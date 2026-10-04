@@ -20,5 +20,7 @@ keystore.properties
 output/
 test-artifacts/
 .worktrees/
+baseline-v010/
+upgrade-artifacts/
 *.hprof
 Thumbs.db

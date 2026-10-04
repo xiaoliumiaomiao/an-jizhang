@@ -45,10 +45,17 @@ jobs:
 
   device-smoke:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # Includes a second clean app build for the fixed 0.1.0 upgrade baseline.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          persist-credentials: false
+      - name: Checkout fixed 0.1.0 baseline
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: 57799ca1751a98e801c091f1cd6cc69f50cb4c77
+          path: baseline-v010
           persist-credentials: false
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
@@ -89,35 +96,50 @@ jobs:
           "$ANDROID_HOME/emulator/emulator" -list-avds
           "$ANDROID_HOME/emulator/emulator" -avd ci-ledger -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -verbose > emulator.log 2>&1 &
           emulator_pid=$!
-          timeout 180s adb wait-for-device
+          # The single fresh AVD uses the emulator's default console port.
+          serial=emulator-5554
+          timeout 180s adb -s "$serial" wait-for-device
           for i in $(seq 1 120); do
             if ! kill -0 "$emulator_pid" 2>/dev/null; then exit 1; fi
-            boot_completed="$(timeout 10s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+            boot_completed="$(timeout 10s adb -s "$serial" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
             if [ "$boot_completed" = '1' ]; then break; fi
             sleep 2
           done
           test "${boot_completed:-}" = '1'
-          timeout 10s adb shell input keyevent 82
-          timeout 10s adb shell settings put global window_animation_scale 0
-          timeout 10s adb shell settings put global transition_animation_scale 0
-          timeout 10s adb shell settings put global animator_duration_scale 0
-      - name: Android UI smoke test
+          timeout 10s adb -s "$serial" shell input keyevent 82
+          timeout 10s adb -s "$serial" shell settings put global window_animation_scale 0
+          timeout 10s adb -s "$serial" shell settings put global transition_animation_scale 0
+          timeout 10s adb -s "$serial" shell settings put global animator_duration_scale 0
+      - name: Build fixed 0.1.0 baseline with this job's debug certificate
+        timeout-minutes: 12
+        working-directory: baseline-v010
         run: |
+          echo 'c5a643cf80162e665cc228f7b16f343fef868e47d3a4836f62e18b7e17ac018a  gradle/wrapper/gradle-wrapper.jar' | sha256sum --check
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+      - name: Android UI smoke tests then isolated replacement upgrade
+        run: |
+          serial=emulator-5554
           capture_device_evidence() {
             result=$?
             echo "Device validation exit: $result"
-            timeout 30s adb logcat -d > device-logcat.txt 2>&1 || true
-            timeout 15s adb exec-out screencap -p > device-screen.png || true
+            timeout 30s adb -s "$serial" logcat -d > device-logcat.txt 2>&1 || true
+            timeout 15s adb -s "$serial" exec-out screencap -p > device-screen.png || true
             find app/build -type f \( -path '*/androidTest-results/*' -o -path '*/reports/androidTests/*' \) -print > device-result-files.txt || true
+            trap - EXIT
+            exit "$result"
           }
           trap capture_device_evidence EXIT
           echo 'c5a643cf80162e665cc228f7b16f343fef868e47d3a4836f62e18b7e17ac018a  gradle/wrapper/gradle-wrapper.jar' | sha256sum --check
           chmod +x gradlew
-          ./gradlew :app:connectedDebugAndroidTest --no-daemon
-          # Connected-test teardown uninstalls both APKs; install this job's
-          # freshly built app again before collecting a launch screenshot.
-          timeout 60s adb install -r app/build/outputs/apk/debug/app-debug.apk
-          timeout 30s adb shell am start -W -n com.xiaoliumiaomiao.anjizhang/.MainActivity
+          ./gradlew :app:connectedDebugAndroidTest \
+            -Pandroid.testInstrumentationRunnerArguments.notClass=com.xiaoliumiaomiao.anjizhang.LedgerUpgradeTest --no-daemon
+          # Connected teardown happens before the upgrade chain. No connected task
+          # may run between seeding the old app and verifying the replaced app.
+          bash .github/scripts/verify-upgrade.sh \
+            baseline-v010/app/build/outputs/apk/debug/app-debug.apk \
+            app/build/outputs/apk/debug/app-debug.apk \
+            app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
           sleep 3
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
@@ -132,3 +154,4 @@ jobs:
             device-logcat.txt
             device-result-files.txt
             device-screen.png
+            upgrade-artifacts/
