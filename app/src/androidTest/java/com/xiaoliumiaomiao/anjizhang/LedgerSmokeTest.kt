@@ -16,6 +16,10 @@ import org.junit.rules.ExternalResource
 import org.junit.rules.RuleChain
 
 class LedgerSmokeTest {
+    private fun activeList():SemanticsNodeInteraction {
+        val tag=listOf("ledger-list","stats-list","settings-list").single{compose.onAllNodesWithTag(it).fetchSemanticsNodes().isNotEmpty()}
+        return compose.onNodeWithTag(tag)
+    }
     val compose = createAndroidComposeRule<MainActivity>()
     private val cleanDatabase = object : ExternalResource() {
         override fun before() { ApplicationProvider.getApplicationContext<Context>().deleteDatabase("ledger.db") }
@@ -34,7 +38,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("金额（元）").assertExists()
     }
     private fun revealLedgerText(value: String): SemanticsNodeInteraction {
-        compose.onNode(hasScrollAction()).performScrollToNode(hasText(value))
+        activeList().performScrollToNode(hasText(value))
         return compose.onNodeWithText(value).assertIsDisplayed()
     }
     @Test fun emptyLedgerAndNavigation() {
@@ -42,13 +46,13 @@ class LedgerSmokeTest {
         compose.onNodeWithText("安记账").assertIsDisplayed()
         revealLedgerText("这个月还没有账目")
         compose.onAllNodesWithText("记一笔")[0].assertIsDisplayed()
-        compose.onNodeWithText("统计").performClick()
+        compose.onNodeWithTag("nav-stats").performClick()
         compose.onNodeWithText("支出分类").assertIsDisplayed()
-        compose.onNodeWithText("设置").performClick()
-        compose.onNodeWithText("本地隐私").assertIsDisplayed()
+        compose.onNodeWithTag("nav-settings").performClick()
+        revealLedgerText("本地隐私")
         compose.onNodeWithText("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。")
             .performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("版本 0.1.2").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("版本 0.1.3").performScrollTo().assertIsDisplayed()
     }
     @Test fun editorInputSurvivesActivityRecreation() {
         openEditor()
@@ -56,7 +60,7 @@ class LedgerSmokeTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         compose.onNodeWithText("取消").performScrollTo().performClick()
-        compose.onNodeWithText("统计").performClick()
+        compose.onNodeWithTag("nav-stats").performClick()
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("支出分类").assertIsDisplayed()
     }
@@ -126,9 +130,14 @@ class LedgerSmokeTest {
         try {
             compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
             awaitSubmitted("save", saveModel, priorSaveJobs)
+            compose.onNodeWithText("保存中…").performScrollTo().assertIsNotEnabled()
+            compose.onNodeWithText("取消").performScrollTo().assertIsNotEnabled()
+            assertTrue("only the submitted save may be queued", saveModel.viewModelScope.coroutineContext[Job]?.children?.count { it.isActive && it !in priorSaveJobs } == 1)
             compose.activityRule.scenario.recreate()
             assertSame("recreation must retain saving ViewModel", saveModel, ledgerModel())
             dumpPhase("save after recreation", saveModel)
+            compose.onNodeWithText("金额（元）").assertTextContains("12.34")
+            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
             compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         } finally { saveLock.unlock() }
         awaitDialogClosed("金额（元）", "save", saveModel)
@@ -136,13 +145,17 @@ class LedgerSmokeTest {
         openEditor()
         compose.onNodeWithText("金额（元）").assertIsDisplayed()
         compose.onNodeWithText("取消").performScrollTo().performClick()
-        revealLedgerText("删除").performClick()
+        revealLedgerText("-¥12.34").performClick()
+        compose.onNodeWithTag("entry-detail").assertIsDisplayed()
+        compose.onNodeWithText("删除").performScrollTo().assertIsDisplayed().performClick()
         val deleteModel = ledgerModel()
         val deleteLock = pauseWorker()
         val priorDeleteJobs = deleteModel.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
         try {
             compose.onNodeWithText("确认删除").performClick()
             awaitSubmitted("delete", deleteModel, priorDeleteJobs)
+            compose.onNodeWithText("确认删除").assertIsDisplayed().assertIsNotEnabled()
+            compose.onNodeWithText("取消").assertIsDisplayed().assertIsNotEnabled()
             compose.activityRule.scenario.recreate()
             assertSame("recreation must retain deleting ViewModel", deleteModel, ledgerModel())
             dumpPhase("delete after recreation", deleteModel)
@@ -166,6 +179,7 @@ class LedgerSmokeTest {
             compose.activityRule.scenario.recreate()
         } finally { workerLock.unlock() }
         compose.waitUntil(10000) { compose.onAllNodes(hasText("操作失败：", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("保存").performScrollTo().assertIsEnabled()
         compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         compose.onNodeWithText("取消").performScrollTo().performClick()
     }

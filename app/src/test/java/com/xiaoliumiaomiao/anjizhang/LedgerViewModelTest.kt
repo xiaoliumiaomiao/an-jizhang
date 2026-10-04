@@ -136,4 +136,23 @@ class LedgerViewModelTest {
         await { model.state.value.error?.contains("10 MiB") == true && !model.state.value.busy }
         assertEquals(BackupCodec.MAX_BYTES + 1, read); assertTrue(model.state.value.entries.isEmpty())
     }
+    @Test fun repeatedFailuresPublishOwnIdsWithoutReplacingOldSuccessAndRetryWorks() {
+        val valid=entry();val success=model.save(valid)
+        await { model.state.value.completedOperationId==success && !model.state.value.busy }
+        val firstFailure=model.save(valid.copy(amountCents=0))
+        await { model.state.value.error!=null && !model.state.value.busy }
+        val firstMessage=model.state.value.error
+        assertEquals(firstFailure,model.state.value.failedOperationId)
+        assertEquals(success,model.state.value.completedOperationId)
+        val secondFailure=model.save(valid.copy(amountCents=0))
+        await { model.state.value.failedOperationId==secondFailure && !model.state.value.busy }
+        assertNotEquals(firstFailure,secondFailure)
+        assertEquals(firstMessage,model.state.value.error)
+        assertEquals(success,model.state.value.completedOperationId)
+        assertEquals(listOf(valid),model.state.value.entries)
+        val retry=model.save(valid.copy(amountCents=2))
+        await { model.state.value.completedOperationId==retry && !model.state.value.busy }
+        assertEquals(listOf(valid.copy(amountCents=2)),model.state.value.entries)
+        assertNull(model.state.value.error)
+    }
 }

@@ -22,6 +22,7 @@ test-artifacts/
 .worktrees/
 baseline-v010/
 baseline-v011/
+baseline-v012/
 upgrade-artifacts/
 *.hprof
 Thumbs.db

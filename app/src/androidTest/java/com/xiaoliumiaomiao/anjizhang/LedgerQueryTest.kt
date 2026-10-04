@@ -18,6 +18,10 @@ import org.junit.rules.ExternalResource
 import org.junit.rules.RuleChain
 
 class LedgerQueryTest {
+    private fun activeList():SemanticsNodeInteraction {
+        val tag=listOf("ledger-list","stats-list","settings-list").single{compose.onAllNodesWithTag(it).fetchSemanticsNodes().isNotEmpty()}
+        return compose.onNodeWithTag(tag)
+    }
     private val month = YearMonth.now()
     private val seeds = listOf(
         Entry("01200000-0000-0000-0000-000000000001", EntryKind.EXPENSE, 1234L, "午餐", month.atDay(2), "团队午餐"),
@@ -47,7 +51,7 @@ class LedgerQueryTest {
         assertNull(vm.state.value.error)
     }
     private fun reveal(matcher: SemanticsMatcher): SemanticsNodeInteraction {
-        compose.onNode(hasScrollAction()).performScrollToNode(matcher)
+        activeList().performScrollToNode(matcher)
         return compose.onNode(matcher).assertIsDisplayed()
     }
     private fun text(value: String) = reveal(hasText(value))
@@ -69,10 +73,10 @@ class LedgerQueryTest {
         text(kind).assertIsSelected()
     }
     private fun row(id: String) = reveal(hasTestTag("entry-$id"))
-    private fun rowButton(id: String, label: String) {
-        row(id)
-        compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag("entry-$id")))
-            .performScrollTo().assertIsDisplayed().performClick()
+    private fun rowButton(id:String,label:String) {
+        row(id).performClick()
+        compose.onNodeWithTag("entry-detail").assertIsDisplayed()
+        compose.onNodeWithText(label).performScrollTo().assertIsDisplayed().performClick()
     }
     private fun saveEditor() {
         compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
@@ -98,10 +102,10 @@ class LedgerQueryTest {
         count(1, 3)
         row(seeds[0].id)
         summary("50.00", "13.34", "36.66")
-        compose.onNodeWithText("统计").performClick()
+        compose.onNodeWithTag("nav-stats").performClick()
         text("午餐  ¥12.34")
         text("交通  ¥1.00")
-        compose.onNodeWithText("账目").performClick()
+        compose.onNodeWithTag("nav-ledger").performClick()
         text("清除筛选").performClick()
         assertQuery("", "全部类型")
         count(3, 3)
@@ -113,10 +117,10 @@ class LedgerQueryTest {
         ready()
         query(" 午餐 ")
         text("仅支出").performClick()
-        compose.onNodeWithText("设置").performClick()
+        compose.onNodeWithTag("nav-settings").performClick()
         compose.activityRule.scenario.recreate()
         text("备份与恢复")
-        compose.onNodeWithText("账目").performClick()
+        compose.onNodeWithTag("nav-ledger").performClick()
         assertQuery(" 午餐 ", "仅支出")
         count(1, 3)
         text("上月").performClick()

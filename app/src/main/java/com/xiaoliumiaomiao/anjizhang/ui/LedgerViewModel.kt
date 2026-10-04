@@ -17,7 +17,8 @@ import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
 
 data class LedgerUiState(val entries: List<Entry> = emptyList(), val busy: Boolean = false,
-    val error: String? = null, val message: String? = null, val completedOperationId: String? = null)
+    val error: String? = null, val message: String? = null, val completedOperationId: String? = null,
+    val failedOperationId: String? = null)
 
 class LedgerViewModel(application: Application) : AndroidViewModel(application) {
     private val mutable = MutableStateFlow(LedgerUiState(busy = true))
@@ -36,7 +37,8 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
                     mutable.update { it.copy(entries = entries, message = message, completedOperationId = operationId ?: it.completedOperationId) }
                 } catch (cancelled: CancellationException) { throw cancelled
                 } catch (failure: Exception) {
-                    mutable.update { it.copy(error = "操作失败：${failure.message ?: "请重试"}。原有账目未被替换。") }
+                    mutable.update { it.copy(error = "操作失败：${failure.message ?: "请重试"}。原有账目未被替换。",
+    failedOperationId = operationId ?: it.failedOperationId) }
                 } finally { mutable.update { it.copy(busy = false) } }
             }
         }

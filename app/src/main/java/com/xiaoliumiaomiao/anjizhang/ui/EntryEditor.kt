@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.platform.testTag
 import com.xiaoliumiaomiao.anjizhang.domain.*
 import java.time.*
 import java.util.UUID
@@ -26,9 +28,9 @@ import java.util.UUID
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var datePicker by rememberSaveable { mutableStateOf(false) }
     val id = rememberSaveable { entry?.id ?: UUID.randomUUID().toString() }
-    Dialog(onDismissRequest = { if (!busy) onDismiss() }) {
-        Surface(shape = MaterialTheme.shapes.large) {
-            Column(Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Dialog(onDismissRequest = { if (!busy) onDismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Column(Modifier.fillMaxSize().systemBarsPadding().imePadding().testTag("editor-form").verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(if (entry == null) "记一笔" else "编辑账目", style = MaterialTheme.typography.headlineSmall)
                 Row {
                     listOf(EntryKind.EXPENSE to "支出", EntryKind.INCOME to "收入").forEach { (kind, label) ->

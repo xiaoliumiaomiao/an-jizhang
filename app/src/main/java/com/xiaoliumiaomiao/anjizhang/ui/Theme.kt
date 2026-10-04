@@ -2,10 +2,12 @@ package com.xiaoliumiaomiao.anjizhang.ui
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.xiaoliumiaomiao.anjizhang.R
 
 private val Blue = Color(0xFF2457C5)
 private val Green = Color(0xFF176B5B)
@@ -42,5 +44,8 @@ private val LedgerTypography = Typography(
 )
 
 @Composable fun LedgerTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = LedgerColors, typography = LedgerTypography, content = content)
+    MaterialTheme(colorScheme = LedgerColors.copy(
+        primary = colorResource(R.color.ledger_primary),
+        background = colorResource(R.color.ledger_background)
+    ), typography = LedgerTypography, content = content)
 }

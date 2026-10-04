@@ -36,8 +36,8 @@ check_apk() {
   timeout 30s "$build_tools/apksigner" verify --print-certs "$apk" > "$artifacts/$label-certificates.txt" 2>&1
   sha256sum "$apk" > "$artifacts/$label-apk-sha256.txt"
 }
-check_apk "$baseline_apk" baseline "$app" 2 0.1.1
-check_apk "$current_apk" current "$app" 3 0.1.2
+check_apk "$baseline_apk" baseline "$app" 3 0.1.2
+check_apk "$current_apk" current "$app" 4 0.1.3
 check_apk "$test_apk" test "$test_package" '' ''
 certificate() {
   local file=$1 digest
@@ -95,4 +95,4 @@ timeout 30s adb -s "$serial" shell am start -W -n "$app/.MainActivity" 2>&1 | te
 tr -d '\r' < "$artifacts/launch-raw.txt" > "$artifacts/launch.txt"
 grep -qx 'Status: ok' "$artifacts/launch.txt" || fail 'Upgraded app launch did not report Status: ok'
 if grep -qiE 'Error:|Exception|unable to resolve' "$artifacts/launch.txt"; then fail 'Upgraded app launch failed'; fi
-printf 'PASS: synthetic ledger survived 0.1.1/code2 -> 0.1.2/code3 replacement\n' | tee "$artifacts/summary.txt"
+printf 'PASS: synthetic ledger survived 0.1.2/code3 -> 0.1.3/code4 replacement\n' | tee "$artifacts/summary.txt"
