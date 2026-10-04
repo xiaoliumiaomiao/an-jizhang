@@ -764,7 +764,7 @@ PHONE_ACCEPTANCE_V012.md 的初始完整正文：
 
 README/HANDOFF 当前段写清 0.1.2 功能/包名/实际证据链接和“待作者手机验收”；0.1.0/0.1.1历史验收记录保留。DEVELOPMENT 的本轮路径改为 10 UI、固定新 SHA、0.1.1→0.1.2，并链接本轮验收表。长期50000条/10MiB整本备份上限、debug签名和不保证CI覆盖安装的限制继续保留。此计划仅对实际完成步骤勾选，不预填事实。文档里运行 ID、hash 等必须从本次工具输出抄录，不能用旧值凑齐。
 
-- [ ] **Step 8：完整分支独立审查，根 agent 私有 PR 及同步验证。** 审查 `git diff 976817290302e712519297cc5b810ce019d2d383...HEAD` 加当前未提交改动；独立 spec/quality reviewer 都读取 Global Constraints、3任务、原始证据。重点关注统计/导出边界、savedState、操作ID、UI测试真失败/真通过、升级不清库、版本/签名与作者验收未预勾。修复阻塞后复审。源码若变，重跑相关测试且最终全CI需覆盖修改后的代码；只有文档改动可引用已测代码提交并说明差异。
+- [x] **Step 8：完整分支独立审查，根 agent 私有 PR 及同步验证。** 审查 `git diff 976817290302e712519297cc5b810ce019d2d383...HEAD` 加当前未提交改动；独立 spec/quality reviewer 都读取 Global Constraints、3任务、原始证据。重点关注统计/导出边界、savedState、操作ID、UI测试真失败/真通过、升级不清库、版本/签名与作者验收未预勾。修复阻塞后复审。源码若变，重跑相关测试且最终全CI需覆盖修改后的代码；只有文档改动可引用已测代码提交并说明差异。
 
 主 agent 按实际完成文档列表显式 git add、diff check、commit/push；不要 `git add .`。PR保持 draft，repo先确认private：
 
@@ -791,11 +791,11 @@ gh pr create --repo xiaoliumiaomiao/an-jizhang --base main --head feat/ledger-qu
 
 ## 计划自检
 
-- [ ] 需求映射齐全：14个纯函数行为、4个设备行为、6原回归、真实升级、包核验、作者门禁。
-- [ ] 接口签名和文案逐字一致；测试不使用未定义 helper；固定依赖无新API。
-- [ ] Task 2 RED 与最终 GREEN 证据分别保存；Task2本地提交不推送，Task3同步升级链后一次获取完整GREEN。
-- [ ] 每个 implementer/reviewer brief 均复制完整 Global Constraints 并明确文件范围；Git/CI/交付由根 agent执行。
-- [ ] 本文代码块与实际实现按当前源码验证；方案中不存在替代行为测试的编译错误或虚假证据。
+- [x] 需求映射齐全：14个纯函数行为、4个设备行为、6原回归、真实升级、包核验、作者门禁。
+- [x] 接口签名和文案逐字一致；测试不使用未定义 helper；固定依赖无新API。
+- [x] Task 2 RED 与最终 GREEN 证据分别保存；Task2生产接入先本地提交，Task3版本同步后才推送完整链；首次完整失败与观测实验另存，没有隐藏重跑历史。
+- [x] 每个 implementer/reviewer brief 均复制完整 Global Constraints 并明确文件范围；Git/CI/交付由根 agent执行。
+- [x] 本文代码块与实际实现按当前源码验证；方案中不存在替代行为测试的编译错误或虚假证据。
 
 计划编写本身不表示上述构建、测试、审查或交付已经执行。
 
@@ -804,4 +804,4 @@ gh pr create --repo xiaoliumiaomiao/an-jizhang --base main --head feat/ledger-qu
 首次完整CI37218934264对应8f1c4c9：50 JVM通过，10 UI中4 Query/5 Smoke通过；唯一原negative case等待错误文字10000ms超时，升级未执行。只读Phase1/2尚未证明根因，原日志/失败报告保留。
 
 ROOT依照Step7已有“必要测试同步修复不能改变需求契约”授权单变量增加原negative方法三行：只读model、持锁后既有Jobs快照、真实点击后重建前复用awaitSubmitted。原DROP/recreate/unlock/错误与输入/取消断言逐字保留，不加IME关闭/重试/扩时/skip/生产改动。11秒编译4执行/40缓存，独立/root/v012_final_review Spec/Quality Approved；ROOT核验tree822835c9c336043fead7447d93850e2e865babe2后提交0076b6b11de015a81f7c2f4e2337f9408ccd9a41并启动CI37220141121。它是更明确的提交观测，不等于根因已修好；即使GREEN，也不从单次结果反推原失败必定未dispatch。新运行的完整实测结果及余下交付步骤仍按真实证据收口。
-实际收口证据：CI37220141121 / 0076b6b 两job成功，50 JVM/10 UI/seed1/verify1全0；negative新增提交观测日志jobs=1与原业务通过，不反推旧根因。两处output新SHA匹配审计8c82...，三旧APK不变；SHA256SUMS原94/188bytes前缀SHA与独立交付前快照一致。首次PowerShell报告元数据膨胀保留raw，compact基本类型记录实际复核，无APK变化；ReadAllLines单行报告修正未重新执行复制。最终draft PR同步与delivery审查待完成，作者八项仍未勾。
+实际收口证据：CI37220141121 / 0076b6b 两job成功，50 JVM/10 UI/seed1/verify1全0；negative新增提交观测日志jobs=1与原业务通过，不反推旧根因。两处output新SHA匹配审计8c82...，三旧APK不变；SHA256SUMS原94/188bytes前缀SHA与独立交付前快照一致。首次PowerShell报告元数据膨胀保留raw，compact基本类型记录实际复核，无APK变化；ReadAllLines单行报告修正未重新执行复制。私有draft PR #3已创建/附并实核三方ed803ff同步、private=true、main976；最终独立Source/Quality/technical Delivery Approved，报告final-delivery-review.md。本次例行文档事实收口后再次核验新三方HEAD，原始结果记录delivery-sync-final.json；作者八项仍未勾。

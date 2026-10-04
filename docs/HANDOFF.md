@@ -12,7 +12,7 @@
 
 本机APK与完整包装审计相同：9408857 bytes，SHA256 8c82dbc30e482232b537868174ffb1aa2c5ec1e9c878420ee9fb7857b381ae42，公开证书209fe650f40d48d32167be84b0d59576ecc3fc90c3af4169fc811a13e700109d与旧本机包相同；无联网/广泛存储、自动备份全域排除、三完整许可实核。已以新文件名复制到工作区output与D:/AIproject/an-jizhang/output，旧APK和旧校验原字节均保留。PowerShell报告元数据膨胀已保留原记录并生成compact meta、实际后置条件再次核验，APK不变。
 
-Task1/Task2/Task3/完整源码/三行观测独立审查Approved；最终交付文档与私有draft PR/附件/HEAD同步正收口，delivery review尚待正式报告。技术交付后作者先在0.1.1导出备份，再正常覆盖安装本机同签名新包并执行PHONE_ACCEPTANCE_V012.md；CI包不覆盖作者应用，安装异常保留原应用与账本，不卸载/清库/强降级。
+Task1/Task2/Task3/完整源码/三行观测独立审查Approved；私有draft [PR #3](https://github.com/xiaoliumiaomiao/an-jizhang/pull/3)已创建/附到任务；01:39:40实核private=true、OPEN/draft、三方HEAD ed803ff、工作区干净、main仍9768172。最终/root/v012_final_review实际返回Source Spec/Quality/Final technical Delivery Approved，无Critical/Important。本次只写回实际审查结论及技术步骤，最后文档commit/push后的三方HEAD/clean/private/draft/main与实物再核验在ignored delivery-sync-final.json。技术交付后作者先在0.1.1导出备份，再正常覆盖安装本机同签名新包并执行PHONE_ACCEPTANCE_V012.md；CI包不覆盖作者应用，安装异常保留原应用与账本，不卸载/清库/强降级。
 ## 已验收基线0.1.1
 
 作者已确认范围：公开备份容量、JSON边界回归、覆盖升级保留账目验证。0.1.0已验收并快进合入main，基线57799ca1751a98e801c091f1cd6cc69f50cb4c77，PR #1已merged。0.1.1在附到本任务的隔离工作区、feat/ledger-hardening-v0.1.1开发；官方复用调研、实现、两任务及全分支独立审查已完成。本机36项JVM通过、lint0错误/9提示、升级fixture实际编译；新旧本机包公开证书同一，新APK签名/权限/许可已核验。最终包81a92bf36f1867cab1aa2df9b318b5d42e18e16dd65eeb864209f6bd0e8d7448复制到本工作区与原项目output，旧包保留。[PR #2](https://github.com/xiaoliumiaomiao/an-jizhang/pull/2)草稿已附。首次CI37211853745的36 JVM、6 UI和旧版seed通过，随后脚本因缺-r原始输出参数停止；修复1971199及增量审查完成，14项脚本门禁探针通过。[最终CI37213110853](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37213110853)在测试提交1971199上两个job均success，主agent实读36 JVM/6 UI/seed1/verify1全通过，全部账目字段及跨月统计保留，升级后启动与截图已核验，作者于2026-10-05确认“经验证全部通过”，PHONE_ACCEPTANCE_V011.md据本次确认勾选，手机型号和Android版本未提供。

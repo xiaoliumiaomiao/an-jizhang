@@ -13,7 +13,7 @@
 
 源码已增加所选月分类或备注的字面关键词搜索，可组合全部类型、仅收入、仅支出，并一键清除两个条件。导航、切月和Activity重建保留查询输入及类型；筛选只影响账目列表，月统计和整本导出继续使用完整数据。源码版本为0.1.2/code3，数据库schema1、备份format1、依赖和权限保持原样。
 
-新增14项纯逻辑与四项真实UI测试均有有效RED/GREEN，原六项回归保留。[最终CI37220141121](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37220141121)在0076b6b代码上实际50 JVM、10 UI及旧版seed/新版verify全部通过，真实0.1.1→0.1.2替换保留完整账目与跨月统计。本机APK签名/权限/完整许可及两处复制哈希已核验；最终交付审查与私有draft PR同步正在收口。详见[本轮验证](docs/VALIDATION_V012.md)、[独立审查](docs/REVIEW_V012.md)和[手机验收表](docs/PHONE_ACCEPTANCE_V012.md)。
+新增14项纯逻辑与四项真实UI测试均有有效RED/GREEN，原六项回归保留。[最终CI37220141121](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37220141121)在0076b6b代码上实际50 JVM、10 UI及旧版seed/新版verify全部通过，真实0.1.1→0.1.2替换保留完整账目与跨月统计。本机APK签名/权限/完整许可及两处复制哈希已核验；私有草稿[PR #3](https://github.com/xiaoliumiaomiao/an-jizhang/pull/3)已创建并同步，源码及最终技术交付独立审查已通过。详见[本轮验证](docs/VALIDATION_V012.md)、[独立审查](docs/REVIEW_V012.md)和[手机验收表](docs/PHONE_ACCEPTANCE_V012.md)。
 
 ## 安装与验证
 
@@ -35,4 +35,4 @@
 
 0.1.1继续复用官方SDK和既有固定测试库，补充容量提示、6项JSON边界回归及同签名覆盖升级验证，没有增加依赖、权限或改变账本格式。[本轮复用决定](docs/REUSE_V011.md)、[独立审查](docs/REVIEW_V011.md)。
 
-0.1.2沿用现有Kotlin标准库、Material3及状态保存API，不复制MoneyBook搜索模块或引入新库；固定来源及采用边界见[REUSE_V012](docs/REUSE_V012.md)。本轮源码与技术测试已通过，最终交付审查正收口；作者手机验收仍待完成。
+0.1.2沿用现有Kotlin标准库、Material3及状态保存API，不复制MoneyBook搜索模块或引入新库；固定来源及采用边界见[REUSE_V012](docs/REUSE_V012.md)。本轮源码与技术测试已通过，最终技术交付独立审查通过；作者手机验收仍待完成。

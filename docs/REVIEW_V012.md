@@ -1,6 +1,6 @@
-# 0.1.2 独立审查记录（源码通过，交付待完成）
+# 0.1.2 独立审查记录（技术交付通过，待手机验收）
 
-日期：2026-10-05（Asia/Shanghai），文档准备快照01:06:52。结论按实际返回报告的范围记录，不用实现者自检代替独立审查。当前Source Spec/Quality Approved、Critical0/Important0；Final delivery gate仍Pending。最终CI设备GREEN、真实升级和两处output后置条件已取得实际证据；私有PR同步与最终delivery报告正收口，作者手机验收仍未执行。
+日期：2026-10-05（Asia/Shanghai），最初文档准备快照01:06:52；本记录已按实际最终报告更新。结论按实际返回报告的范围记录，不用实现者自检代替独立审查。当前Source Spec/Quality Approved、Critical0/Important0；Final technical Delivery Approved。最终CI设备GREEN、真实升级和两处output后置条件已取得实际证据；私有draft PR #3及三方HEAD同步已实核，最终delivery独立报告已返回Approved，作者手机验收仍未执行。
 
 ## 实现与独立审查分工
 
@@ -15,7 +15,8 @@
 | 候选APK包装 | ROOT构建 | `/root/v012_delivery_prep` | `apk-candidate-audit.md`及8份工具原始输出：精确候选SHA的包信息/签名/权限/备份排除/完整许可符合要求；ROOT已实读 |
 | 三行保存提交观测 | `/root/v012_query_ui` | `/root/v012_final_review` | `task-2-dispatch-observation-review.md`：Spec/Quality Approved，原断言/10秒/业务不变，根因不反推 |
 | APK复制脚本快照 | ROOT准备 | `/root/v012_delivery_guard_review` | `apk-copy-script-review.md`：Spec/Quality Approved；执行前script SHA75f...，不等于已执行 |
-| 最终交付证据与文档 | ROOT收口 | `/root/v012_final_review`后续独立审查 | Pending，尚无最终delivery报告，不预写Approved |
+| APK后置条件与compact补审 | ROOT执行/核验 | `/root/v012_delivery_guard_review` | `apk-delivery-compact-review.md`：Approved；原序列化审查遗漏已纠正，ReadAllLines一行fix未重跑，实际新旧hash/prefix/唯一新行相符 |
+| 最终交付证据与文档 | ROOT收口 | `/root/v012_final_review`后续独立审查 | `final-delivery-review.md`：Source Spec/Quality与Final technical Delivery Approved，Critical0/Important0；作者手机gate仍待执行 |
 
 表中无前缀报告均位于`test-artifacts/sdd-v012/`。stage tree不是提交；ROOT核验被审暂存树与随后提交树一致：Task1 `d16513239a92542a5db41fc666fd132c2f6b344f`、Task2修复`9fe45c1e0e1a83f7700b30661fd34afe8f53f3bf`、Task2 UI `5842ce90453b59f9dd5af1410fbe81c19af514b6`、Task3 `aa5adefe86c24c0efd4051cb9ad3b867d9ad86b4`。完整源码范围为已验收BASE `976817290302e712519297cc5b810ce019d2d383`→代码HEAD `8f1c4c902ff387ad1755b4d25600cff0ddcb5e8c`。
 
@@ -41,6 +42,10 @@ Critical：无。Important：无。现存Minor为SDK XML工具v3/遇v4、lint8�
 
 ROOT最后本机完整构建19秒、3执行/75 UP-TO-DATE，JVM并未重新执行50项；`final-apk-freeze.json`记录包9408857 bytes、SHA `8c82dbc30e482232b537868174ffb1aa2c5ec1e9c878420ee9fb7857b381ae42`与候选完全相同。原包装证据只针对该精确哈希可复用；不是output复制/最终交付完成结论。
 
-首次完整CI37218934264确实失败，其原始失败/诊断保留。三行观测增量Approved后，最终[CI37220141121](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37220141121)在0076b6b11de015a81f7c2f4e2337f9408ccd9a41实际50 JVM/10 UI/seed1/verify1全0，字段/统计/同CI证书/安装启动/退出及截图已独立实读；本机同审计SHA已复制两处，旧文件/旧校验字节不变。PowerShell报告附加元数据膨胀已保留raw并生成基本类型compact记录，未改变APK；单行ReadAllLines报告修正没有重跑复制。最终delivery reviewer仍需核对正式文档与private draft PR/附件/HEAD同步后返回完整报告，当前Pending。
+首次完整CI37218934264确实失败，其原始失败/诊断保留。三行观测增量Approved后，最终[CI37220141121](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37220141121)在0076b6b11de015a81f7c2f4e2337f9408ccd9a41实际50 JVM/10 UI/seed1/verify1全0，字段/统计/同CI证书/安装启动/退出及截图已独立实读；本机同审计SHA已复制两处，旧文件/旧校验字节不变。PowerShell报告附加元数据膨胀已保留raw并生成基本类型compact记录，未改变APK；单行ReadAllLines报告修正没有重跑复制。最终/root/v012_final_review已完整读取正式文档、原始CI与实际APK/清单，并live核验private draft PR #3和三方HEAD/main边界，实际返回Final technical Delivery Approved。
 
 [PHONE_ACCEPTANCE_V012](PHONE_ACCEPTANCE_V012.md)八项全未勾、技术与手机结果分开；作者本轮反馈尚未提供，不继承0.1.1通过，不合main或正式发布。极端长文本Bundle边界、手机字号/键盘体验仍待本轮实际验收，不添加未经需求确认的200字产品限制。
+
+最终独立审查前同步快照：2026-10-05 01:39:40，[PR #3](https://github.com/xiaoliumiaomiao/an-jizhang/pull/3)实际OPEN/draft且已附，repo private=true；本机、远端和PR HEAD均ed803ff4415c0ded54881817c0ca3ae4627081b2，工作区干净、main仍已验收9768172。0076b6b之后仅文档变化。本次补充实际PR/补审事实也只改文档，最终commit/push后仍须核验同步。
+
+最终报告final-delivery-review.md覆盖ed803ff4415c0ded54881817c0ca3ae4627081b2与四份仅文档事实补充，Source Spec/Quality/Final technical Delivery均Approved，Critical0/Important0；ROOT实际list_artifacts再次核验#3附件。原失败根因不反推、报告序列化遗漏及补审纠正、全部既有诊断和八项未勾手机表均保留。本次只把已返回结论及技术步骤完成项写回文档；最后commit/push后的三方HEAD、clean/private/draft/main与实物再核验记录在ignored delivery-sync-final.json，不重编译应用。

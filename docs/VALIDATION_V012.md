@@ -1,6 +1,6 @@
 # 0.1.2 验证记录（技术验证通过，待手机验收）
 
-日期：2026-10-05（Asia/Shanghai）。0.1.2本轮完整技术测试已通过，本机测试APK已按新文件名复制到两处output；最终交付独立审查及私有草稿PR同步正收口。作者已确认0.1.0和0.1.1全部通过；0.1.2手机验收尚待执行，不继承旧通过结果。[PHONE_ACCEPTANCE_V012](PHONE_ACCEPTANCE_V012.md)八项全未勾。
+日期：2026-10-05（Asia/Shanghai）。0.1.2本轮完整技术测试已通过，本机测试APK已按新文件名复制到两处output；私有草稿PR与同步已实核，最终交付独立审查Approved，技术交付完成。作者已确认0.1.0和0.1.1全部通过；0.1.2手机验收尚待执行，不继承旧通过结果。[PHONE_ACCEPTANCE_V012](PHONE_ACCEPTANCE_V012.md)八项全未勾。
 
 ## 范围与代码来源
 
@@ -90,8 +90,8 @@ ROOT在当前代码HEAD再执行上方完整构建，`final-local-build-20261005
 - [x] 当前受测代码两job成功、50 JVM/10 UI全0及lint实际结果。
 - [x] 固定0.1.1→0.1.2同证书真实替换、两runner、字段/统计/启动/截图原始证据。
 - [x] 两处output新文件复制及新旧哈希、旧校验行原字节前缀核验。
-- [ ] 私有draft PR、附件和本机/远端/PR HEAD同步（完成后填实际URL/证据）。
-- [ ] 最终交付原始证据与文档独立review（源码Approved不代替delivery）。
+- [x] 私有draft [PR #3](https://github.com/xiaoliumiaomiao/an-jizhang/pull/3)已创建并附到本任务；2026-10-05 01:39:40实核private=true、OPEN/draft、三方HEAD均ed803ff4415c0ded54881817c0ca3ae4627081b2、工作区干净，main仍9768172。原始sync快照在delivery-sync-before-final-review.json；0076b6b之后仅七文档变化。
+- [x] `/root/v012_final_review`实际独立原始证据/实物/正式文档/live PR同步审查，`final-delivery-review.md`：Source Spec/Quality与Final technical Delivery均Approved，Critical0/Important0。
 - [ ] 作者独立执行0.1.2手机表并反馈；八项全未勾，不合main或正式发布。
 
 ## 两处APK交付与记录修正
@@ -122,3 +122,6 @@ ROOT只授权单变量：在该negative方法增加只读model、持锁后Jobs�
 实际assembleDebugAndroidTest退出0、11秒、4执行/40 UP-TO-DATE，原始build-20261005-011900.log与副本哈希一致。独立/root/v012_final_review实读三行diff、失败证据和原始编译日志，Spec/Quality Approved、Critical0/Important0，Final delivery仍Pending；报告task-2-dispatch-observation-review.md。ROOT核验review tree822835c9c336043fead7447d93850e2e865babe2与提交0076b6b11de015a81f7c2f4e2337f9408ccd9a41的tree一致后推送。
 
 这是增加诊断与时序前提的实验；后续即使GREEN，也不能单凭它反推原失败一定来自未dispatch。诊断、首次完整CI失败、原始日志及报告均保留。
+独立/root/v012_delivery_guard_review补审实际交付后置条件与一行报告修正Approved，报告apk-delivery-compact-review.md；原审查漏查序列化问题已在补报告纠正。PS5.1只读内存探针确认ReadAllLines行无Provider附加元数据、按脚本结构序列化2412 bytes；当前compactmeta3059 bytes、现场新旧hash/prefix/新行均相符，reportingFixExecuted=false。没有重跑复制或修改APK。
+
+最终技术交付独立报告已返回Approved；本次只记录实际结论和技术步骤完成项。最后文档commit/push后，ROOT再次核对本机/远端/PR HEAD、private/draft/clean/main边界与新旧包，真实快照保存ignored delivery-sync-final.json；0076b6b之后只改文档，不把未重新执行的应用构建或手机验收记为通过。
