@@ -58,21 +58,44 @@ jobs:
       - name: Prepare pinned Android SDK tools
         run: bash .github/scripts/setup-android.sh
       - name: Prepare emulator
+        timeout-minutes: 12
         run: |
+          diagnose_emulator() {
+            result=$?
+            if [ "$result" -ne 0 ]; then
+              echo "Emulator preparation failed: $result"
+              if [ -n "${emulator_pid:-}" ]; then ps -p "$emulator_pid" -o pid,stat,args || true; fi
+              timeout 10s adb devices -l || true
+              if [ -f emulator.log ]; then tail -n 160 emulator.log; fi
+            fi
+          }
+          trap diagnose_emulator EXIT
           sudo chmod 666 /dev/kvm
           sdkmanager 'platforms/android-35' 'build-tools/35.0.0' 'platform-tools' 'emulator' 'system-images/android-35/google_apis/x86_64'
-          echo no | avdmanager create avd -n ci-ledger -k 'system-images;android-35;google_apis;x86_64' --device pixel_5
-          "$ANDROID_HOME/emulator/emulator" -avd ci-ledger -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect > emulator.log 2>&1 &
-          adb wait-for-device
+          avd_path="$RUNNER_TEMP/ci-ledger.avd"
+          echo no | avdmanager create avd -n ci-ledger -k 'system-images;android-35;google_apis;x86_64' --device pixel_5 --path "$avd_path"
+          # The default 12 GiB userdata exceeds free disk on hosted runners.
+          # This fresh CI AVD contains only test data; no user device is modified.
+          sed -i '/^disk.dataPartition.size=/d' "$avd_path/config.ini"
+          printf '\ndisk.dataPartition.size=4G\n' >> "$avd_path/config.ini"
+          df -h "$RUNNER_TEMP"
+          "$ANDROID_HOME/emulator/emulator" -version
+          "$ANDROID_HOME/emulator/emulator" -accel-check
+          "$ANDROID_HOME/emulator/emulator" -list-avds
+          "$ANDROID_HOME/emulator/emulator" -avd ci-ledger -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -verbose > emulator.log 2>&1 &
+          emulator_pid=$!
+          timeout 180s adb wait-for-device
           for i in $(seq 1 120); do
-            if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = '1' ]; then break; fi
+            if ! kill -0 "$emulator_pid" 2>/dev/null; then exit 1; fi
+            boot_completed="$(timeout 10s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+            if [ "$boot_completed" = '1' ]; then break; fi
             sleep 2
           done
-          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = '1'
-          adb shell input keyevent 82
-          adb shell settings put global window_animation_scale 0
-          adb shell settings put global transition_animation_scale 0
-          adb shell settings put global animator_duration_scale 0
+          test "${boot_completed:-}" = '1'
+          timeout 10s adb shell input keyevent 82
+          timeout 10s adb shell settings put global window_animation_scale 0
+          timeout 10s adb shell settings put global transition_animation_scale 0
+          timeout 10s adb shell settings put global animator_duration_scale 0
       - name: Android UI smoke test
         run: |
           chmod +x gradlew
