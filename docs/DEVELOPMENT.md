@@ -35,3 +35,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -JavaHom
 - 本地输出是debug测试APK。正式发布需要单独签名、版本策略与作者授权。
 - 回退代码可保留当前分支，再切回此前提交；不要用 `git reset --hard` 清除未保存工作。
 - 应用升级保留数据依赖签名及数据库迁移。卸载会删除账本，操作前先在应用中导出备份；备份是明文，选可信位置保管。
+
+## 0.1.1 CI设备与升级测试
+
+CI在仅含合成数据的临时模拟器运行6项smoke。它们会清理测试数据库；升级fixture的两个方法要求不同真实安装版本，因此由后面的专门链分别执行。CI的smoke命令为：
+
+```bash
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.notClass=com.xiaoliumiaomiao.anjizhang.LedgerUpgradeTest --no-daemon
+```
+
+CI先在同job从固定57799ca基线构建旧APK，再完成上述smoke，最后用相同临时debug证书执行旧版seed、install-r新版、verify，旧→新链中保留数据库。verify-upgrade.sh限定CI=true、唯一emulator且AVD名ci-ledger，并严格检查两个runner结果；作者手机按PHONE_ACCEPTANCE_V011.md做正常安装与操作验收。APK哈希、公开证书、runner原始/规范化输出和截图存于android-device产物。
+
+脚本单方法测试使用`am instrument -w -r`：`-w`等待完成，`-r`提供原始runner协议；默认展示格式可能只有`OK (1 test)`而没有completion code。脚本要求两者同时成功，防止ADB退出0掩盖测试失败，参见[官方参数说明](https://developer.android.com/studio/test/command-line)。

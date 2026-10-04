@@ -6,7 +6,7 @@
 |---|---|---|
 | adb | [Android官方文档](https://developer.android.com/tools/adb)、[AOSP NOTICE](https://android.googlesource.com/platform/packages/modules/adb/+/refs/heads/main/NOTICE) | 使用已有官方Platform Tools；覆盖安装用-r，指定隔离模拟器serial，不操作作者手机 |
 | APK签名检查 | [apksigner](https://developer.android.com/tools/apksigner)、[签名文档](https://developer.android.com/studio/publish/app-signing) | 只读取APK公开证书摘要；CI同job临时debug签名，不上传本机私钥 |
-| instrumentation方法筛选 | [官方命令行测试文档](https://developer.android.com/studio/test/command-line) | 沿用AndroidX runner1.6.2/ext junit1.2.1，分别运行升级seed和verify；[AndroidX Apache许可](https://github.com/android/android-test/blob/main/LICENSE) |
+| instrumentation方法筛选 | [官方命令行测试文档](https://developer.android.com/studio/test/command-line) | 沿用AndroidX runner1.6.2/ext junit1.2.1，分别运行升级seed和verify；使用-w等待完成、-r输出原始runner协议以检查completion；[AndroidX Apache许可](https://github.com/android/android-test/blob/main/LICENSE) |
 | JSON边界夹具 | [JSONTokener](https://developer.android.com/reference/org/json/JSONTokener)、[JUnit4.13.2断言API](https://junit.org/junit4/javadoc/4.13.2/org/junit/Assert.html) | 合成合法记录，自写断言保护既有严格门禁；JUnit4[许可为EPL-1.0](https://github.com/junit-team/junit4/blob/r4.13.2/LICENSE-junit.txt)，属于已有测试依赖，不进入生产APK |
 | 版本规则 | [Android版本文档](https://developer.android.com/studio/publish/versioning) | 应用版本code1→2/name0.1.0→0.1.1，SQLite schema和备份version保持1 |
 
