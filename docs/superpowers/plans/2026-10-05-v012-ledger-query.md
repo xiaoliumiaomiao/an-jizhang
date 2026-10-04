@@ -65,7 +65,7 @@
 
 **Interfaces:** 消费已有 `Entry(id, kind, amountCents, category, date, note)`、`EntryKind.EXPENSE/INCOME`。输出 Global Constraints 中唯一 EntryFilter.apply 接口；无数据库、协程、UI 状态或新依赖。
 
-- [ ] **Step 1：写完整行为测试。** 新建 EntryFilterTest.kt，内容如下。
+- [x] **Step 1：写完整行为测试。** 新建 EntryFilterTest.kt，内容如下。
 
 ```kotlin
 package com.xiaoliumiaomiao.anjizhang
@@ -164,7 +164,7 @@ class EntryFilterTest {
 }
 ```
 
-- [ ] **Step 2：添加可编译的最小新接口，再记录行为 RED。** 新建 EntryFilter.kt。未接入 UI 的新接口先返回输入；这是新功能的起始实现，不改坏已有生产行为。
+- [x] **Step 2：添加可编译的最小新接口，再记录行为 RED。** 新建 EntryFilter.kt。未接入 UI 的新接口先返回输入；这是新功能的起始实现，不改坏已有生产行为。
 
 ```kotlin
 package com.xiaoliumiaomiao.anjizhang.domain
@@ -184,7 +184,7 @@ object EntryFilter {
 
 预期：编译成功，JUnit 行为失败，例如 selectedMonthIncludesBothEdgesAndExcludesAdjacentDays 的集合不相等、noMatchReturnsEmptyList 为 false。保留 build 日志和 `app/build/test-results/testDebugUnitTest/TEST-com.xiaoliumiaomiao.anjizhang.EntryFilterTest.xml` 到 `test-artifacts/sdd-v012/task1-red/`，主 agent 实读失败原因；若为编译/环境错误先修复测试，不能记作 RED。
 
-- [ ] **Step 3：将 apply 函数体替换为最小实现。**
+- [x] **Step 3：将 apply 函数体替换为最小实现。**
 
 ```kotlin
 fun apply(entries: List<Entry>, month: YearMonth, query: String = "", kind: EntryKind? = null): List<Entry> {
@@ -198,7 +198,7 @@ fun apply(entries: List<Entry>, month: YearMonth, query: String = "", kind: Entr
 }
 ```
 
-- [ ] **Step 4：运行新增测试及全 JVM。**
+- [x] **Step 4：运行新增测试及全 JVM。**
 
 ```powershell
 .\scripts\build.ps1 -Tasks ':app:testDebugUnitTest', '--tests', 'com.xiaoliumiaomiao.anjizhang.EntryFilterTest'
@@ -208,7 +208,7 @@ git diff --check
 
 预期新增 14 项通过，全量 50 项通过，0 失败/错误/跳过；读取 XML 确认实际计数，不把 UP-TO-DATE 说成重新执行。备份/数据库原测试不得删除。
 
-- [ ] **Step 5：独立规格审查，然后独立质量审查。** 原文交付 Global Constraints、此 Task、基线/当前 diff、RED/GREEN 日志路径。规格检查全部条件、稳定性和无修改；质量检查纯函数/无过度设计/测试可失败。阻塞问题修复、适量重跑并复审；主 agent 才提交。
+- [x] **Step 5：独立规格审查，然后独立质量审查。** 原文交付 Global Constraints、此 Task、基线/当前 diff、RED/GREEN 日志路径。规格检查全部条件、稳定性和无修改；质量检查纯函数/无过度设计/测试可失败。阻塞问题修复、适量重跑并复审；主 agent 才提交。
 
 主 agent 原子提交：
 
