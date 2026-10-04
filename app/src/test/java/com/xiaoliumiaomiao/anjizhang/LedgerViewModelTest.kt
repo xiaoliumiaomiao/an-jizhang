@@ -52,15 +52,47 @@ class LedgerViewModelTest {
             assertTrue(model.state.value.entries.isEmpty())
         } finally { outside.close() }
     }
+    @Test fun successfulSavePublishesUniqueCompletionForNewObserver() {
+        val valid = entry()
+        val operation = model.save(valid)
+        await { model.state.value.entries.size == 1 && !model.state.value.busy }
+        val completion = model.state.value.completedOperationId
+        assertEquals("成功操作ID必须保留在可观察状态，不能只通知旧闭包", operation, completion)
+    }
+    @Test fun deletePublishesDifferentCompletionAndFailedSaveCannotReuseOldSuccess() {
+        val valid = entry()
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        val failed = model.save(valid.copy(amountCents = 0))
+        await { model.state.value.error != null && !model.state.value.busy }
+        assertNotEquals(saved, failed)
+        assertEquals(saved, model.state.value.completedOperationId)
+        val deleted = model.delete(valid)
+        assertNotEquals(saved, deleted)
+        await { model.state.value.completedOperationId == deleted && !model.state.value.busy }
+        assertTrue(model.state.value.entries.isEmpty())
+    }
+    @Test fun malformedUtf8DoesNotMerge() {
+        model.restore { ByteArrayInputStream(byteArrayOf(0xC3.toByte(), 0x28)) }
+        await { model.state.value.error != null && !model.state.value.busy }
+        assertTrue(model.state.value.entries.isEmpty())
+    }
+    @Test fun failedOutputReportsErrorWithoutChangingLedger() {
+        val valid = entry()
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        model.export { object : java.io.OutputStream() { override fun write(value: Int) { throw java.io.IOException("输出失败") } } }
+        await { model.state.value.error?.contains("输出失败") == true && !model.state.value.busy }
+        assertEquals(listOf(valid), model.state.value.entries)
+    }
     @Test fun startsEmptyWithoutDemoData() { assertTrue(model.state.value.entries.isEmpty()); assertNull(model.state.value.error) }
     @Test fun failedSaveKeepsDataAndAllowsRetry() {
-        var success = false
-        model.save(entry(0)) { success = true }
+        val failedOperation = model.save(entry(0))
         await { model.state.value.error != null && !model.state.value.busy }
-        assertFalse(success); assertTrue(model.state.value.entries.isEmpty())
+        assertNotEquals(failedOperation, model.state.value.completedOperationId); assertTrue(model.state.value.entries.isEmpty())
         val valid = entry()
-        model.save(valid) { success = true }
-        await { success && !model.state.value.busy }
+        val savedOperation = model.save(valid)
+        await { model.state.value.completedOperationId == savedOperation && !model.state.value.busy }
         assertEquals(listOf(valid), model.state.value.entries); assertNull(model.state.value.error)
     }
     @Test fun exportAndDuplicateRestoreReportCounts() {

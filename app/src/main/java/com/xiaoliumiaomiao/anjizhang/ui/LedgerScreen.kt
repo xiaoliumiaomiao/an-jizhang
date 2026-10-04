@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaoliumiaomiao.anjizhang.data.BackupCodec
@@ -24,13 +25,22 @@ import java.time.YearMonth
     var editing by rememberSaveable { mutableStateOf(false) }
     var editingJson by rememberSaveable { mutableStateOf<String?>(null) }
     var deletingJson by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingSaveId by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingDeleteId by rememberSaveable { mutableStateOf<String?>(null) }
+    // A restored Composition consumes the matching result itself; ViewModel holds no UI closure.
+    LaunchedEffect(state.completedOperationId, pendingSaveId, pendingDeleteId) {
+        state.completedOperationId?.let { completed ->
+            if (completed == pendingSaveId) { editing = false; pendingSaveId = null }
+            if (completed == pendingDeleteId) { deletingJson = null; pendingDeleteId = null }
+        }
+    }
     val editingEntry = remember(editingJson) { editingJson?.let { BackupCodec.decode(it).single() } }
     val deletingEntry = remember(deletingJson) { deletingJson?.let { BackupCodec.decode(it).single() } }
     val summary = remember(state.entries, month) { MonthlySummary.calculate(state.entries, month) }
     Scaffold(topBar = {
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("安记账", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 8.dp))
-            Button(onClick = { editingJson = null; editing = true }, enabled = !state.busy) { Text("记一笔") }
+            Button(onClick = { pendingSaveId = null; editingJson = null; editing = true }, enabled = !state.busy) { Text("记一笔") }
         }
     }, bottomBar = {
         NavigationBar {
@@ -68,21 +78,21 @@ import java.time.YearMonth
                     if (entries.isEmpty()) item {
                         Column(Modifier.fillMaxWidth().padding(vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text("这个月还没有账目", style = MaterialTheme.typography.titleMedium)
-                            Button(onClick = { editingJson = null; editing = true }, enabled = !state.busy) { Text("记一笔") }
+                            Button(onClick = { pendingSaveId = null; editingJson = null; editing = true }, enabled = !state.busy) { Text("记一笔") }
                         }
                     }
                     items(entries, key = { it.id }) { entry ->
-                        Column(Modifier.fillMaxWidth().clickable(enabled = !state.busy) { editingJson = BackupCodec.encode(listOf(entry)); editing = true }.padding(vertical = 8.dp)) {
+                        Column(Modifier.fillMaxWidth().clickable(enabled = !state.busy) { pendingSaveId = null; editingJson = BackupCodec.encode(listOf(entry)); editing = true }.padding(vertical = 8.dp)) {
                             Text(entry.date.toString(), style = MaterialTheme.typography.labelLarge)
                             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Text(entry.category, style = MaterialTheme.typography.titleMedium)
-                                Text((if (entry.kind == EntryKind.EXPENSE) "-" else "+") + Money.format(entry.amountCents), style = MaterialTheme.typography.titleLarge, color = if (entry.kind == EntryKind.EXPENSE) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+                                Text((if (entry.kind == EntryKind.EXPENSE) "-" else "+") + Money.format(entry.amountCents), modifier = Modifier.weight(1f), textAlign = TextAlign.End, style = MaterialTheme.typography.titleLarge, color = if (entry.kind == EntryKind.EXPENSE) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
                             }
                             Text(if (entry.kind == EntryKind.EXPENSE) "支出" else "收入", style = MaterialTheme.typography.labelLarge)
                             if (entry.note.isNotEmpty()) Text(entry.note)
                             Row {
-                                TextButton(onClick = { editingJson = BackupCodec.encode(listOf(entry)); editing = true }, enabled = !state.busy) { Text("编辑") }
-                                TextButton(onClick = { deletingJson = BackupCodec.encode(listOf(entry)) }, enabled = !state.busy) { Text("删除") }
+                                TextButton(onClick = { pendingSaveId = null; editingJson = BackupCodec.encode(listOf(entry)); editing = true }, enabled = !state.busy) { Text("编辑") }
+                                TextButton(onClick = { pendingDeleteId = null; deletingJson = BackupCodec.encode(listOf(entry)) }, enabled = !state.busy) { Text("删除") }
                             }
                             HorizontalDivider()
                         }
@@ -110,8 +120,8 @@ import java.time.YearMonth
             }
         }
     }
-    if (editing) EntryEditor(editingEntry, state.busy, state.error, onDismiss = { editing = false }, onSave = { entry -> viewModel.save(entry) { editing = false } })
+    if (editing) EntryEditor(editingEntry, state.busy, state.error, onDismiss = { editing = false }, onSave = { entry -> pendingSaveId = viewModel.save(entry) })
     deletingEntry?.let { entry ->
-        AlertDialog(onDismissRequest = { if (!state.busy) deletingJson = null }, title = { Text("删除账目？") }, text = { Column { Text("${entry.date} ${entry.category} ${Money.format(entry.amountCents)}，删除后无法撤销。") ; state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) } } }, confirmButton = { TextButton(enabled = !state.busy, onClick = { viewModel.delete(entry) { deletingJson = null } }) { Text("确认删除") } }, dismissButton = { TextButton(enabled = !state.busy, onClick = { deletingJson = null }) { Text("取消") } })
+        AlertDialog(onDismissRequest = { if (!state.busy) deletingJson = null }, title = { Text("删除账目？") }, text = { Column { Text("${entry.date} ${entry.category} ${Money.format(entry.amountCents)}，删除后无法撤销。") ; state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) } } }, confirmButton = { TextButton(enabled = !state.busy, onClick = { pendingDeleteId = viewModel.delete(entry) }) { Text("确认删除") } }, dismissButton = { TextButton(enabled = !state.busy, onClick = { deletingJson = null }) { Text("取消") } })
     }
 }

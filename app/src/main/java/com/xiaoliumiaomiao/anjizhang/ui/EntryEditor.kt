@@ -32,7 +32,7 @@ import java.util.UUID
                 Text(if (entry == null) "记一笔" else "编辑账目", style = MaterialTheme.typography.headlineSmall)
                 Row {
                     listOf(EntryKind.EXPENSE to "支出", EntryKind.INCOME to "收入").forEach { (kind, label) ->
-                        FilterChip(selected = kindName == kind.name, onClick = { kindName = kind.name; category = if (kind == EntryKind.EXPENSE) "餐饮" else "工资" }, label = { Text(label) }, modifier = Modifier.padding(end = 8.dp).heightIn(min = 48.dp))
+                        FilterChip(selected = kindName == kind.name, onClick = { if (kindName != kind.name) { kindName = kind.name; category = if (kind == EntryKind.EXPENSE) "餐饮" else "工资" } }, label = { Text(label) }, modifier = Modifier.padding(end = 8.dp).heightIn(min = 48.dp))
                     }
                 }
                 OutlinedTextField(amount, { amount = it }, label = { Text("金额（元）") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())

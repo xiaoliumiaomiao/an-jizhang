@@ -12,11 +12,12 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.UUID
 import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
 
 data class LedgerUiState(val entries: List<Entry> = emptyList(), val busy: Boolean = false,
-    val error: String? = null, val message: String? = null)
+    val error: String? = null, val message: String? = null, val completedOperationId: String? = null)
 
 class LedgerViewModel(application: Application) : AndroidViewModel(application) {
     private val mutable = MutableStateFlow(LedgerUiState(busy = true))
@@ -25,15 +26,14 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
     private var database: LedgerDatabase? = null
     private fun db(): LedgerDatabase = database ?: LedgerDatabase(getApplication()).also { database = it }
     init { load() }
-    private fun work(action: suspend () -> String?, onSuccess: () -> Unit = {}) {
+    private fun work(action: suspend () -> String?, operationId: String? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             lock.withLock {
                 mutable.update { it.copy(busy = true, error = null, message = null) }
                 try {
                     val message = action()
                     val entries = db().listEntries()
-                    mutable.update { it.copy(entries = entries, message = message) }
-                    withContext(Dispatchers.Main) { onSuccess() }
+                    mutable.update { it.copy(entries = entries, message = message, completedOperationId = operationId ?: it.completedOperationId) }
                 } catch (cancelled: CancellationException) { throw cancelled
                 } catch (failure: Exception) {
                     mutable.update { it.copy(error = "操作失败：${failure.message ?: "请重试"}。原有账目未被替换。") }
@@ -42,8 +42,12 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
     fun load() = work({ null })
-    fun save(entry: Entry, onSuccess: () -> Unit = {}) = work({ db().save(entry); "已保存" }, onSuccess)
-    fun delete(entry: Entry, onSuccess: () -> Unit = {}) = work({ db().delete(entry.id); "已删除" }, onSuccess)
+    fun save(entry: Entry): String = UUID.randomUUID().toString().also { operationId ->
+        work({ db().save(entry); "已保存" }, operationId)
+    }
+    fun delete(entry: Entry): String = UUID.randomUUID().toString().also { operationId ->
+        work({ db().delete(entry.id); "已删除" }, operationId)
+    }
     fun export(open: () -> OutputStream?) = work({
         val bytes = BackupCodec.encode(db().listEntries()).toByteArray(Charsets.UTF_8)
         (open() ?: error("无法打开备份位置")).use { it.write(bytes) }
