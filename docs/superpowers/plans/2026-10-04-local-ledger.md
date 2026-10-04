@@ -87,4 +87,4 @@
 - [x] Step 2: `git diff --check`；APK使用aapt分析无INTERNET权限且apksigner verify成功。复制生成APK到output，不覆盖已有同名异哈希文件；Get-FileHash记录SHA256。
 - [x] Step 3: 如无本机模拟器可用，配置GitHub Actions的Android模拟器instrumentation smoke测试并保留报告；无法运行时如实记录，不伪造通过。最终37191001385实际6项/0失败/0错误/0跳过。
 - [x] Step 4: 写清楚一条构建路径（项目工具路径+scripts/build.ps1）、每步成功信号、失败处理、回退界限；手机验收先安装测试APK，然后新增一笔0.01元支出，作者检查界面及金额；后续勾选验收表。
-- [ ] Step 5: 提交并推送feature分支/建立可审查PR，attach PR；作者验收记录保持pending。核验GitHub private、远端HEAD、工作区状态并交付。
+- [x] Step 5: 提交并推送feature分支/建立可审查PR，attach PR；作者验收记录保持pending。核验GitHub private、远端HEAD、工作区状态并交付。文档提交0f2b0cd已推送，实读private=true、PR已附、本机/远端HEAD一致且工作区干净；本步骤仅记录既有完成证据。

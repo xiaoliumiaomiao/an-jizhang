@@ -99,3 +99,5 @@ JVM/模拟器不能代替作者手机验收。真实系统文件选择器、手�
 ## 版本控制交付
 
 私有仓库的功能分支为feat/local-ledger-v1；[PR #1](https://github.com/xiaoliumiaomiao/an-jizhang/pull/1)保留为测试交付草稿，作者手机验收未执行。最终文档仅补充证据，不修改已验证的应用实现。
+
+交付文档提交`0f2b0cd61c7af25e676f6385dede2f57f5bee7f0`已成功推送。随后实读GitHub isPrivate=true、PR draft=true，PR附件存在；git ls-remote与本机HEAD均为该提交，git status --short为空。最后仅补记本同步结果与计划勾选，不改变已通过CI的代码；此文档收尾提交后再次核验远端一致与工作区干净。

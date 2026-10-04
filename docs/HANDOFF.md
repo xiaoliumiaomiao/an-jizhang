@@ -19,6 +19,7 @@
 - 最终APK：output/an-jizhang-0.1.0-debug.apk；SHA256SUMS.txt记录校验值。无联网/广泛存储权限，关闭自动备份，apksigner验证v2签名有效，随包许可与源码逐文件匹配。
 - 最终[CI 37191001385](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37191001385)两项job均success，实际XML为30项JVM及6项Android15/API35设备测试全部通过，0失败/0错误/0跳过；lint0错误/9提示。保存/删除在运行中Activity重建、同VM、失败保留输入及旧结果隔离均通过。主agent实读结果与日志并查看成功启动后的中文首页截图，证据在VALIDATION.md。
 - 应用及本机APK来源811e7bf；其后仅CI或设备夹具变更，最终测试提交c02c1ea9aa6a269de5742cacee236e26af46d717，未改应用实现。测试就绪、真实滚动、键盘隐藏及提交等待修复保留全部6项、10秒和业务断言，独立增量复审均无阻塞项。[草稿PR #1](https://github.com/xiaoliumiaomiao/an-jizhang/pull/1)已创建并附到本任务；作者手机验收保持pending。
+- 交付文档0f2b0cd已推送并实读确认private=true、本机/远端HEAD一致、工作区干净。开发计划的技术交付步骤已完成；最后的文档收尾仅记录同步证据，作者手机验收仍是下一步。
 
 ## 验收与边界
 
