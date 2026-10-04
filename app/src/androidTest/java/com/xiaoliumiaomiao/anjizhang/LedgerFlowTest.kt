@@ -35,9 +35,28 @@ class LedgerFlowTest {
     @Test fun detailCancelPreservesQueryAndDoesNotLeakDraftIntoAnotherEntry(){
         ready()
         compose.onNodeWithTag("ledger-list").assertIsDisplayed();captureLedgerScreen("ledger")
+        val ledger=compose.onNodeWithTag("ledger-list")
+        val lastRow=hasTestTag("entry-${first.id}")
+        ledger.performScrollToNode(lastRow)
+        // Reach the real end padding rather than accepting a row partly under the floating action.
+        ledger.performTouchInput { swipeUp() }
+        val viewport=ledger.getBoundsInRoot()
+        val fab=compose.onNodeWithTag("add-entry").assertIsDisplayed().getUnclippedBoundsInRoot()
+        listOf("-"+Money.format(first.amountCents),first.category,first.note).forEach { text->
+            val lastText=compose.onNode(hasText(text) and hasAnyAncestor(lastRow),useUnmergedTree=true)
+            lastText.assertIsDisplayed()
+            val bounds=lastText.getUnclippedBoundsInRoot()
+            assertTrue("Last entry text $text must fit fully in the visible list: $bounds / $viewport",
+                bounds.left>=viewport.left && bounds.top>=viewport.top &&
+                    bounds.right<=viewport.right && bounds.bottom<=viewport.bottom)
+            assertFalse("Last entry text $text overlaps the add-entry action: $bounds / $fab",
+                bounds.left<fab.right && bounds.right>fab.left &&
+                    bounds.top<fab.bottom && bounds.bottom>fab.top)
+        }
+        captureLedgerScreen("ledger-last-entry")
         reveal("ledger-list","搜索分类或备注").performTextReplacement("不存在的合成关键词")
         compose.closeKeyboard();reveal("ledger-list","没有符合条件的账目");captureLedgerScreen("no-matches")
-        reveal("ledger-list","搜索分类或备注").performTextReplacement(" 匹配词 ");compose.closeKeyboard()
+        reveal("ledger-list","搜索分类或备注").performClick().performTextReplacement(" 匹配词 ");compose.closeKeyboard()
         reveal("ledger-list","仅支出").performClick();open(first)
         captureLedgerScreen("detail")
         compose.onNodeWithText("编辑").performScrollTo().performClick()

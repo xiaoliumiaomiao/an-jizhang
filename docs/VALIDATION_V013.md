@@ -32,4 +32,8 @@ owner 最小修复只增加两生产文件7行；完整本机 `build-20261005-03
 
 ## 待完成门禁
 
-测试工具修复复审和重新运行真实新 UI、恢复及窄屏 CI；8 张原生合成截图；固定 0.1.2/code3 → 0.1.3/code4 的同证书替换、seed/verify 原始 runner、安装与启动；精确最终候选 APK 的新文件复制和旧文件哈希保留；私有 draft PR、最终三方 HEAD 同步及作者手机验收。尚不声称技术交付或作者验收完成。
+两测试工具修正已编译并独立 Spec/Quality Approved，Critical0、Important0；候选受测代码 `45e2cf95105bfa7fe8cbb49d6ec471cfcca8c87e`，包含 owner 与工具修复。[运行37229801074](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37229801074) 已完成但整体失败：55 JVM 通过，lint0错误/9提示，connected16/1失败/0错误/0跳过。原10、Recovery2、LargeText1及Flow另外2例全部通过；删除恢复的F1行为已取得GREEN，保存恢复本次首次实际通过。唯一失败是Flow第二次替换搜索词后等待IME出现超10秒，发生在详情截图之前；7张原生PNG已取回，详情图缺失，升级链未执行。
+
+原logcat显示第一次用户Back已关闭IME，第二次替换仍聚焦输入框内容没有触发重新显示；只在第二次输入前增加真实点击，保持helper、10秒等待和业务断言。测试APK编译10秒成功，40个其他保护文件及生产APK哈希未变，独立Spec/Quality Approved，C0/I0；真实GREEN尚待下一CI。七张图片的部分视觉审查发现明细初屏最后一条餐饮金额被FAB覆盖；当前末尾padding可能允许滚动查看，需补实际滚动、金额与FAB不重叠的几何断言及第9张`ledger-last-entry.png`，不能凭静态padding关闭该观测。 末行补证测试现已编译成功（build-20261005-041609.log，10秒），40保护文件和生产APK不变；只完成测试准备，实际几何断言及第9图仍待CI。
+
+重新运行真实新 UI、恢复及窄屏 CI；9 张原生合成截图（含最后一行滚动证据）；固定 0.1.2/code3 → 0.1.3/code4 的同证书替换、seed/verify 原始 runner、安装与启动；精确最终候选 APK 的新文件复制和旧文件哈希保留；私有 draft PR、最终三方 HEAD 同步及作者手机验收。尚不声称技术交付或作者验收完成。

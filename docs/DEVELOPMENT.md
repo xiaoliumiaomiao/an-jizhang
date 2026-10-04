@@ -48,7 +48,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -JavaHom
   -Pandroid.testInstrumentationRunnerArguments.notClass=com.xiaoliumiaomiao.anjizhang.LedgerUpgradeTest --no-daemon
 ```
 
-connected 包含原 Smoke6/Query4、Flow3、LargeText1、Recovery2；实际执行数和结果以本轮 XML 为准。Recovery 模拟保存的 Compose UI 状态加新 VM，并未实际杀 Android 进程。原始证据和八张合成截图由 workflow 上传，CI job success 还须结合 runner、XML 与图片审查。
+connected 包含原 Smoke6/Query4、Flow3、LargeText1、Recovery2；实际执行数和结果以本轮 XML 为准。Recovery 模拟保存的 Compose UI 状态加新 VM，并未实际杀 Android 进程。原始证据和九张合成截图由 workflow 上传（含最后行滚动可见性），CI job success 还须结合 runner、XML 与图片审查。
 
 升级基线固定已验收 `ff8479f75cd917bc49e5ab2173ad7e9906dc480c`，在 `baseline-v012` 构建 0.1.2/code3。connected 结束后，同一 job 的 debug 证书执行旧版 seed → 新版 0.1.3/code4 `install -r` → verify → 正常启动；中间不清库、卸载、再次 connected、重 seed 或降级。作者使用本机同旧签名包覆盖，CI 包仅供独立技术验证。
 

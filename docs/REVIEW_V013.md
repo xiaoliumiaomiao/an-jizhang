@@ -14,7 +14,13 @@
 | 最终全源码 d375cdc | Needs revision，Critical 0、Important 1：F1，新 VM 恢复已保存 pending ID 时缺少执行者，可能永久锁定 |
 | Recovery 两个测试的准备 | Spec / Quality Approved，Critical 0、Important 0；真实 queued Job、新 VM 和保存的 Compose UI 状态、同 ID / sentinel DB 断言。只完成编译，不是真实进程 kill 或仪器 GREEN |
 | F1 owner 最小修复增量 | Source Spec / Quality Approved，Critical 0、Important 0；两文件7行、39保护文件未变，实读55 JVM及新候选APK。F1静态闭合，实际恢复与交付仍待 |
+| 截图工具与恢复选择器修正 | Spec / Quality Approved，Critical 0、Important 0；两 AndroidTest 文件限定改动、39保护文件未变、11秒编译成功。保留CI-only guard、真实字节后置检查和全部业务断言，等待CI实际GREEN |
+| 第二次搜索输入的真实点击 | Spec / Quality Approved，Critical 0、Important 0；一行测试动作修正，40保护文件与生产APK未变，10秒编译通过。独立实读IME show→用户Back→hide→无新show的原日志；保留helper/等待/全部业务断言，待真实GREEN |
+| 候选七张图片部分视觉检查 | 详情图缺失，完整视觉未批准；发现明细初屏最后一条金额被FAB覆盖，需实际滚动可见性证据。正常/窄屏Editor操作可见，不替代作者自然验收 |
+| 末行滚动与完整文字几何补证测试 | Spec / Quality Approved，Critical 0、Important 0；19行限定补证、pinned API统一Dp、完整文字在可视视口且与FAB不相交；40保护文件和生产APK不变，编译10秒成功，真实几何和第9图仍待CI |
 
 F1 的最小处理为 VM 实例身份与 root 保存的 pendingOwner；恢复到不同 VM 时仅清旧提交锁，保存草稿和浏览上下文，同 VM 旋转继续保护在途操作。完整本机构建和源码增量已独立批准。检查点CI37228768041实际原10 UI通过，删除恢复在disabled处取得真实F1 RED；保存恢复在文字选择器歧义处提前失败，4个Flow/窄屏用例在截图工具处提前失败。两个测试工具修正的独立复审与真实GREEN、最终UI/升级/原生截图、最终APK/私有PR及同步证据仍待，当前不批准交付或合main。
+
+候选CI37229801074实际16/1失败，原10、Recovery2、LargeText1、Flow2均通过；唯一Flow第二次搜索输入键盘准备失败，详情缺图、升级未执行。上述真实点击已通过独立审查，下一次CI加最后行滚动及金额不被FAB遮挡的断言/第9图；当前不批准完整交付或合main。
 
 实际验证及边界见 [VALIDATION_V013](VALIDATION_V013.md)，作者手机表 [PHONE_ACCEPTANCE_V013](PHONE_ACCEPTANCE_V013.md) 保持未勾。
