@@ -71,7 +71,7 @@ install_apk() {
 }
 run_method() {
   local method=$1 phase=$2 output="$artifacts/$2-instrumentation.txt"
-  timeout 120s adb -s "$serial" shell am instrument -w \
+  timeout 120s adb -s "$serial" shell am instrument -w -r \
     -e class "$app.LedgerUpgradeTest#$method" \
     "$test_package/androidx.test.runner.AndroidJUnitRunner" 2>&1 | tee "$artifacts/$phase-instrumentation-raw.txt"
   tr -d '\r' < "$artifacts/$phase-instrumentation-raw.txt" > "$output"
