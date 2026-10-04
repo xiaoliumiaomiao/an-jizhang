@@ -2,7 +2,7 @@
 
 当前仓库使用功能分支开发，账本、工具、缓存、APK及签名密钥不会提交Git。先读 agent.md、REQUIREMENTS.md、HANDOFF.md。
 
-0.1.2/code3 已由作者确认通过并合入 main。当前功能分支 `feat/ledger-ui-v0.1.3` 制作 0.1.3/code4：明细/统计/设置、日期分组、详情和全屏编辑；schema1、备份 format1、依赖及权限保持原样。本轮技术验证进行中，实际进度见 [VALIDATION_V013](VALIDATION_V013.md)，技术测试不能替代 [本轮手机验收](PHONE_ACCEPTANCE_V013.md)。
+0.1.2/code3 已由作者确认通过并合入 main。当前功能分支 `feat/ledger-ui-v0.1.3` 制作 0.1.3/code4：明细/统计/设置、日期分组、详情和全屏编辑；schema1、备份 format1、依赖及权限保持原样。[最终CI37236054231](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37236054231)实际55 JVM、16 UI及旧版seed/新版verify全部通过，lint0错误/9提示；实际交付与审查见 [VALIDATION_V013](VALIDATION_V013.md)，技术测试不能替代 [本轮手机验收](PHONE_ACCEPTANCE_V013.md)。
 
 ## 这台 Windows 的一条构建路径
 

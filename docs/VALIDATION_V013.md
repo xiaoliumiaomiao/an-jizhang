@@ -1,16 +1,27 @@
 # 0.1.3 验证记录
 
-状态：技术验证进行中，作者手机验收待执行。以下只记录已经产生的证据，不将旧版验收或编译成功当成本轮设备通过。
+状态：完整CI、九图独立视觉/运行审查及交付复制已完成；最终技术交付独立审查进行中，作者手机十三项待验收。
 
-最新冻结受测代码：`086caba8699a64d67cd393f7da5901f5875bac31`，[CI37234298023](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37234298023)已完成 success；55 JVM与16设备测试均0失败/错误/跳过，原50/10名称全部保留，lint0错误/9提示。最后一处数据库失败保存测试本次完整通过。下面旧候选中的“待”是对应当时的状态。
+最终受测代码 `fb9ffd89d81e51c04716b86319416f900ad4e564` 的 [CI37236054231](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37236054231)已 completed / success，两job均成功。ROOT实读本次XML：55 JVM、16 UI全部0失败/错误/跳过，原50 JVM与Smoke6/Query4逐名保留；lint0错误/9既有提示。三次先前失败的Flow返回、非法金额及数据库失败保存用例本次均实际通过。Recovery2为保存Compose状态加新VM的模拟，不是Android进程kill实测。
+
+ROOT直接实读本次seed/verify原始runner：各唯一`OK (1 test)`、唯一`INSTRUMENTATION_CODE: -1`、无失败标记；baseline/current/test公开证书均为`461437ab0fe0e5ff1febbdea491072e5435334fdbd67912c591f229eeaf1a970`。实际旧包0.1.2/code3、新包0.1.3/code4；三次安装Success、启动Status:ok、exit0。固定ff8479f旧seed → install-r新版 → 只读verify两次重开，保留schema1、三笔全部字段、1分、中文引号换行及9/10月统计；中途无清库、卸载、重seed、再次connected或降级。原始证据位于ignored `test-artifacts/ci-v013-final-37236054231/`。
+
+本次pull.log实际9 files pulled、0 skipped。ROOT及独立审查者逐张查看九张UI原生PNG和升级首页；`final-frame-nine-screens-runtime-review.md`为Visual / Runtime Approved，Critical0、Important0。statistics.png本次确为月统计（支出69.12、交通56.78、餐饮12.34，统计选中），settings随后正确；旧统计旧帧I1仅对本次候选关闭，历史错误图和报告保留。正常字号末行金额/分类/备注完整视口及不与FAB相交的几何断言、实际滚动图均通过。初屏FAB可遮挡低处行金额的观察仍保留；不声称每种字体/手机初屏均无遮挡。窄屏font2实际用例通过；两图中的最大合法金额与先前零值错误提示并存，错误在重试前保留，不据此声称最大金额保存失败。
+
+本机最终生产APK为9559162字节，SHA256 `450d48c0bb1aaf429a50d6b9fc30cc6482c46fec4be841c16b81b0ea22134d0a`，0.1.3/code4、min26/target35。公开本机证书`209fe650f40d48d32167be84b0d59576ecc3fc90c3af4169fc811a13e700109d`与旧本机0.1.2相同；v2签名有效，无联网/广泛存储权限，自动备份全域排除，三份完整许可与源码一致。审计位于ignored `apk-audit-owner/`；随后只有AndroidTest和文档调整，生产APK哈希未变。CI证书与作者本机证书分别记录。
+
+已顺序执行独立批准的`copy-owner-reviewed-apk.ps1`和准确pin本CI的`copy-reviewed-screens.ps1`，均exit0。工作区与`D:/AIproject/an-jizhang/output`各交付新APK、新`SHA256SUMS-v0.1.3.txt`及九张原图；两APK哈希一致，18张图与来源字节哈希一致。五个旧APK哈希不变，旧SHA256SUMS.txt前缀原字节保留且新增校验行唯一。有界primitive记录在ignored `apk-delivery.json` / `screen-delivery.json`，没有序列化FileInfo元数据。私有draft [PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)已创建并附到任务；最终HEAD同步与全交付审查另记录，不把草稿当成作者验收。
+
+## 历史统计截图候选与修正
+历史已完成实测候选：`086caba8699a64d67cd393f7da5901f5875bac31`，[CI37234298023](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37234298023)已完成 success；55 JVM与16设备测试均0失败/错误/跳过，原50/10名称全部保留，lint0错误/9提示。最后一处数据库失败保存测试本次完整通过。下面旧候选中的“待”是对应当时的状态。
 
 本轮首次实际完成同CI证书的0.1.2/code3→0.1.3/code4覆盖升级：ROOT实读seed/verify原始runner各唯一OK(1 test)、唯一INSTRUMENTATION_CODE:-1、无失败标记；三包公开证书98756a4ce45b13c7d3d10f46368254538fde254bd4703f20ae96bf45e06510cb相同，实际版本/安装Success/启动Status:ok/exit0均核实。三条记录的所有字段、schema1、1分、中文引号换行和跨月统计在两次reopen中保留，脚本原顺序无中途清库、卸载或重seed；正常中文升级首页已ROOT查看。原始证据位于ignored test-artifacts/ci-v013-final-37234298023/。
 
-九个原生PNG确实全部pull，ROOT逐张及升级图查看，但发现视觉I1：statistics.png实际为切页前的设置画面，统计nav仍呈触摸态；不能将九个文件称为九个目标页面齐。独立视觉审查同样确认。其余八图与正常字号末行完整几何断言已取得实证；初屏FAB遮挡历史观察保留。当前未复制新APK/截图或创建本轮PR，FullDelivery仍待正确统计原生帧证据。下一步只诊断并修正测试截图同步，不改生产界面或业务断言；真实重新验证后再交付。
+九个原生PNG确实全部pull，ROOT逐张及升级图查看，但发现视觉I1：statistics.png实际为切页前的设置画面，统计nav仍呈触摸态；不能将九个文件称为九个目标页面齐。独立视觉审查同样确认。其余八图与正常字号末行完整几何断言已取得实证；初屏FAB遮挡历史观察保留。当时未复制新APK/截图或创建本轮PR，FullDelivery仍待正确统计原生帧证据。下一步只诊断并修正测试截图同步，不改生产界面或业务断言；真实重新验证后再交付。
 
 截图同步准备仅修改两个AndroidTest文件：guard后以公开WindowInspector选唯一实际attached/shown/focused硬件根窗，主线程注册frame commit并invalidate，测试线程最多10秒等待真实回调，finally注销，再执行一次原生全屏截图。统一覆盖九次调用，包括实际Dialog根窗；不固定使用后台Activity。统计调用保留列表显示断言并增加选中标签、月统计和支出分类。固定Compose1.8与Android15官方源码已核实；frame commit只承诺渲染提交，不承诺已经显示，最终原图必须复看。无sleep、隐藏API、裁切、重拍挑图或生产改动。
 
-本机本项共两次AndroidTest编译均12秒成功：首次窄范围版本build-20261005-052149.log，在ROOT澄清统一九次范围前已开始；最终版本build-20261005-052238.log。两原记录分别保留，首次不充当最终源码验证。最终39保护源码与9559162字节的450d48c0…生产APK未变；最能力独立源码增量Spec / Quality Approved，Critical0、Important0，真实新CI图像仍待。
+本机本项共两次AndroidTest编译均12秒成功：首次窄范围版本build-20261005-052149.log，在ROOT澄清统一九次范围前已开始；最终版本build-20261005-052238.log。两原记录分别保留，首次不充当最终源码验证。最终39保护源码与9559162字节的450d48c0…生产APK未变；最能力独立源码增量Spec / Quality Approved，Critical0、Important0，当时真实新CI图像仍待。
 
 ## 范围与基线
 
@@ -38,11 +49,11 @@
 
 截图工具根因按 [Android15 AOSP UiAutomationConnection](https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android-15.0.0_r1/core/java/android/app/UiAutomationConnection.java) 核实：`executeShellCommand` 调用 `Runtime.exec(String)`，不会解析 shell 操作符。修正为顺序执行单程序 mkdir/cp/stat、验证目标真实字节数；保存恢复选择器限定可选择的类型节点，保留显示、选中、enabled、数据库和10秒断言。测试工具修复后重新执行，不以重跑到绿反推前次通过。
 
-owner 最小修复只增加两生产文件7行；完整本机 `build-20261005-033516.log` 实际55/0/0/0、lint0错误/9既有提示，应用和测试 APK 成功，39个其他源码/测试文件哈希不变。独立源码增量 Spec/Quality Approved，Critical0、Important0；F1 静态路径闭合，实际新 UI/恢复 GREEN 尚待。当前本机候选 APK 为 9559162 字节、SHA256 `450d48c0bb1aaf429a50d6b9fc30cc6482c46fec4be841c16b81b0ea22134d0a`，公开证书与旧包相同、权限及原完整许可已重审计；尚未复制交付。
+owner 最小修复只增加两生产文件7行；完整本机 `build-20261005-033516.log` 实际55/0/0/0、lint0错误/9既有提示，应用和测试 APK 成功，39个其他源码/测试文件哈希不变。独立源码增量 Spec/Quality Approved，Critical0、Important0；F1 静态路径闭合，实际新 UI/恢复 GREEN 尚待。当时本机候选 APK 为 9559162 字节、SHA256 `450d48c0bb1aaf429a50d6b9fc30cc6482c46fec4be841c16b81b0ea22134d0a`，公开证书与旧包相同、权限及原完整许可已重审计；当时尚未复制交付。
 
-## 待完成门禁
+## 历史候选失败与修正
 
-最新候选为 `14796f3aae611a0df3798f432fd36bc4115b1f22`；两测试原生事件同步已获独立审查后推送，[CI37232888471](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37232888471)已完成但整体失败。ROOT实读55 JVM/0失败错误跳过、lint0E9W；connected16/1失败/0错误/0跳过，原50/10名称全部保留，9张原生PNG全部取回。前两失败（Flow详情返回和非法金额1分重试）本次均完整通过；恢复、窄屏等其余14项中的13项也通过，尚不称全部设备GREEN。
+当时候选为 `14796f3aae611a0df3798f432fd36bc4115b1f22`；两测试原生事件同步已获独立审查后推送，[CI37232888471](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37232888471)已完成但整体失败。ROOT实读55 JVM/0失败错误跳过、lint0E9W；connected16/1失败/0错误/0跳过，原50/10名称全部保留，9张原生PNG全部取回。前两失败（Flow详情返回和非法金额1分重试）本次均完整通过；恢复、窄屏等其余14项中的13项也通过，尚不称全部设备GREEN。
 
 唯一失败为原Smoke `databaseSaveFailureAfterRecreationKeepsEditorInputs` 在`awaitSubmitted`（Smoke:185）等待新活动Job超10000ms。既有失败诊断明确`NOT submitted`、jobs0、busyfalse/errornull，尚未执行Activity重建或断言SQL失败；不能说数据库失败恢复已在本轮通过或生产DB失败被修复。此方法金额输入后缺少原生收键盘，成功queued save/delete方法已使用该步骤。下一步只补该用例真实点击输入、原10秒收键盘、保存按钮可见可用，完整保留故障表、真实提交、锁、同VM重建和输入/失败提示断言；准备后编译与独立审查，再真实CI。升级链此次仍未执行，最终交付仍待。下列候选失败均保留为历史实证，不反推此前通过。
 
@@ -59,3 +70,9 @@ Flow case原logcat显示取消Dialog后Back发向已无input channel的旧Dialog
 原logcat显示第一次用户Back已关闭IME，第二次替换仍聚焦输入框内容没有触发重新显示；只在第二次输入前增加真实点击，保持helper、10秒等待和业务断言。测试APK编译10秒成功，40个其他保护文件及生产APK哈希未变，独立Spec/Quality Approved，C0/I0；真实GREEN尚待下一CI。七张图片的部分视觉审查发现明细初屏最后一条餐饮金额被FAB覆盖；当前末尾padding可能允许滚动查看，需补实际滚动、金额与FAB不重叠的几何断言及第9张`ledger-last-entry.png`，不能凭静态padding关闭该观测。 末行补证测试现已编译成功（build-20261005-041609.log，10秒），40保护文件和生产APK不变；只完成测试准备，实际几何断言及第9图仍待CI。
 
 两个原生事件同步修正现已独立Spec / Quality Approved，Critical0、Important0。重新运行真实新 UI、恢复及窄屏 CI；核对同次9张原生合成截图（含最后一行滚动证据）；固定 0.1.2/code3 → 0.1.3/code4 的同证书替换、seed/verify 原始 runner、安装与启动；精确最终候选 APK 的新文件复制和旧文件哈希保留；私有 draft PR、最终三方 HEAD 同步及作者手机验收。尚不声称技术交付或作者验收完成。
+
+## 最终交付边界
+
+上述历史段落中的“待”均对应当时检查点；当前完整运行、视觉和实物见文首，最终独立全交付与同步记录将据实际结果补充。受测fb9ffd之后的收尾提交只允许正式文档变化，推送后逐一核验local/remote/PR HEAD、PRIVATE、OPEN/draft、clean与main仍ff8479f。
+
+PHONE_ACCEPTANCE_V013.md十三项全部未勾，手机型号/Android版本未提供。作者先在0.1.2导出备份，再用本机同签名0.1.3正常覆盖安装；异常保留原应用与账本，不卸载、清库或强降级。作者确认本轮前不合main或正式发布。

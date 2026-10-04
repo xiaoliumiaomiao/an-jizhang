@@ -1,6 +1,6 @@
 # 安记账
 
-中文安卓本地记账软件，当前候选0.1.3，支持Android8.0及以上。0.1.0、0.1.1和0.1.2均已由作者确认验收通过；0.1.3界面与功能拓扑重构正在完成技术验证，手机验收尚待。
+中文安卓本地记账软件，当前候选0.1.3，支持Android8.0及以上。0.1.0、0.1.1和0.1.2均已由作者确认验收通过；0.1.3界面与功能拓扑重构已通过完整CI，正在完成交付审查，手机验收尚待。
 
 - 收入/支出新增、编辑、确认删除，内置与自定义分类、日期、备注。
 - 月份切换、收入/支出/结余、支出分类统计。金额始终使用整数分。
@@ -15,21 +15,21 @@
 
 依据成熟软件官方公开资料重组入口，来源、年代/平台限制及采用范围见 [REUSE_V013](docs/REUSE_V013.md)。沿用固定 AndroidX/Material3 与既有 MIT 片段，布局和图标用项目代码实现，schema1、备份format1、整数分及依赖/权限保持原样。
 
-候选代码 `086caba8699a64d67cd393f7da5901f5875bac31` 的 [CI37234298023](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37234298023)已完整通过：55单元/16设备/旧版seed及新版verify均无失败、错误或跳过，lint0错误/9提示，覆盖升级字段和跨月统计保留。九图实际取回，但统计图抓到切页前设置画面，正在补测试截图绘制同步；完整技术交付审查仍待。[验证](docs/VALIDATION_V013.md)、[审查](docs/REVIEW_V013.md)、[本轮手机表](docs/PHONE_ACCEPTANCE_V013.md)。作者确认本轮前保持main为已验收0.1.2，不合并或正式发布。
+受测代码 `fb9ffd89d81e51c04716b86319416f900ad4e564` 的 [最终CI37236054231](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37236054231)已完整通过：55单元/16设备/旧版seed及新版verify均无失败、错误或跳过，lint0错误/9提示；同证书0.1.2→0.1.3覆盖升级保留全部字段及跨月统计。九张原生场景截图已取回并由ROOT逐张查看，统计页旧帧问题已取得正确新图；独立视觉及完整技术交付审查单独记录。[验证](docs/VALIDATION_V013.md)、[审查](docs/REVIEW_V013.md)、[本轮手机表](docs/PHONE_ACCEPTANCE_V013.md)。私有草稿[PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)已附到任务；作者确认本轮前保持main为已验收0.1.2，不合并或正式发布。
 
 ## 0.1.2 已验收迭代
 
 源码已增加所选月分类或备注的字面关键词搜索，可组合全部类型、仅收入、仅支出，并一键清除两个条件。导航、切月和Activity重建保留查询输入及类型；筛选只影响账目列表，月统计和整本导出继续使用完整数据。源码版本为0.1.2/code3，数据库schema1、备份format1、依赖和权限保持原样。
 
-新增14项纯逻辑与四项真实UI测试均有有效RED/GREEN，原六项回归保留。[最终CI37220141121](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37220141121)在0076b6b代码上实际50 JVM、10 UI及旧版seed/新版verify全部通过，真实0.1.1→0.1.2替换保留完整账目与跨月统计。本机APK签名/权限/完整许可及两处复制哈希已核验；私有草稿[PR #3](https://github.com/xiaoliumiaomiao/an-jizhang/pull/3)已创建并同步，源码及最终技术交付独立审查已通过。详见[本轮验证](docs/VALIDATION_V012.md)、[独立审查](docs/REVIEW_V012.md)和[手机验收表](docs/PHONE_ACCEPTANCE_V012.md)。
+新增14项纯逻辑与四项真实UI测试均有有效RED/GREEN，原六项回归保留。[最终CI37220141121](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37220141121)在0076b6b代码上实际50 JVM、10 UI及旧版seed/新版verify全部通过，真实0.1.1→0.1.2替换保留完整账目与跨月统计。本机APK签名/权限/完整许可及两处复制哈希已核验；[PR #3](https://github.com/xiaoliumiaomiao/an-jizhang/pull/3)已在作者验收后合并，源码及最终技术交付独立审查已通过。详见[本轮验证](docs/VALIDATION_V012.md)、[独立审查](docs/REVIEW_V012.md)和[手机验收表](docs/PHONE_ACCEPTANCE_V012.md)。
 
 ## 安装与验证
 
-本机debug测试APK为 `output/an-jizhang-0.1.2-debug.apk`，校验值在 `output/SHA256SUMS.txt`；原0.1.0/0.1.1包保留。新旧本机包已实际确认签名证书相同。也可以在[GitHub Actions](https://github.com/xiaoliumiaomiao/an-jizhang/actions)的成功运行中下载`android-build`产物用于独立验证；不同机器和不同CI运行可能使用不同签名，不能保证互相覆盖作者已安装的应用。
+本机debug测试APK交付文件为 `output/an-jizhang-0.1.3-debug.apk`，校验值在 `output/SHA256SUMS-v0.1.3.txt`；原0.1.0/0.1.1/0.1.2包保留。新旧本机包已实际确认签名证书相同。也可以在[GitHub Actions](https://github.com/xiaoliumiaomiao/an-jizhang/actions)的成功运行中下载`android-build`产物用于独立验证；不同机器和不同CI运行可能使用不同签名，不能保证互相覆盖作者已安装的应用。
 
-先在现有0.1.1中导出整本备份，再直接安装本机同签名0.1.2覆盖旧版，并执行[本轮手机验收表](docs/PHONE_ACCEPTANCE_V012.md)。安装报错保留原应用和账本；卸载会删除数据，不卸载/清库/强制降级。备份为明文，请保存到可信位置。[0.1.1手机记录](docs/PHONE_ACCEPTANCE_V011.md)已于2026-10-05确认全部通过，原[0.1.0记录](docs/PHONE_ACCEPTANCE.md)已通过；不继承为本轮结果。
+先在现有0.1.2中导出整本备份，再直接安装本机同签名0.1.3覆盖旧版，并执行[本轮手机验收表](docs/PHONE_ACCEPTANCE_V013.md)。安装报错保留原应用和账本；卸载会删除数据，不卸载/清库/强制降级。备份为明文，请保存到可信位置。旧版手机验收通过不继承为本轮结果。
 
-构建步骤及当前0.1.2开发路径见[DEVELOPMENT](docs/DEVELOPMENT.md)，已交付0.1.1实际测试证据见[VALIDATION_V011](docs/VALIDATION_V011.md)，首版证据保存在[VALIDATION](docs/VALIDATION.md)。正式签名与应用商店发布另行决定。
+构建步骤及当前0.1.3开发路径见[DEVELOPMENT](docs/DEVELOPMENT.md)，已交付0.1.1实际测试证据见[VALIDATION_V011](docs/VALIDATION_V011.md)，首版证据保存在[VALIDATION](docs/VALIDATION.md)。正式签名与应用商店发布另行决定。
 
 0.1.1本机及[最终CI](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37213110853)的36项单元测试通过，CI另有6项Android15界面测试、旧版seed及新版verify各1项通过，均无失败或跳过；同签名0.1.0→0.1.1覆盖后全部账目字段和跨月统计保留。lint0错误/9提示，独立代码及修复增量审查通过。首次脚本输出格式问题及修复过程见验证记录，模拟器结果与作者确认通过的手机升级验收分别记录。
 

@@ -2,16 +2,17 @@
 
 日期：2026-10-05（Asia/Shanghai）。
 
-## 0.1.3 当前：界面与功能拓扑重构进行中
+## 0.1.3 当前：界面重构已实现，交付审查进行中
 
 2026-10-05作者确认0.1.2校验通过；验收反馈已记录到ff8479f75cd917bc49e5ab2173ad7e9906dc480c，PR #3已MERGED，main已快进同步。当前复用既有隔离工作区，分支feat/ledger-ui-v0.1.3。旧APK、签名和真实数据保留。基线重新执行50 JVM全通过，原日志及7 XML位于ignored test-artifacts/sdd-v013/baseline-ff8479f。
 
 本轮授权为界面重构/功能拓扑调整，参考成熟产品。官方资料与安全复用决定见REUSE_V013.md；三目的地明细/统计/设置、独立记一笔、日期分组、账目详情及全屏编辑见DESIGN_V013.md。不增加账户/云/联网/依赖，不迁库或改变备份格式。规格审查发现提交排队期间busy尚未生效，需同步锁定本次会话并以成功/失败operationId解除；仅扩展VM呈现结果协议，不改记账规则。
 
-源码及独立全分支/增量审查已完成，候选086caba8699a64d67cd393f7da5901f5875bac31。CI37234298023已success：55JVM/16UI/seed1/verify1全部0失败/错误/跳过，原50/10名称保留、lint0E9W；实际固定0.1.2→0.1.3同证书覆盖后schema1、全部字段和跨月统计保留，raw runner/安装/启动已ROOT核实。九原生图取回，但ROOT与独立审查发现统计图抓到设置旧帧，视觉I1待测试截图同步补证，不能称九场景齐。正常字号末行完整geometry已通过，初屏FAB遮挡记录保留。历史失败、owner最小修复与真实结果见VALIDATION_V013.md；未执行交付复制或创建本轮PR，不合main。
+最终受测代码fb9ffd89d81e51c04716b86319416f900ad4e564，[CI37236054231](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37236054231)已success：55JVM/16UI/seed1/verify1全部0失败/错误/跳过，原50/10名称保留、lint0E9W；固定0.1.2→0.1.3同证书覆盖保留schema1、全部字段和跨月统计。ROOT直接实读本次raw runner、三证书、安装/启动/exit；九原生UI图与升级首页已逐张查看，独立Visual / Runtime Approved，C0/I0。统计图旧帧I1由本次正确月统计关闭，旧图和失败过程保留。正常字号末行完整geometry及滚动图通过，初屏FAB观察、大字范围和Recovery非真实Android kill边界见VALIDATION_V013.md。
 
-本机候选APK审计为9559162bytes/450d48c0bb1aaf429a50d6b9fc30cc6482c46fec4be841c16b81b0ea22134d0a，同原本机公开证书、原权限与完整许可；尚未复制交付或创建0.1.3 PR。ignored test-artifacts/sdd-v013保存各独立报告及脚本，最终Delivery仍待。PHONE_ACCEPTANCE_V013.md十三项全部待本轮作者手机验收，技术交付后提交作者检查，不提前合main。
+本机APK9559162bytes/SHA256450d48c0bb1aaf429a50d6b9fc30cc6482c46fec4be841c16b81b0ea22134d0a，原本机公开证书、权限及完整许可审计通过。已实际复制新0.1.3包、独立校验文件和九张原图到工作区output及D:/AIproject/an-jizhang/output；2APK/18PNG与来源hash相同，5旧APK及校验前缀字节保留。私有draft[PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)已附到任务；正式交付审查与最终HEAD同步进行中。ignored test-artifacts/sdd-v013保存各独立报告、实物和同步证据。
 
+PHONE_ACCEPTANCE_V013.md十三项全部待作者本轮手机验收，型号与Android版本未提供；先在0.1.2导出备份再本机同签名覆盖0.1.3，安装异常保留原应用与账本，不卸载/清库/强降级。main保留已验收ff8479f，作者确认前不合并或正式发布。
 ## 最新作者反馈（2026-10-05）
 
 作者回复“已校验通过”，并要求下一轮界面重构与系统功能拓扑调整，具体方案参考市面成熟软件。PHONE_ACCEPTANCE_V012.md八项据该反馈勾选；手机型号/Android版本仍未提供。下文0.1.2段中的手机待验收文字是技术交付时的历史快照，本次反馈已解除该gate。0.1.2验收反馈ff8479f已推送并快进合入main，PR #3已MERGED；当前0.1.3分支与待验收状态见上节。

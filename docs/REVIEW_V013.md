@@ -1,6 +1,6 @@
 # 0.1.3 独立审查记录
 
-状态：分任务及最终源码增量审查已完成，技术交付证据审查进行中；作者手机验收待执行。
+状态：分任务/最终源码、最新CI运行与九图视觉审查已通过；实物已交付，最终技术交付独立审查进行中。作者手机十三项待验收。
 
 实现者与审查者分开，原始报告保存在 ignored `test-artifacts/sdd-v013/`。下列 Approved 仅表示所列范围获得批准，不将静态检查冒充设备或作者验收。
 
@@ -23,13 +23,19 @@
 | 取消Dialog与保存点击的原生事件同步 | 两测试限定增量Spec / Quality Approved，Critical0、Important0；pinned API、主窗口焦点/页面条件等待、真实IME收起/按钮可见可用及失败诊断。39保护文件和生产APK不变，23秒编译成功；原全部业务/10秒断言保留，实际GREEN仍待 |
 | 原数据库失败保存用例的键盘与可见性准备 | 单方法限定增量Spec / Quality Approved，Critical0、Important0；真实点击与既有收键盘，Save显示/可用后原点击。40源码和生产APK未变、10秒编译成功；Mutex、故障表、真实提交、重建、失败输入及原10秒断言保留，真实GREEN仍待 |
 | 最终候选086caba源码增量 | 最能力审查者独立Source Spec / Quality Approved，Critical0、Important0；只读实算40保护哈希、APK和原始编译日志，目标方法撤销三处后全文恢复；运行和FullDelivery待新CI |
-| CI37234298023实际运行与视觉 | 55JVM/16UI/seed1/verify1实际全部通过，九PNG取回；ROOT与独立视觉审查发现statistics.png是设置旧帧，视觉Needs revision，Critical0、Important1。其余八图与升级首页已查看，当前不批准九场景或FullDelivery，须补截图绘制同步后真实取证 |
+| CI37234298023实际运行与视觉 | 55JVM/16UI/seed1/verify1实际全部通过，九PNG取回；ROOT与独立视觉审查发现statistics.png是设置旧帧，视觉Needs revision，Critical0、Important1。其余八图与升级首页已查看，当时不批准九场景或FullDelivery，须补截图绘制同步后真实取证 |
 | 统一九次原生截图帧提交同步 | 最能力独立Source Spec / Quality Approved，Critical0、Important0；公开API、真实当前焦点硬件窗、主线程注册/清理、测试线程10秒屏障及单次原生全屏图。39保护源码和生产APK未变；两次12秒编译如实区分窄版与最终版，统计图I1运行关闭仍待新原图 |
 
-F1 的最小处理为 VM 实例身份与 root 保存的 pendingOwner；恢复到不同 VM 时仅清旧提交锁，保存草稿和浏览上下文，同 VM 旋转继续保护在途操作。完整本机构建和源码增量已独立批准。检查点CI37228768041实际原10 UI通过，删除恢复在disabled处取得真实F1 RED；保存恢复在文字选择器歧义处提前失败，4个Flow/窄屏用例在截图工具处提前失败。两个测试工具修正的独立复审与真实GREEN、最终UI/升级/原生截图、最终APK/私有PR及同步证据仍待，当前不批准交付或合main。
+以下段落为历史检查点，当时的“待”不代表文首当前状态。F1 的最小处理为 VM 实例身份与 root 保存的 pendingOwner；恢复到不同 VM 时仅清旧提交锁，保存草稿和浏览上下文，同 VM 旋转继续保护在途操作。完整本机构建和源码增量已独立批准。检查点CI37228768041实际原10 UI通过，删除恢复在disabled处取得真实F1 RED；保存恢复在文字选择器歧义处提前失败，4个Flow/窄屏用例在截图工具处提前失败。两个测试工具修正的独立复审与真实GREEN、最终UI/升级/原生截图、最终APK/私有PR及同步证据仍待，当时不批准交付或合main。
 
-候选CI37229801074实际16/1失败，原10、Recovery2、LargeText1、Flow2均通过；唯一Flow第二次搜索输入键盘准备失败，详情缺图、升级未执行。上述真实点击已通过独立审查，下一次CI加最后行滚动及金额不被FAB遮挡的断言/第9图；当前不批准完整交付或合main。
+候选CI37229801074实际16/1失败，原10、Recovery2、LargeText1、Flow2均通过；唯一Flow第二次搜索输入键盘准备失败，详情缺图、升级未执行。上述真实点击已通过独立审查，下一次CI加最后行滚动及金额不被FAB遮挡的断言/第9图；当时不批准完整交付或合main。
 
-最新CI37231650011完整几何断言通过且九图齐全，独立视觉范围批准；Flow在Dialog取消后原生Back发向旧窗口导致列表未出现，Smoke非法错误节点未出现需检验IME触摸准备假设。原生事件同步修正正在编译与复审，不修改生产校验，不因图片通过而批准完整交付。
+历史CI37231650011完整几何断言通过且九图齐全，独立视觉范围批准；Flow在Dialog取消后原生Back发向旧窗口导致列表未出现，Smoke非法错误节点未出现需检验IME触摸准备假设。当时原生事件同步修正正在编译与复审，不修改生产校验，不因图片通过而批准完整交付。
 
 实际验证及边界见 [VALIDATION_V013](VALIDATION_V013.md)，作者手机表 [PHONE_ACCEPTANCE_V013](PHONE_ACCEPTANCE_V013.md) 保持未勾。
+
+## 当前最终运行与交付审查
+
+- 受测fb9ffd / CI37236054231：独立Visual / Runtime Approved，Critical0、Important0；实读55 JVM、16 UI、原50/10名称、lint0E9W、seed/verify与本次三证书、覆盖安装/启动。逐张9UI+升级原图正确，旧统计帧I1仅对本次关闭。报告ignored `final-frame-nine-screens-runtime-review.md`。
+- 正常字号末行完整几何和滚动图实际通过；初屏FAB可遮挡观察保留，不外推所有字体或手机。font2旧零值提示在合法重试前仍可见，后续保存/详情用例通过。Recovery2是UI状态/新VM模拟，不称真实进程kill；手机十三项保持未勾。
+- 经独立批准的脚本实际完成双APK/18PNG复制与来源hash检查，5旧APK及校验前缀字节保留。完整技术交付审查另须核对正式docs、私有draft PR4与三方HEAD同步，当前尚不借本视觉报告批准FullDelivery或合main。
