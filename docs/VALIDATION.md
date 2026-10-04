@@ -1,6 +1,6 @@
 # 首版验证记录
 
-日期：2026-10-04（Asia/Shanghai）。技术交付验证完成，作者手机验收未执行。此记录以实际工具输出为依据。
+日期：2026-10-04（Asia/Shanghai）。0.1.0技术交付验证完成；作者于同日确认手机验收表全部通过，详见PHONE_ACCEPTANCE.md。技术证据以实际工具输出为依据，手机验收以作者本次确认为依据。
 
 最终 [CI 37191001385](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37191001385) 在提交 `c02c1ea9aa6a269de5742cacee236e26af46d717` 上两项job均成功：实际XML为30项JVM测试及6项Android15/API35设备测试，均0失败/0错误/0跳过；lint0错误/9提示。后续提交仅整理文档，不改此轮验证的应用、测试或CI。
 

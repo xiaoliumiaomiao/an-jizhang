@@ -11,7 +11,7 @@
 
 ## 安装与验证
 
-本次交付的debug测试APK为 `output/an-jizhang-0.1.0-debug.apk`，校验值在 `output/SHA256SUMS.txt`；也可以在[GitHub Actions](https://github.com/xiaoliumiaomiao/an-jizhang/actions)的成功运行中下载`android-build`产物用于独立验证。后续覆盖安装须用同一份本机debug keystore构建；不同机器和不同CI运行可能使用不同签名，不能保证互相覆盖。作者手机验收尚未进行，先按[手机验收表](docs/PHONE_ACCEPTANCE.md)检查。
+本次交付的debug测试APK为 `output/an-jizhang-0.1.0-debug.apk`，校验值在 `output/SHA256SUMS.txt`；也可以在[GitHub Actions](https://github.com/xiaoliumiaomiao/an-jizhang/actions)的成功运行中下载`android-build`产物用于独立验证。后续覆盖安装须用同一份本机debug keystore构建；不同机器和不同CI运行可能使用不同签名，不能保证互相覆盖。作者于2026-10-04确认0.1.0[手机验收表](docs/PHONE_ACCEPTANCE.md)全部通过，下一轮为0.1.1稳固迭代。
 
 首先在安卓手机安装测试APK，新增一笔0.01元餐饮支出。正确结果是列表出现该账目，本月支出0.01、结余-0.01。卸载会删除本地账本，操作前先导出备份；导出是明文，请妥善保管。
 
