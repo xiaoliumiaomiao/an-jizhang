@@ -32,6 +32,12 @@ owner 最小修复只增加两生产文件7行；完整本机 `build-20261005-03
 
 ## 待完成门禁
 
+最新候选为 `14796f3aae611a0df3798f432fd36bc4115b1f22`；两测试原生事件同步已获独立审查后推送，[CI37232888471](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37232888471)已完成但整体失败。ROOT实读55 JVM/0失败错误跳过、lint0E9W；connected16/1失败/0错误/0跳过，原50/10名称全部保留，9张原生PNG全部取回。前两失败（Flow详情返回和非法金额1分重试）本次均完整通过；恢复、窄屏等其余14项中的13项也通过，尚不称全部设备GREEN。
+
+唯一失败为原Smoke `databaseSaveFailureAfterRecreationKeepsEditorInputs` 在`awaitSubmitted`（Smoke:185）等待新活动Job超10000ms。既有失败诊断明确`NOT submitted`、jobs0、busyfalse/errornull，尚未执行Activity重建或断言SQL失败；不能说数据库失败恢复已在本轮通过或生产DB失败被修复。此方法金额输入后缺少原生收键盘，成功queued save/delete方法已使用该步骤。下一步只补该用例真实点击输入、原10秒收键盘、保存按钮可见可用，完整保留故障表、真实提交、锁、同VM重建和输入/失败提示断言；准备后编译与独立审查，再真实CI。升级链此次仍未执行，最终交付仍待。下列候选失败均保留为历史实证，不反推此前通过。
+
+该单方法同步现已准备并独立 Spec / Quality Approved，Critical0、Important0。原始语义树中金额12.34有效，保存按钮1651..1761px完全低于表单可视底1628px；支持IME/可见性准备不足的推断，日志缺实际触点，不能称百分百定因。仅补真实点击、既有收键盘及保存按钮可见可用；方法外全文与其余40源码哈希未变，原锁、DROP TABLE、真实排队观察、重建、失败输入与10秒等待均保留。`build-20261005-045629.log`唯一AndroidTest编译实际10秒成功，生产APK仍450d48c0…；实际设备GREEN及升级待下一次CI，不以编译替代。
+
 候选 `e30c02d13b4938da6aa6f314952321e4b6b051c2` 包含真实第二次点击及末行完整几何补证；[CI37231650011](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37231650011)已完成但整体失败。最能力独立源码增量审查 Source Spec/Quality Approved，Critical0、Important0；这不等于运行或Delivery通过。ROOT实读8个JVM XML为55/0/0/0、lint0错误/9提示；connected16/2失败/0错误/0跳过，原50/10用例名称全部保留。
 
 该次末行金额/分类/备注完整矩形在可视列表内且与FAB不相交的断言实际通过，9张原生PNG全部取回，详情及滚动后的末行图已ROOT直接查看。第二次搜索IME准备也已通过；Flow继续到取消编辑后native Back，再读明细时缺`ledger-list`（Flow:67）。原Smoke非法金额用例在读取错误节点处失败（Smoke:73，0 node而不是可见性失败）；其他14方法通过。升级链仍未执行，图片齐全不能代替完整设备通过。
