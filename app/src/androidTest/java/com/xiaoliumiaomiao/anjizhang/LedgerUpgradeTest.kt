@@ -23,7 +23,7 @@ class LedgerUpgradeTest {
     )
 
     @Test fun seedOldVersionLedger() {
-        val context = installedVersion("0.1.0", 1)
+        val context = installedVersion("0.1.1", 2)
         val database = LedgerDatabase(context)
         try {
             assertTrue("Seed requires an empty ledger; existing data must not be overwritten", database.listEntries().isEmpty())
@@ -35,7 +35,7 @@ class LedgerUpgradeTest {
     }
 
     @Test fun verifyUpgradedLedger() {
-        val context = installedVersion("0.1.1", 2)
+        val context = installedVersion("0.1.2", 3)
         // No save, merge, delete, or reseed: a missing database must fail.
         assertLedgerOnDisk(context, "upgrade-opened")
         assertLedgerOnDisk(context, "upgrade-reopened")

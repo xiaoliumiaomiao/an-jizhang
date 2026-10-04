@@ -45,17 +45,17 @@ jobs:
 
   device-smoke:
     runs-on: ubuntu-24.04
-    # Includes a second clean app build for the fixed 0.1.0 upgrade baseline.
+    # Includes a second clean app build for the fixed 0.1.1 upgrade baseline.
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - name: Checkout fixed 0.1.0 baseline
+      - name: Checkout fixed 0.1.1 baseline
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: 57799ca1751a98e801c091f1cd6cc69f50cb4c77
-          path: baseline-v010
+          ref: 976817290302e712519297cc5b810ce019d2d383
+          path: baseline-v011
           persist-credentials: false
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
@@ -110,9 +110,9 @@ jobs:
           timeout 10s adb -s "$serial" shell settings put global window_animation_scale 0
           timeout 10s adb -s "$serial" shell settings put global transition_animation_scale 0
           timeout 10s adb -s "$serial" shell settings put global animator_duration_scale 0
-      - name: Build fixed 0.1.0 baseline with this job's debug certificate
+      - name: Build fixed 0.1.1 baseline with this job's debug certificate
         timeout-minutes: 12
-        working-directory: baseline-v010
+        working-directory: baseline-v011
         run: |
           echo 'c5a643cf80162e665cc228f7b16f343fef868e47d3a4836f62e18b7e17ac018a  gradle/wrapper/gradle-wrapper.jar' | sha256sum --check
           chmod +x gradlew
@@ -137,7 +137,7 @@ jobs:
           # Connected teardown happens before the upgrade chain. No connected task
           # may run between seeding the old app and verifying the replaced app.
           bash .github/scripts/verify-upgrade.sh \
-            baseline-v010/app/build/outputs/apk/debug/app-debug.apk \
+            baseline-v011/app/build/outputs/apk/debug/app-debug.apk \
             app/build/outputs/apk/debug/app-debug.apk \
             app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
           sleep 3
