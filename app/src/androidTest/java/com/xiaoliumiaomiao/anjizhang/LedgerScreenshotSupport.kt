@@ -16,6 +16,13 @@ internal fun captureLedgerScreen(name:String) {
     val file=File(directory,"$name.png")
     val bitmap=requireNotNull(registry.uiAutomation.takeScreenshot())
     try { file.outputStream().use{check(bitmap.compress(Bitmap.CompressFormat.PNG,100,it))} } finally { bitmap.recycle() }
-    val command="mkdir -p /data/local/tmp/ledger-v013-screens && cp ${file.absolutePath} /data/local/tmp/ledger-v013-screens/$name.png && echo captured"
-    assertEquals("captured",shell(command))
+    val sourcePath=file.absolutePath
+    assertTrue(sourcePath.matches(Regex("[a-zA-Z0-9/._-]+")))
+    assertTrue("the generated screenshot must contain bytes",file.length()>0)
+    val destination="/data/local/tmp/ledger-v013-screens/$name.png"
+    // UiAutomation uses Runtime.exec(String); execute one program per call, without shell syntax.
+    shell("mkdir -p /data/local/tmp/ledger-v013-screens")
+    shell("cp $sourcePath $destination")
+    val copiedBytes=shell("stat -c %s $destination").toLong()
+    assertEquals("the retrievable screenshot must match the generated PNG size",file.length(),copiedBytes)
 }

@@ -22,8 +22,14 @@
 
 [旧界面运行 37227250211](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37227250211)，代码 `0e0896f51173b9ff937519a63c3af0b2d76e723c`：build success，JVM 54 通过；connected 共 13，原 10 全通过，新增 Flow 3 在旧版缺少 `ledger-list`/`nav-settings` 等入口处失败，0 错误/跳过。升级链因 connected 失败未执行。原始日志/XML 和失败详情保存在 ignored `test-artifacts/ci-v013-red-37227250211/`。
 
-最终源码审查发现 F1：保存 UI 的 pending IDs 恢复到新 VM 后，没有后台任务能产生其完成结果，可能永久禁用操作。两个恢复 fixture 经独立准备审查后随新 UI 提交到有意回归检查点 `fe2974467826e65b178fb6fab24d0a0c4755ce9d`；[运行 37228768041](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37228768041) 待完成及原始结果读取。此检查点不是交付版本。
+最终源码审查发现 F1：保存 UI 的 pending IDs 恢复到新 VM 后，没有后台任务能产生其完成结果，可能永久禁用操作。两个恢复 fixture 经独立准备审查后随新 UI 提交到有意回归检查点 `fe2974467826e65b178fb6fab24d0a0c4755ce9d`；[运行 37228768041](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37228768041) 已完成，ROOT 下载并读取原始报告。此检查点不是交付版本。
+
+该运行 JVM55 全通过、lint0错误/9提示；connected16、6失败、0错误/跳过，原10全部通过。Recovery 删除例在恢复后 `确认删除.assertIsEnabled` 因 Disabled 失败，是 F1 的真实行为 RED。保存例提前因“支出”同时匹配背景详情及编辑类型而失败，未到达解锁断言，不称保存恢复已取得行为 RED。Flow3 和 LargeText1 因截图 helper 的 `mkdir && cp && echo` 作为普通程序参数执行而缺少成功输出提前失败；截图 pull 为 0 个文件。connected 失败，升级链未执行。原始 XML、完整 CI/logcat 和摘要保存在 ignored `test-artifacts/ci-v013-recovery-red-37228768041/`。
+
+截图工具根因按 [Android15 AOSP UiAutomationConnection](https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android-15.0.0_r1/core/java/android/app/UiAutomationConnection.java) 核实：`executeShellCommand` 调用 `Runtime.exec(String)`，不会解析 shell 操作符。修正为顺序执行单程序 mkdir/cp/stat、验证目标真实字节数；保存恢复选择器限定可选择的类型节点，保留显示、选中、enabled、数据库和10秒断言。测试工具修复后重新执行，不以重跑到绿反推前次通过。
+
+owner 最小修复只增加两生产文件7行；完整本机 `build-20261005-033516.log` 实际55/0/0/0、lint0错误/9既有提示，应用和测试 APK 成功，39个其他源码/测试文件哈希不变。独立源码增量 Spec/Quality Approved，Critical0、Important0；F1 静态路径闭合，实际新 UI/恢复 GREEN 尚待。当前本机候选 APK 为 9559162 字节、SHA256 `450d48c0bb1aaf429a50d6b9fc30cc6482c46fec4be841c16b81b0ea22134d0a`，公开证书与旧包相同、权限及原完整许可已重审计；尚未复制交付。
 
 ## 待完成门禁
 
-owner 最小修复、最新完整本机构建和独立增量审查；真实新 UI、恢复及窄屏 CI；8 张原生合成截图；固定 0.1.2/code3 → 0.1.3/code4 的同证书替换、seed/verify 原始 runner、安装与启动；最终本机 APK 签名/权限/许可审计、新文件复制和旧文件哈希保留；私有 draft PR、最终三方 HEAD 同步及作者手机验收。尚不声称技术交付或作者验收完成。
+测试工具修复复审和重新运行真实新 UI、恢复及窄屏 CI；8 张原生合成截图；固定 0.1.2/code3 → 0.1.3/code4 的同证书替换、seed/verify 原始 runner、安装与启动；精确最终候选 APK 的新文件复制和旧文件哈希保留；私有 draft PR、最终三方 HEAD 同步及作者手机验收。尚不声称技术交付或作者验收完成。

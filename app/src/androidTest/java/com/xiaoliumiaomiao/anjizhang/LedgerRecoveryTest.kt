@@ -169,7 +169,7 @@ class LedgerRecoveryTest {
 
             val freshModel = fixture.restoreWithFreshModel(listOf(original))
             compose.onNodeWithTag("editor-form").assertIsDisplayed()
-            compose.onNodeWithText("支出").performScrollTo().assertIsDisplayed().assertIsSelected()
+            compose.onNode(hasText("支出") and isSelectable()).performScrollTo().assertIsDisplayed().assertIsSelected()
             assertField("金额（元）", "56.78")
             assertField("日期（yyyy-MM-dd）", draft.date.toString())
             assertField("分类（可自定义）", draft.category)
