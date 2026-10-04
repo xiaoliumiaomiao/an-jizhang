@@ -66,15 +66,22 @@ class LedgerSmokeTest {
     }
     @Test fun invalidAmountCannotSaveThenOneCentExpenseAppears() {
         openEditor()
-        compose.onNodeWithText("金额（元）").performTextInput("0")
-        compose.onNodeWithText("保存").performScrollTo().performClick()
+        compose.onNodeWithText("金额（元）").performClick().performTextInput("0")
+        compose.closeKeyboard()
+        compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
         // Validation inserts a new row into the scrollable form after the save-button scroll.
         // Reveal that row by a real scroll, preserving the actual-display assertion.
-        compose.onNodeWithText("金额请输入0.01至999999999.99，最多两位小数").performScrollTo().assertIsDisplayed()
+        try {
+            compose.onNodeWithText("金额请输入0.01至999999999.99，最多两位小数").performScrollTo().assertIsDisplayed()
+        } catch (failure: AssertionError) {
+            dumpPhase("invalid-amount-error-missing", ledgerModel())
+            throw failure
+        }
         compose.onNodeWithText("金额（元）").assertTextContains("0")
         assertTrue("非法金额不能生成账目", ledgerModel().state.value.entries.isEmpty())
-        compose.onNodeWithText("金额（元）").performScrollTo().performTextReplacement("0.01")
-        compose.onNodeWithText("保存").performScrollTo().performClick()
+        compose.onNodeWithText("金额（元）").performScrollTo().performClick().performTextReplacement("0.01")
+        compose.closeKeyboard()
+        compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
         val savedModel = ledgerModel()
         compose.waitUntil(10000) {
             savedModel.state.value.entries.any { it.amountCents == 1L && it.kind == com.xiaoliumiaomiao.anjizhang.domain.EntryKind.EXPENSE } &&

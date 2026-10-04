@@ -32,8 +32,14 @@ owner 最小修复只增加两生产文件7行；完整本机 `build-20261005-03
 
 ## 待完成门禁
 
+候选 `e30c02d13b4938da6aa6f314952321e4b6b051c2` 包含真实第二次点击及末行完整几何补证；[CI37231650011](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37231650011)已完成但整体失败。最能力独立源码增量审查 Source Spec/Quality Approved，Critical0、Important0；这不等于运行或Delivery通过。ROOT实读8个JVM XML为55/0/0/0、lint0错误/9提示；connected16/2失败/0错误/0跳过，原50/10用例名称全部保留。
+
+该次末行金额/分类/备注完整矩形在可视列表内且与FAB不相交的断言实际通过，9张原生PNG全部取回，详情及滚动后的末行图已ROOT直接查看。第二次搜索IME准备也已通过；Flow继续到取消编辑后native Back，再读明细时缺`ledger-list`（Flow:67）。原Smoke非法金额用例在读取错误节点处失败（Smoke:73，0 node而不是可见性失败）；其他14方法通过。升级链仍未执行，图片齐全不能代替完整设备通过。
+
+Flow case原logcat显示取消Dialog后Back发向已无input channel的旧Dialog窗口，需等待编辑节点消失及Activity窗口焦点恢复，再发原Back并等待列表结果。Smoke日志显示保存触摸前IME已显示、没有收起；固定Compose1.8的performClick实际注入触摸，最支持IME/布局变化导致点击准备不足的假设，日志缺触点与当时语义树，不能称100%定因。最小测试同步修正使用真实点击后原10秒closeKeyboard、保存按钮可见/可用，再保留原非法错误/0/数据库未写/合法1分断言；仅失败时补已有语义树/VM诊断并重新抛出。无生产校验修改，`build-20261005-043541.log`测试APK编译23秒成功、39个其他保护文件及生产APK哈希未变；独立审查及新真实CI仍待。
+
 两测试工具修正已编译并独立 Spec/Quality Approved，Critical0、Important0；候选受测代码 `45e2cf95105bfa7fe8cbb49d6ec471cfcca8c87e`，包含 owner 与工具修复。[运行37229801074](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37229801074) 已完成但整体失败：55 JVM 通过，lint0错误/9提示，connected16/1失败/0错误/0跳过。原10、Recovery2、LargeText1及Flow另外2例全部通过；删除恢复的F1行为已取得GREEN，保存恢复本次首次实际通过。唯一失败是Flow第二次替换搜索词后等待IME出现超10秒，发生在详情截图之前；7张原生PNG已取回，详情图缺失，升级链未执行。
 
 原logcat显示第一次用户Back已关闭IME，第二次替换仍聚焦输入框内容没有触发重新显示；只在第二次输入前增加真实点击，保持helper、10秒等待和业务断言。测试APK编译10秒成功，40个其他保护文件及生产APK哈希未变，独立Spec/Quality Approved，C0/I0；真实GREEN尚待下一CI。七张图片的部分视觉审查发现明细初屏最后一条餐饮金额被FAB覆盖；当前末尾padding可能允许滚动查看，需补实际滚动、金额与FAB不重叠的几何断言及第9张`ledger-last-entry.png`，不能凭静态padding关闭该观测。 末行补证测试现已编译成功（build-20261005-041609.log，10秒），40保护文件和生产APK不变；只完成测试准备，实际几何断言及第9图仍待CI。
 
-重新运行真实新 UI、恢复及窄屏 CI；9 张原生合成截图（含最后一行滚动证据）；固定 0.1.2/code3 → 0.1.3/code4 的同证书替换、seed/verify 原始 runner、安装与启动；精确最终候选 APK 的新文件复制和旧文件哈希保留；私有 draft PR、最终三方 HEAD 同步及作者手机验收。尚不声称技术交付或作者验收完成。
+两个原生事件同步修正现已独立Spec / Quality Approved，Critical0、Important0。重新运行真实新 UI、恢复及窄屏 CI；核对同次9张原生合成截图（含最后一行滚动证据）；固定 0.1.2/code3 → 0.1.3/code4 的同证书替换、seed/verify 原始 runner、安装与启动；精确最终候选 APK 的新文件复制和旧文件哈希保留；私有 draft PR、最终三方 HEAD 同步及作者手机验收。尚不声称技术交付或作者验收完成。

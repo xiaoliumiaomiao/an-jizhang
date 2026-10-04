@@ -62,8 +62,18 @@ class LedgerFlowTest {
         compose.onNodeWithText("编辑").performScrollTo().performClick()
         set("分类（可自定义）","未保存分类");compose.closeKeyboard()
         compose.onNodeWithText("取消").performScrollTo().performClick()
+        // Native Back targets the focused window; Compose idling alone does not wait for Dialog focus transfer.
+        compose.waitUntil(10000) {
+            val editorClosed=compose.onAllNodesWithTag("editor-form").fetchSemanticsNodes().isEmpty()
+            val mainWindowFocused=compose.runOnIdle { compose.activity.hasWindowFocus() }
+            editorClosed && mainWindowFocused
+        }
         compose.onNodeWithText("分类：餐饮").assertIsDisplayed()
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("ledger-list").fetchSemanticsNodes().size==1 &&
+                compose.onAllNodesWithTag("entry-detail").fetchSemanticsNodes().isEmpty()
+        }
         reveal("ledger-list","搜索分类或备注").assertTextContains(" 匹配词 ")
         reveal("ledger-list","仅支出").assertIsSelected()
         assertEquals(listOf(first,second).toSet(),model().state.value.entries.toSet())
