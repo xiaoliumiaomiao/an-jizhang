@@ -15,7 +15,7 @@
 
 依据成熟软件官方公开资料重组入口，来源、年代/平台限制及采用范围见 [REUSE_V013](docs/REUSE_V013.md)。沿用固定 AndroidX/Material3 与既有 MIT 片段，布局和图标用项目代码实现，schema1、备份format1、整数分及依赖/权限保持原样。
 
-候选代码 `e30c02d13b4938da6aa6f314952321e4b6b051c2` 的 [CI37231650011](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37231650011)构建已通过，实际55项测试全通过、lint0错误/9提示；设备16项中2项失败，9张原生图取回且末行滚动可见性通过，升级未执行。正在补原生窗口/键盘事件同步并保留全部业务断言，最终技术交付审查仍待。[验证](docs/VALIDATION_V013.md)、[审查](docs/REVIEW_V013.md)、[本轮手机表](docs/PHONE_ACCEPTANCE_V013.md)。作者确认本轮前保持main为已验收0.1.2，不合并或正式发布。
+候选代码 `086caba8699a64d67cd393f7da5901f5875bac31` 的 [CI37234298023](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37234298023)已完整通过：55单元/16设备/旧版seed及新版verify均无失败、错误或跳过，lint0错误/9提示，覆盖升级字段和跨月统计保留。九图实际取回，但统计图抓到切页前设置画面，正在补测试截图绘制同步；完整技术交付审查仍待。[验证](docs/VALIDATION_V013.md)、[审查](docs/REVIEW_V013.md)、[本轮手机表](docs/PHONE_ACCEPTANCE_V013.md)。作者确认本轮前保持main为已验收0.1.2，不合并或正式发布。
 
 ## 0.1.2 已验收迭代
 

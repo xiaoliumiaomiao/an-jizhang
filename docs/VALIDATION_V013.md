@@ -2,6 +2,16 @@
 
 状态：技术验证进行中，作者手机验收待执行。以下只记录已经产生的证据，不将旧版验收或编译成功当成本轮设备通过。
 
+最新冻结受测代码：`086caba8699a64d67cd393f7da5901f5875bac31`，[CI37234298023](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37234298023)已完成 success；55 JVM与16设备测试均0失败/错误/跳过，原50/10名称全部保留，lint0错误/9提示。最后一处数据库失败保存测试本次完整通过。下面旧候选中的“待”是对应当时的状态。
+
+本轮首次实际完成同CI证书的0.1.2/code3→0.1.3/code4覆盖升级：ROOT实读seed/verify原始runner各唯一OK(1 test)、唯一INSTRUMENTATION_CODE:-1、无失败标记；三包公开证书98756a4ce45b13c7d3d10f46368254538fde254bd4703f20ae96bf45e06510cb相同，实际版本/安装Success/启动Status:ok/exit0均核实。三条记录的所有字段、schema1、1分、中文引号换行和跨月统计在两次reopen中保留，脚本原顺序无中途清库、卸载或重seed；正常中文升级首页已ROOT查看。原始证据位于ignored test-artifacts/ci-v013-final-37234298023/。
+
+九个原生PNG确实全部pull，ROOT逐张及升级图查看，但发现视觉I1：statistics.png实际为切页前的设置画面，统计nav仍呈触摸态；不能将九个文件称为九个目标页面齐。独立视觉审查同样确认。其余八图与正常字号末行完整几何断言已取得实证；初屏FAB遮挡历史观察保留。当前未复制新APK/截图或创建本轮PR，FullDelivery仍待正确统计原生帧证据。下一步只诊断并修正测试截图同步，不改生产界面或业务断言；真实重新验证后再交付。
+
+截图同步准备仅修改两个AndroidTest文件：guard后以公开WindowInspector选唯一实际attached/shown/focused硬件根窗，主线程注册frame commit并invalidate，测试线程最多10秒等待真实回调，finally注销，再执行一次原生全屏截图。统一覆盖九次调用，包括实际Dialog根窗；不固定使用后台Activity。统计调用保留列表显示断言并增加选中标签、月统计和支出分类。固定Compose1.8与Android15官方源码已核实；frame commit只承诺渲染提交，不承诺已经显示，最终原图必须复看。无sleep、隐藏API、裁切、重拍挑图或生产改动。
+
+本机本项共两次AndroidTest编译均12秒成功：首次窄范围版本build-20261005-052149.log，在ROOT澄清统一九次范围前已开始；最终版本build-20261005-052238.log。两原记录分别保留，首次不充当最终源码验证。最终39保护源码与9559162字节的450d48c0…生产APK未变；最能力独立源码增量Spec / Quality Approved，Critical0、Important0，真实新CI图像仍待。
+
 ## 范围与基线
 
 作者已确认 0.1.2 通过；已验收 main 为 `ff8479f75cd917bc49e5ab2173ad7e9906dc480c`。本轮在 `feat/ledger-ui-v0.1.3` 重构明细、统计、设置、详情及全屏编辑，不改变 schema1、备份 format1、整数分规则、applicationId、minSdk26、依赖或权限。

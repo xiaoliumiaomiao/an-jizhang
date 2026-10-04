@@ -22,6 +22,9 @@
 | CI37231650011九张原生图 | 视觉范围Approved；末行正常字号滚动后金额/分类/备注完整且与FAB分离，详情字段/编辑删除可读。初屏FAB遮挡历史观测仍保留，不外推大字列表或手机验收；整体16项2失败、升级未执行，FullDelivery未批准 |
 | 取消Dialog与保存点击的原生事件同步 | 两测试限定增量Spec / Quality Approved，Critical0、Important0；pinned API、主窗口焦点/页面条件等待、真实IME收起/按钮可见可用及失败诊断。39保护文件和生产APK不变，23秒编译成功；原全部业务/10秒断言保留，实际GREEN仍待 |
 | 原数据库失败保存用例的键盘与可见性准备 | 单方法限定增量Spec / Quality Approved，Critical0、Important0；真实点击与既有收键盘，Save显示/可用后原点击。40源码和生产APK未变、10秒编译成功；Mutex、故障表、真实提交、重建、失败输入及原10秒断言保留，真实GREEN仍待 |
+| 最终候选086caba源码增量 | 最能力审查者独立Source Spec / Quality Approved，Critical0、Important0；只读实算40保护哈希、APK和原始编译日志，目标方法撤销三处后全文恢复；运行和FullDelivery待新CI |
+| CI37234298023实际运行与视觉 | 55JVM/16UI/seed1/verify1实际全部通过，九PNG取回；ROOT与独立视觉审查发现statistics.png是设置旧帧，视觉Needs revision，Critical0、Important1。其余八图与升级首页已查看，当前不批准九场景或FullDelivery，须补截图绘制同步后真实取证 |
+| 统一九次原生截图帧提交同步 | 最能力独立Source Spec / Quality Approved，Critical0、Important0；公开API、真实当前焦点硬件窗、主线程注册/清理、测试线程10秒屏障及单次原生全屏图。39保护源码和生产APK未变；两次12秒编译如实区分窄版与最终版，统计图I1运行关闭仍待新原图 |
 
 F1 的最小处理为 VM 实例身份与 root 保存的 pendingOwner；恢复到不同 VM 时仅清旧提交锁，保存草稿和浏览上下文，同 VM 旋转继续保护在途操作。完整本机构建和源码增量已独立批准。检查点CI37228768041实际原10 UI通过，删除恢复在disabled处取得真实F1 RED；保存恢复在文字选择器歧义处提前失败，4个Flow/窄屏用例在截图工具处提前失败。两个测试工具修正的独立复审与真实GREEN、最终UI/升级/原生截图、最终APK/私有PR及同步证据仍待，当前不批准交付或合main。
 
