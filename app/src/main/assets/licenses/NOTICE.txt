@@ -1,0 +1,15 @@
+安记账第三方代码通知
+
+Android Architecture Samples
+Source: https://github.com/android/architecture-samples/tree/ee66e1526b84c026615df032c705842b7d2a521f
+License: Apache-2.0, Android-Architecture-Samples-LICENSE
+Files adopted: gradlew, gradlew.bat, gradle/wrapper/gradle-wrapper.jar, gradle/wrapper/gradle-wrapper.properties.
+Changes: properties distribution changed to Gradle 8.11.1 official services.gradle.org URL and SHA256 checksum; scripts only trailing whitespace normalized; jar unchanged.
+Wrapper JAR SHA256: c5a643cf80162e665cc228f7b16f343fef868e47d3a4836f62e18b7e17ac018a
+
+MoneyBook
+Source: https://github.com/AndersOnLin4/moneybook/tree/98c50341da262e839f68557e721eee38aca57067
+License: MIT, MoneyBook-LICENSE
+Adapted source: app/src/main/java/com/andersonlin/moneybook/util/Format.kt String.toCents fragment only.
+Destination: app/src/main/java/com/xiaoliumiaomiao/anjizhang/domain/Money.kt Money.parse.
+Changes: added decimal regex and maximum limits; exact BigDecimal conversion retained. Floating-point formatting, UI, database, encryption and restore code not reused.
