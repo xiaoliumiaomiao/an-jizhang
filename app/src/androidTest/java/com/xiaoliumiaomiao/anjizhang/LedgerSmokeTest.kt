@@ -4,9 +4,12 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import com.xiaoliumiaomiao.anjizhang.ui.LedgerViewModel
 import kotlinx.coroutines.sync.Mutex
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertSame
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExternalResource
@@ -63,6 +66,30 @@ class LedgerSmokeTest {
     }
     // Hold only the existing worker serialization lock, so recreation precedes actual SQL work.
     // No production test hook or artificial data seed is used.
+    private fun ledgerModel(): LedgerViewModel {
+        var model: LedgerViewModel? = null
+        compose.runOnIdle { model = ViewModelProvider(compose.activity)[LedgerViewModel::class.java] }
+        return model!!
+    }
+    private fun dumpPhase(phase: String, model: LedgerViewModel) {
+        android.util.Log.e("LedgerSmoke", "$phase activity=${System.identityHashCode(compose.activity)} model=${System.identityHashCode(model)} state=${model.state.value} jobs=${model.viewModelScope.coroutineContext[Job]?.children?.count()}")
+        val roots = compose.onAllNodes(isRoot(), useUnmergedTree = true)
+        roots.fetchSemanticsNodes().indices.forEach { roots[it].printToLog("LedgerSmoke") }
+    }
+    private fun awaitSubmitted(phase: String, model: LedgerViewModel, previousJobs: Set<Job>) {
+        // With the serialization lock held, a NEW active child cannot complete SQL work.
+        // Its presence proves onSave/onDelete dispatched work; holding Mutex alone does not.
+        try {
+            compose.waitUntil(10000) {
+                model.viewModelScope.coroutineContext[Job]?.children?.any { it.isActive && it !in previousJobs } == true
+            }
+            dumpPhase("$phase submitted", model)
+        } catch (failure: Throwable) { dumpPhase("$phase NOT submitted", model); throw failure }
+    }
+    private fun awaitDialogClosed(label: String, phase: String, model: LedgerViewModel) {
+        try { compose.waitUntil(10000) { compose.onAllNodesWithText(label).fetchSemanticsNodes().isEmpty() } }
+        catch (failure: Throwable) { dumpPhase("$phase dialog timeout", model); throw AssertionError("$phase dialog did not close; state=${model.state.value}", failure) }
+    }
     private fun pauseWorker(): Mutex {
         var model: LedgerViewModel? = null
         compose.runOnIdle { model = ViewModelProvider(compose.activity)[LedgerViewModel::class.java] }
@@ -73,25 +100,35 @@ class LedgerSmokeTest {
     @Test fun saveAndDeleteCompleteAfterActivityRecreationAndOldResultDoesNotCloseNewEditor() {
         openEditor()
         compose.onNodeWithText("金额（元）").performTextInput("12.34")
+        val saveModel = ledgerModel()
         val saveLock = pauseWorker()
+        val priorSaveJobs = saveModel.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
         try {
             compose.onNodeWithText("保存").performScrollTo().performClick()
+            awaitSubmitted("save", saveModel, priorSaveJobs)
             compose.activityRule.scenario.recreate()
+            assertSame("recreation must retain saving ViewModel", saveModel, ledgerModel())
+            dumpPhase("save after recreation", saveModel)
             compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         } finally { saveLock.unlock() }
-        compose.waitUntil(10000) { compose.onAllNodesWithText("金额（元）").fetchSemanticsNodes().isEmpty() }
+        awaitDialogClosed("金额（元）", "save", saveModel)
         compose.onNodeWithText("-¥12.34").assertIsDisplayed()
         openEditor()
         compose.onNodeWithText("金额（元）").assertIsDisplayed()
         compose.onNodeWithText("取消").performScrollTo().performClick()
         compose.onNodeWithText("删除").performScrollTo().performClick()
+        val deleteModel = ledgerModel()
         val deleteLock = pauseWorker()
+        val priorDeleteJobs = deleteModel.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
         try {
             compose.onNodeWithText("确认删除").performClick()
+            awaitSubmitted("delete", deleteModel, priorDeleteJobs)
             compose.activityRule.scenario.recreate()
+            assertSame("recreation must retain deleting ViewModel", deleteModel, ledgerModel())
+            dumpPhase("delete after recreation", deleteModel)
             compose.onNodeWithText("删除账目？").assertIsDisplayed()
         } finally { deleteLock.unlock() }
-        compose.waitUntil(10000) { compose.onAllNodesWithText("删除账目？").fetchSemanticsNodes().isEmpty() }
+        awaitDialogClosed("删除账目？", "delete", deleteModel)
         compose.onNodeWithText("这个月还没有账目").assertIsDisplayed()
     }
     @Test fun databaseSaveFailureAfterRecreationKeepsEditorInputs() {
