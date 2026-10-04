@@ -33,10 +33,14 @@ class LedgerSmokeTest {
         compose.waitUntil(10000) { compose.onAllNodesWithText("金额（元）").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("金额（元）").assertExists()
     }
+    private fun revealLedgerText(value: String): SemanticsNodeInteraction {
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText(value))
+        return compose.onNodeWithText(value).assertIsDisplayed()
+    }
     @Test fun emptyLedgerAndNavigation() {
         readyEntryAction()
         compose.onNodeWithText("安记账").assertIsDisplayed()
-        compose.onNodeWithText("这个月还没有账目").assertIsDisplayed()
+        revealLedgerText("这个月还没有账目")
         compose.onAllNodesWithText("记一笔")[0].assertIsDisplayed()
         compose.onNodeWithText("统计").performClick()
         compose.onNodeWithText("支出分类").assertIsDisplayed()
@@ -44,7 +48,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("本地隐私").assertIsDisplayed()
         compose.onNodeWithText("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。")
             .performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("版本 0.1.1").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("版本 0.1.2").performScrollTo().assertIsDisplayed()
     }
     @Test fun editorInputSurvivesActivityRecreation() {
         openEditor()
@@ -67,9 +71,13 @@ class LedgerSmokeTest {
         assertTrue("非法金额不能生成账目", ledgerModel().state.value.entries.isEmpty())
         compose.onNodeWithText("金额（元）").performScrollTo().performTextReplacement("0.01")
         compose.onNodeWithText("保存").performScrollTo().performClick()
-        compose.waitUntil(10000) { compose.onAllNodesWithText("-¥0.01").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("-¥0.01").assertIsDisplayed()
-        compose.onNodeWithText("支出 ¥0.01").assertIsDisplayed()
+        val savedModel = ledgerModel()
+        compose.waitUntil(10000) {
+            savedModel.state.value.entries.any { it.amountCents == 1L && it.kind == com.xiaoliumiaomiao.anjizhang.domain.EntryKind.EXPENSE } &&
+                compose.onAllNodesWithText("金额（元）").fetchSemanticsNodes().isEmpty()
+        }
+        revealLedgerText("-¥0.01")
+        revealLedgerText("支出 ¥0.01")
     }
     // Hold only the existing worker serialization lock, so recreation precedes actual SQL work.
     // No production test hook or artificial data seed is used.
@@ -124,11 +132,11 @@ class LedgerSmokeTest {
             compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         } finally { saveLock.unlock() }
         awaitDialogClosed("金额（元）", "save", saveModel)
-        compose.onNodeWithText("-¥12.34").assertIsDisplayed()
+        revealLedgerText("-¥12.34")
         openEditor()
         compose.onNodeWithText("金额（元）").assertIsDisplayed()
         compose.onNodeWithText("取消").performScrollTo().performClick()
-        compose.onNodeWithText("删除").performScrollTo().performClick()
+        revealLedgerText("删除").performClick()
         val deleteModel = ledgerModel()
         val deleteLock = pauseWorker()
         val priorDeleteJobs = deleteModel.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
@@ -141,7 +149,7 @@ class LedgerSmokeTest {
             compose.onNodeWithText("删除账目？").assertIsDisplayed()
         } finally { deleteLock.unlock() }
         awaitDialogClosed("删除账目？", "delete", deleteModel)
-        compose.onNodeWithText("这个月还没有账目").assertIsDisplayed()
+        revealLedgerText("这个月还没有账目")
     }
     @Test fun databaseSaveFailureAfterRecreationKeepsEditorInputs() {
         openEditor()

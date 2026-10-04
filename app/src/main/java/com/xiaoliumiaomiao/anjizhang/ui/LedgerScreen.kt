@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,13 @@ import java.time.YearMonth
     var page by rememberSaveable { mutableStateOf("账目") }
     var monthText by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     val month = YearMonth.parse(monthText)
+    var query by rememberSaveable { mutableStateOf("") }
+    var kindName by rememberSaveable { mutableStateOf("") }
+    val kind = EntryKind.entries.firstOrNull { it.name == kindName }
+    val monthEntries = remember(state.entries, month) { EntryFilter.apply(state.entries, month) }
+    val visibleEntries = remember(state.entries, month, query, kindName) {
+        EntryFilter.apply(state.entries, month, query, kind)
+    }
     var editing by rememberSaveable { mutableStateOf(false) }
     var editingJson by rememberSaveable { mutableStateOf<String?>(null) }
     var deletingJson by rememberSaveable { mutableStateOf<String?>(null) }
@@ -49,7 +57,7 @@ import java.time.YearMonth
             }
         }
     }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize().padding(padding).imePadding().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
             if (state.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             state.error?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error); TextButton(onClick = viewModel::load, enabled = !state.busy) { Text("重试读取") } } }
             state.message?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.primary) } }
@@ -74,15 +82,22 @@ import java.time.YearMonth
             }
             when (page) {
                 "账目" -> {
-                    val entries = state.entries.filter { YearMonth.from(it.date) == month }
-                    if (entries.isEmpty()) item {
+                    item {
+                        EntryFilters(query, kind, onQueryChange = { query = it },
+                            onKindChange = { kindName = it?.name.orEmpty() },
+                            onClear = { query = ""; kindName = "" })
+                    }
+                    item { Text("显示 ${visibleEntries.size} / 本月 ${monthEntries.size} 条") }
+                    if (monthEntries.isEmpty()) item {
                         Column(Modifier.fillMaxWidth().padding(vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text("这个月还没有账目", style = MaterialTheme.typography.titleMedium)
                             Button(onClick = { pendingSaveId = null; editingJson = null; editing = true }, enabled = !state.busy) { Text("记一笔") }
                         }
+                    } else if (visibleEntries.isEmpty()) item {
+                        Text("没有符合条件的账目", style = MaterialTheme.typography.titleMedium)
                     }
-                    items(entries, key = { it.id }) { entry ->
-                        Column(Modifier.fillMaxWidth().clickable(enabled = !state.busy) { pendingSaveId = null; editingJson = BackupCodec.encode(listOf(entry)); editing = true }.padding(vertical = 8.dp)) {
+                    items(visibleEntries, key = { it.id }) { entry ->
+                        Column(Modifier.fillMaxWidth().testTag("entry-${entry.id}").clickable(enabled = !state.busy) { pendingSaveId = null; editingJson = BackupCodec.encode(listOf(entry)); editing = true }.padding(vertical = 8.dp)) {
                             Text(entry.date.toString(), style = MaterialTheme.typography.labelLarge)
                             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Text(entry.category, style = MaterialTheme.typography.titleMedium)
@@ -116,7 +131,7 @@ import java.time.YearMonth
                         Text("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。") }
                     item { HorizontalDivider(); Text("本地隐私", style = MaterialTheme.typography.titleLarge); Text("账目仅保存在此设备，无需登录，不联网，无广告或分析服务。") }
                     item { Text("卸载提醒", style = MaterialTheme.typography.titleLarge); Text("卸载应用会删除本地账目；更换设备或卸载前，请先导出备份。系统云备份已关闭。") }
-                    item { Text("版本 0.1.1"); TextButton(onClick = onLicenses) { Text("第三方许可") } }
+                    item { Text("版本 0.1.2"); TextButton(onClick = onLicenses) { Text("第三方许可") } }
                 }
             }
         }
