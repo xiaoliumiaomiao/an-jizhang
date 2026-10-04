@@ -53,3 +53,5 @@ Task1及Task2代码独立规格/质量审查均Approved，全分支静态审查�
 - 覆盖安装`Success`，启动MainActivity `Status: ok`，Upgrade和Device validation exit均0。主agent查看升级后device-screen.png，中文首页显示2026年10月收入100.00、支出0.01、结余99.99及原收入/自定义分类记录；截图证明这次启动状态，不替代数据库字段或手机验收。
 
 原始证据保存在忽略的`test-artifacts/ci-37213110853/android-build`、`android-device/upgrade-artifacts`、设备XML及`run.log/run.json`；独立解析计数在`jvm-summary.json/ui-summary.json/upgrade-summary.json`。代码测试HEAD为1971199；生产APK来源仍69acd94，此后只改测试/CI和文档，最终本机APK哈希不变。文档收尾不重复运行无变化的应用测试，最终远端同步证据另记录。
+
+2026-10-04 23:44（Asia/Shanghai）实际核对：交付文档提交`2baed55a1db3b4bbc0655df92f2f961d4486558c`已推送，GitHub仍private=true，本机HEAD、远端功能分支HEAD、草稿PR #2 HEAD完全一致，工作区干净。1971199之后仅README/docs变更；最终独立规格、质量及交付文档审查全部Approved，0新增Critical/Important/Minor。原始同步快照`test-artifacts/sdd-v011/delivery-sync-first.json`。收尾仅补本段、交接同步说明及计划Step6勾选；推送后再次核对的最新HEAD、私有状态、干净工作区及新旧APK哈希保存在忽略的`final-sync.json`，不追溯预填作者手机验收。
