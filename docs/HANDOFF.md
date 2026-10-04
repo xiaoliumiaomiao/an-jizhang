@@ -1,12 +1,12 @@
 # 当前交接
 
-日期：2026-10-04（Asia/Shanghai）。
+日期：2026-10-05（Asia/Shanghai）。
 
-## 当前迭代0.1.1（技术验证完成，待作者手机升级验收）
+## 当前迭代0.1.1（作者验收全部通过）
 
-作者已确认范围：公开备份容量、JSON边界回归、覆盖升级保留账目验证。0.1.0已验收并快进合入main，基线57799ca1751a98e801c091f1cd6cc69f50cb4c77，PR #1已merged。0.1.1在附到本任务的隔离工作区、feat/ledger-hardening-v0.1.1开发；官方复用调研、实现、两任务及全分支独立审查已完成。本机36项JVM通过、lint0错误/9提示、升级fixture实际编译；新旧本机包公开证书同一，新APK签名/权限/许可已核验。最终包81a92bf36f1867cab1aa2df9b318b5d42e18e16dd65eeb864209f6bd0e8d7448复制到本工作区与原项目output，旧包保留。[PR #2](https://github.com/xiaoliumiaomiao/an-jizhang/pull/2)草稿已附。首次CI37211853745的36 JVM、6 UI和旧版seed通过，随后脚本因缺-r原始输出参数停止；修复1971199及增量审查完成，14项脚本门禁探针通过。[最终CI37213110853](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37213110853)在测试提交1971199上两个job均success，主agent实读36 JVM/6 UI/seed1/verify1全通过，全部账目字段及跨月统计保留，升级后启动与截图已核验，新手机验收表PHONE_ACCEPTANCE_V011.md保持待确认。
+作者已确认范围：公开备份容量、JSON边界回归、覆盖升级保留账目验证。0.1.0已验收并快进合入main，基线57799ca1751a98e801c091f1cd6cc69f50cb4c77，PR #1已merged。0.1.1在附到本任务的隔离工作区、feat/ledger-hardening-v0.1.1开发；官方复用调研、实现、两任务及全分支独立审查已完成。本机36项JVM通过、lint0错误/9提示、升级fixture实际编译；新旧本机包公开证书同一，新APK签名/权限/许可已核验。最终包81a92bf36f1867cab1aa2df9b318b5d42e18e16dd65eeb864209f6bd0e8d7448复制到本工作区与原项目output，旧包保留。[PR #2](https://github.com/xiaoliumiaomiao/an-jizhang/pull/2)草稿已附。首次CI37211853745的36 JVM、6 UI和旧版seed通过，随后脚本因缺-r原始输出参数停止；修复1971199及增量审查完成，14项脚本门禁探针通过。[最终CI37213110853](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37213110853)在测试提交1971199上两个job均success，主agent实读36 JVM/6 UI/seed1/verify1全通过，全部账目字段及跨月统计保留，升级后启动与截图已核验，作者于2026-10-05确认“经验证全部通过”，PHONE_ACCEPTANCE_V011.md据本次确认勾选，手机型号和Android版本未提供。
 
-0.1.1交付文档2baed55已推送并于2026-10-04 23:44实核private、本机/远端/草稿PR HEAD一致、工作区干净；代码测试提交1971199之后仅文档变化。最终独立交付证据及文档审查Approved。收尾同步详情见VALIDATION_V011.md；作者0.1.1手机升级验收仍待确认。
+0.1.1交付文档2baed55已推送并于2026-10-04 23:44实核private、本机/远端/草稿PR HEAD一致、工作区干净；代码测试提交1971199之后仅文档变化。最终独立交付证据及文档审查Approved。收尾同步详情见VALIDATION_V011.md；作者0.1.1手机升级验收已于2026-10-05确认全部通过。
 
 ## 0.1.0历史：已交付的实现
 
