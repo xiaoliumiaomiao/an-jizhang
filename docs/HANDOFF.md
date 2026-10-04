@@ -2,11 +2,15 @@
 
 日期：2026-10-04（Asia/Shanghai）。
 
+## 当前迭代0.1.1（实现中）
+
+作者已确认范围：公开备份容量、JSON边界回归、覆盖升级保留账目验证。0.1.0已验收并快进合入main，基线57799ca1751a98e801c091f1cd6cc69f50cb4c77，PR #1已merged。0.1.1在附到本任务的隔离工作区、feat/ledger-hardening-v0.1.1开发；已完成官方复用调研和开发计划。本轮技术验证尚在执行，新手机验收表PHONE_ACCEPTANCE_V011.md保持待确认。
+
 ## 已交付的实现
 
 - 作者确认范围：收支、分类、月统计、备份恢复；支持Android8.0及以上，人民币。
 - 起始目录为空，没有覆盖历史代码或用户账本。
-- 私有仓库：https://github.com/xiaoliumiaomiao/an-jizhang，已实际验证private；main保留初始化，开发位于feat/local-ledger-v1。
+- 私有仓库：https://github.com/xiaoliumiaomiao/an-jizhang，已实际验证private；已验收0.1.0在main，新迭代位于feat/ledger-hardening-v0.1.1。
 - 规则：agent.md为唯一完整规则，AGENTS.md为工具识别入口。允许多个subagent，实现任务均有另一agent独立审查。
 - 开发前审查五个候选；实际复用固定SHA的安卓官方Gradle Wrapper及MoneyBook MIT金额解析片段。完整许可证随APK打包，详见REUSE_AUDIT.md。
 - 收支新增/编辑/确认删除，自定义分类、日期和备注；月份浏览、精确整数分统计；私有SQLite持久化；系统选择器导出JSON及验证后事务合并恢复均已实现。
