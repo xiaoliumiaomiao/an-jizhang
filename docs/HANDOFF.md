@@ -2,7 +2,7 @@
 
 日期：2026-10-05（Asia/Shanghai）。
 
-## 0.1.3 当前：界面重构已实现，交付审查进行中
+## 0.1.3 当前：技术交付完成，待作者手机验收
 
 2026-10-05作者确认0.1.2校验通过；验收反馈已记录到ff8479f75cd917bc49e5ab2173ad7e9906dc480c，PR #3已MERGED，main已快进同步。当前复用既有隔离工作区，分支feat/ledger-ui-v0.1.3。旧APK、签名和真实数据保留。基线重新执行50 JVM全通过，原日志及7 XML位于ignored test-artifacts/sdd-v013/baseline-ff8479f。
 
@@ -10,9 +10,10 @@
 
 最终受测代码fb9ffd89d81e51c04716b86319416f900ad4e564，[CI37236054231](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37236054231)已success：55JVM/16UI/seed1/verify1全部0失败/错误/跳过，原50/10名称保留、lint0E9W；固定0.1.2→0.1.3同证书覆盖保留schema1、全部字段和跨月统计。ROOT直接实读本次raw runner、三证书、安装/启动/exit；九原生UI图与升级首页已逐张查看，独立Visual / Runtime Approved，C0/I0。统计图旧帧I1由本次正确月统计关闭，旧图和失败过程保留。正常字号末行完整geometry及滚动图通过，初屏FAB观察、大字范围和Recovery非真实Android kill边界见VALIDATION_V013.md。
 
-本机APK9559162bytes/SHA256450d48c0bb1aaf429a50d6b9fc30cc6482c46fec4be841c16b81b0ea22134d0a，原本机公开证书、权限及完整许可审计通过。已实际复制新0.1.3包、独立校验文件和九张原图到工作区output及D:/AIproject/an-jizhang/output；2APK/18PNG与来源hash相同，5旧APK及校验前缀字节保留。私有draft[PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)已附到任务；正式交付审查与最终HEAD同步进行中。ignored test-artifacts/sdd-v013保存各独立报告、实物和同步证据。
+本机APK9559162bytes/SHA256450d48c0bb1aaf429a50d6b9fc30cc6482c46fec4be841c16b81b0ea22134d0a，原本机公开证书、权限及完整许可审计通过。已实际复制新0.1.3包、独立校验文件和九张原图到工作区output及D:/AIproject/an-jizhang/output；2APK/18PNG与来源hash相同，5旧APK及校验前缀字节保留。私有draft[PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)已附到任务；最终完整技术交付独立审查已Approved，Critical0、Important0，报告final-full-delivery-review.md。审查时docs-only b8b7ce8的local/remote/PR HEAD一致且两checkout干净；最后结论写回后再按verify-delivery-sync.ps1核验，记录delivery-sync-final.json。ignored test-artifacts/sdd-v013保存各独立报告、实物和同步证据。
 
 PHONE_ACCEPTANCE_V013.md十三项全部待作者本轮手机验收，型号与Android版本未提供；先在0.1.2导出备份再本机同签名覆盖0.1.3，安装异常保留原应用与账本，不卸载/清库/强降级。main保留已验收ff8479f，作者确认前不合并或正式发布。
+
 ## 最新作者反馈（2026-10-05）
 
 作者回复“已校验通过”，并要求下一轮界面重构与系统功能拓扑调整，具体方案参考市面成熟软件。PHONE_ACCEPTANCE_V012.md八项据该反馈勾选；手机型号/Android版本仍未提供。下文0.1.2段中的手机待验收文字是技术交付时的历史快照，本次反馈已解除该gate。0.1.2验收反馈ff8479f已推送并快进合入main，PR #3已MERGED；当前0.1.3分支与待验收状态见上节。

@@ -1,6 +1,6 @@
 # 0.1.3 独立审查记录
 
-状态：分任务/最终源码、最新CI运行与九图视觉审查已通过；实物已交付，最终技术交付独立审查进行中。作者手机十三项待验收。
+状态：分任务/最终源码、最新CI运行与九图视觉、实际副本、最终完整技术交付独立审查均Approved，Critical0、Important0；作者手机十三项待验收。
 
 实现者与审查者分开，原始报告保存在 ignored `test-artifacts/sdd-v013/`。下列 Approved 仅表示所列范围获得批准，不将静态检查冒充设备或作者验收。
 
@@ -38,4 +38,6 @@
 
 - 受测fb9ffd / CI37236054231：独立Visual / Runtime Approved，Critical0、Important0；实读55 JVM、16 UI、原50/10名称、lint0E9W、seed/verify与本次三证书、覆盖安装/启动。逐张9UI+升级原图正确，旧统计帧I1仅对本次关闭。报告ignored `final-frame-nine-screens-runtime-review.md`。
 - 正常字号末行完整几何和滚动图实际通过；初屏FAB可遮挡观察保留，不外推所有字体或手机。font2旧零值提示在合法重试前仍可见，后续保存/详情用例通过。Recovery2是UI状态/新VM模拟，不称真实进程kill；手机十三项保持未勾。
-- 经独立批准的脚本实际完成双APK/18PNG复制与来源hash检查，5旧APK及校验前缀字节保留。完整技术交付审查另须核对正式docs、私有draft PR4与三方HEAD同步，当前尚不借本视觉报告批准FullDelivery或合main。
+- 经独立批准的脚本实际完成双APK/18PNG复制与来源hash检查，5旧APK及校验前缀字节保留。实际副本与最终完整技术交付已另获独立Approved（见下段），包括正式docs、私有draft PR4与三方HEAD同步；保持作者手机待验收，不合main。
+
+最终完整技术交付审查实际返回Source Spec / Quality / Final technical Delivery Approved，Critical0、Important0，报告ignored `final-full-delivery-review.md`。审查覆盖需求、固定受测fb9ffd、本次CI372360、原始协议/图片、有效owner APK审计、实际副本、正式文档、私有PR4及b8b7ce8三方同步。`final-delivery-copies-review.md`独立实际副本审查同为C0/I0；旧候选和初屏FAB等限制不改写。本次技术结论不能代勾作者手机十三项。

@@ -1,6 +1,6 @@
 # 0.1.3 验证记录
 
-状态：完整CI、九图独立视觉/运行审查及交付复制已完成；最终技术交付独立审查进行中，作者手机十三项待验收。
+状态：完整CI、九图独立视觉/运行、实物复制与最终完整技术交付审查已通过；作者手机十三项待验收。
 
 最终受测代码 `fb9ffd89d81e51c04716b86319416f900ad4e564` 的 [CI37236054231](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37236054231)已 completed / success，两job均成功。ROOT实读本次XML：55 JVM、16 UI全部0失败/错误/跳过，原50 JVM与Smoke6/Query4逐名保留；lint0错误/9既有提示。三次先前失败的Flow返回、非法金额及数据库失败保存用例本次均实际通过。Recovery2为保存Compose状态加新VM的模拟，不是Android进程kill实测。
 
@@ -13,6 +13,7 @@ ROOT直接实读本次seed/verify原始runner：各唯一`OK (1 test)`、唯一`
 已顺序执行独立批准的`copy-owner-reviewed-apk.ps1`和准确pin本CI的`copy-reviewed-screens.ps1`，均exit0。工作区与`D:/AIproject/an-jizhang/output`各交付新APK、新`SHA256SUMS-v0.1.3.txt`及九张原图；两APK哈希一致，18张图与来源字节哈希一致。五个旧APK哈希不变，旧SHA256SUMS.txt前缀原字节保留且新增校验行唯一。有界primitive记录在ignored `apk-delivery.json` / `screen-delivery.json`，没有序列化FileInfo元数据。私有draft [PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)已创建并附到任务；最终HEAD同步与全交付审查另记录，不把草稿当成作者验收。
 
 ## 历史统计截图候选与修正
+
 历史已完成实测候选：`086caba8699a64d67cd393f7da5901f5875bac31`，[CI37234298023](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37234298023)已完成 success；55 JVM与16设备测试均0失败/错误/跳过，原50/10名称全部保留，lint0错误/9提示。最后一处数据库失败保存测试本次完整通过。下面旧候选中的“待”是对应当时的状态。
 
 本轮首次实际完成同CI证书的0.1.2/code3→0.1.3/code4覆盖升级：ROOT实读seed/verify原始runner各唯一OK(1 test)、唯一INSTRUMENTATION_CODE:-1、无失败标记；三包公开证书98756a4ce45b13c7d3d10f46368254538fde254bd4703f20ae96bf45e06510cb相同，实际版本/安装Success/启动Status:ok/exit0均核实。三条记录的所有字段、schema1、1分、中文引号换行和跨月统计在两次reopen中保留，脚本原顺序无中途清库、卸载或重seed；正常中文升级首页已ROOT查看。原始证据位于ignored test-artifacts/ci-v013-final-37234298023/。
@@ -73,6 +74,6 @@ Flow case原logcat显示取消Dialog后Back发向已无input channel的旧Dialog
 
 ## 最终交付边界
 
-上述历史段落中的“待”均对应当时检查点；当前完整运行、视觉和实物见文首，最终独立全交付与同步记录将据实际结果补充。受测fb9ffd之后的收尾提交只允许正式文档变化，推送后逐一核验local/remote/PR HEAD、PRIVATE、OPEN/draft、clean与main仍ff8479f。
+上述历史段落中的“待”均对应当时检查点；当前完整运行、视觉和实物见文首。独立实际副本审查final-delivery-copies-review.md及最终全交付final-full-delivery-review.md均Approved，Critical0、Important0。审查时b8b7ce8的local/remote/PR HEAD一致、private=true、OPEN/draft、两checkout干净、main固定ff8479f，实际证据delivery-sync-pre-review.json；最后结论写回后再实核并记录delivery-sync-final.json。受测fb9ffd之后的收尾提交只允许正式文档变化，推送后逐一核验local/remote/PR HEAD、PRIVATE、OPEN/draft、clean与main仍ff8479f。
 
 PHONE_ACCEPTANCE_V013.md十三项全部未勾，手机型号/Android版本未提供。作者先在0.1.2导出备份，再用本机同签名0.1.3正常覆盖安装；异常保留原应用与账本，不卸载、清库或强降级。作者确认本轮前不合main或正式发布。

@@ -1,6 +1,6 @@
 # 安记账
 
-中文安卓本地记账软件，当前候选0.1.3，支持Android8.0及以上。0.1.0、0.1.1和0.1.2均已由作者确认验收通过；0.1.3界面与功能拓扑重构已通过完整CI，正在完成交付审查，手机验收尚待。
+中文安卓本地记账软件，当前候选0.1.3，支持Android8.0及以上。0.1.0、0.1.1和0.1.2均已由作者确认验收通过；0.1.3界面与功能拓扑重构已完成技术验证和独立交付审查，手机验收尚待。
 
 - 收入/支出新增、编辑、确认删除，内置与自定义分类、日期、备注。
 - 月份切换、收入/支出/结余、支出分类统计。金额始终使用整数分。
@@ -15,7 +15,7 @@
 
 依据成熟软件官方公开资料重组入口，来源、年代/平台限制及采用范围见 [REUSE_V013](docs/REUSE_V013.md)。沿用固定 AndroidX/Material3 与既有 MIT 片段，布局和图标用项目代码实现，schema1、备份format1、整数分及依赖/权限保持原样。
 
-受测代码 `fb9ffd89d81e51c04716b86319416f900ad4e564` 的 [最终CI37236054231](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37236054231)已完整通过：55单元/16设备/旧版seed及新版verify均无失败、错误或跳过，lint0错误/9提示；同证书0.1.2→0.1.3覆盖升级保留全部字段及跨月统计。九张原生场景截图已取回并由ROOT逐张查看，统计页旧帧问题已取得正确新图；独立视觉及完整技术交付审查单独记录。[验证](docs/VALIDATION_V013.md)、[审查](docs/REVIEW_V013.md)、[本轮手机表](docs/PHONE_ACCEPTANCE_V013.md)。私有草稿[PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)已附到任务；作者确认本轮前保持main为已验收0.1.2，不合并或正式发布。
+受测代码 `fb9ffd89d81e51c04716b86319416f900ad4e564` 的 [最终CI37236054231](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37236054231)已完整通过：55单元/16设备/旧版seed及新版verify均无失败、错误或跳过，lint0错误/9提示；同证书0.1.2→0.1.3覆盖升级保留全部字段及跨月统计。九张原生场景截图已取回并由ROOT逐张查看，统计页旧帧问题已取得正确新图；独立源码、视觉/运行、实物副本和最终技术交付审查均Approved，Critical0、Important0。[验证](docs/VALIDATION_V013.md)、[审查](docs/REVIEW_V013.md)、[本轮手机表](docs/PHONE_ACCEPTANCE_V013.md)。私有草稿[PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)已附到任务；作者确认本轮前保持main为已验收0.1.2，不合并或正式发布。
 
 ## 0.1.2 已验收迭代
 
