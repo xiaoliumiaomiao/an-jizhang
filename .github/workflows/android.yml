@@ -103,12 +103,19 @@ jobs:
           timeout 10s adb shell settings put global animator_duration_scale 0
       - name: Android UI smoke test
         run: |
+          capture_device_evidence() {
+            result=$?
+            echo "Device validation exit: $result"
+            timeout 30s adb logcat -d > device-logcat.txt 2>&1 || true
+            timeout 15s adb exec-out screencap -p > device-screen.png || true
+            find app/build -type f \( -path '*/androidTest-results/*' -o -path '*/reports/androidTests/*' \) -print > device-result-files.txt || true
+          }
+          trap capture_device_evidence EXIT
           echo 'c5a643cf80162e665cc228f7b16f343fef868e47d3a4836f62e18b7e17ac018a  gradle/wrapper/gradle-wrapper.jar' | sha256sum --check
           chmod +x gradlew
           ./gradlew :app:connectedDebugAndroidTest --no-daemon
           adb shell am start -n com.xiaoliumiaomiao.anjizhang/.MainActivity
           sleep 3
-          adb exec-out screencap -p > device-screen.png
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -119,4 +126,6 @@ jobs:
             app/build/outputs/androidTest-results/
             emulator.log
             emulator-libs.log
+            device-logcat.txt
+            device-result-files.txt
             device-screen.png
