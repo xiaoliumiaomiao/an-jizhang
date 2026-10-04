@@ -67,11 +67,11 @@
 - `@Composable fun LedgerScreen(viewModel:LedgerViewModel,onExport:()->Unit,onImport:()->Unit,onLicenses:()->Unit)`。
 - MainActivity注册CreateDocument("application/json")/OpenDocument()；导出前提示明文；导入限流读取最多MAX_BYTES+1字节并在后台调用decode+merge，返回新增/跳过数量。
 
-- [ ] Step 1: 添加可执行行为测试：启动后显示“安记账”、空状态、记账入口；数据库失败能够呈现错误；不在启动时添加演示账目。先运行测试记录因页面尚未实现而失败。
-- [ ] Step 2: 实现温暖米白/深青配色Material3，账目/统计/设置三个导航项；月切换和本月按钮，汇总卡，分类条形统计，列表编辑与确认删除。Editor提供支出/收入、金额、日期选择器、分类建议+自定义、备注、验证错误。使用rememberSaveable保留输入状态，长内容可滚动、点击区>=48dp，系统Insets不会遮挡。
-- [ ] Step 3: 实现备份选择器与后台I/O，取消选择不改变数据；read失败/解析失败不执行merge；恢复先提示合并方式；设置内显示隐私/卸载提醒/版本及第三方许可。
-- [ ] Step 4: `./gradlew.bat :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-daemon`，修正真实失败。检查merged manifest权限/backup属性；如果未能运行安卓UI，明确测试层级并保留作者验收。
-- [ ] Step 5: 自检提交 `feat: add offline bookkeeping screens and document backups`，独立审查并修复后复审。
+- [x] Step 1: 添加可执行行为测试：启动后显示“安记账”、空状态、记账入口；数据库失败能够呈现错误；不在启动时添加演示账目。先运行测试记录因页面尚未实现而失败。
+- [x] Step 2: 实现温暖米白/深青配色Material3，账目/统计/设置三个导航项；月切换和本月按钮，汇总卡，分类条形统计，列表编辑与确认删除。Editor提供支出/收入、金额、日期选择器、分类建议+自定义、备注、验证错误。使用rememberSaveable保留输入状态，长内容可滚动、点击区>=48dp，系统Insets不会遮挡。
+- [x] Step 3: 实现备份选择器与后台I/O，取消选择不改变数据；read失败/解析失败不执行merge；恢复先提示合并方式；设置内显示隐私/卸载提醒/版本及第三方许可。
+- [x] Step 4: `./gradlew.bat :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-daemon`，修正真实失败。检查merged manifest权限/backup属性；如果未能运行安卓UI，明确测试层级并保留作者验收。
+- [x] Step 5: 自检提交 `feat: add offline bookkeeping screens and document backups`，独立审查并修复后复审。
 
 ### Task 3: 验证、交付与私有远端同步
 
@@ -83,8 +83,8 @@
 **Interfaces:**
 - Consumes完整应用；交付测试APK，正式签名/商店发布不在范围内。
 
-- [ ] Step 1: 使用实际JDK/SDK执行测试、lint、debug构建并保存日志；独立全分支审查，修复阻塞项后重跑受影响验证。
-- [ ] Step 2: `git diff --check`；APK使用aapt分析无INTERNET权限且apksigner verify成功。复制生成APK到output，不覆盖已有同名异哈希文件；Get-FileHash记录SHA256。
-- [ ] Step 3: 如无本机模拟器可用，配置GitHub Actions的Android模拟器instrumentation smoke测试并保留报告；无法运行时如实记录，不伪造通过。
-- [ ] Step 4: 写清楚一条构建路径（项目工具路径+scripts/build.ps1）、每步成功信号、失败处理、回退界限；手机验收先安装测试APK，然后新增一笔0.01元支出，作者检查界面及金额；后续勾选验收表。
+- [x] Step 1: 使用实际JDK/SDK执行测试、lint、debug构建并保存日志；独立全分支审查，修复阻塞项后重跑受影响验证。
+- [x] Step 2: `git diff --check`；APK使用aapt分析无INTERNET权限且apksigner verify成功。复制生成APK到output，不覆盖已有同名异哈希文件；Get-FileHash记录SHA256。
+- [x] Step 3: 如无本机模拟器可用，配置GitHub Actions的Android模拟器instrumentation smoke测试并保留报告；无法运行时如实记录，不伪造通过。最终37191001385实际6项/0失败/0错误/0跳过。
+- [x] Step 4: 写清楚一条构建路径（项目工具路径+scripts/build.ps1）、每步成功信号、失败处理、回退界限；手机验收先安装测试APK，然后新增一笔0.01元支出，作者检查界面及金额；后续勾选验收表。
 - [ ] Step 5: 提交并推送feature分支/建立可审查PR，attach PR；作者验收记录保持pending。核验GitHub private、远端HEAD、工作区状态并交付。
