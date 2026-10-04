@@ -1,5 +1,9 @@
 package com.xiaoliumiaomiao.anjizhang
 import android.content.Context
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.view.KeyEvent
+import android.view.accessibility.AccessibilityWindowInfo
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.core.app.ApplicationProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -70,6 +74,24 @@ class LedgerSmokeTest {
     }
     // Hold only the existing worker serialization lock, so recreation precedes actual SQL work.
     // No production test hook or artificial data seed is used.
+    private fun closeEditorKeyboard() {
+        // Close the real IME with a user's Back key before this recreation-focused scenario.
+        // Wait for native windows, which Compose idling does not synchronize.
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val info = automation.serviceInfo
+        val previousFlags = info.flags
+        info.flags = previousFlags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+        automation.serviceInfo = info
+        try {
+            compose.waitUntil(10000) { automation.windows.any { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } }
+            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+            compose.waitUntil(10000) { automation.windows.none { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } }
+        } finally {
+            info.flags = previousFlags
+            automation.serviceInfo = info
+        }
+    }
     private fun ledgerModel(): LedgerViewModel {
         var model: LedgerViewModel? = null
         compose.runOnIdle { model = ViewModelProvider(compose.activity)[LedgerViewModel::class.java] }
@@ -104,11 +126,13 @@ class LedgerSmokeTest {
     @Test fun saveAndDeleteCompleteAfterActivityRecreationAndOldResultDoesNotCloseNewEditor() {
         openEditor()
         compose.onNodeWithText("金额（元）").performTextInput("12.34")
+        closeEditorKeyboard()
+        compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         val saveModel = ledgerModel()
         val saveLock = pauseWorker()
         val priorSaveJobs = saveModel.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
         try {
-            compose.onNodeWithText("保存").performScrollTo().performClick()
+            compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
             awaitSubmitted("save", saveModel, priorSaveJobs)
             compose.activityRule.scenario.recreate()
             assertSame("recreation must retain saving ViewModel", saveModel, ledgerModel())
