@@ -37,6 +37,7 @@ import java.util.UUID
     var deletingJson by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingSaveId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingDeleteId by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingOwner by rememberSaveable { mutableStateOf(viewModel.instanceId) }
     val effectiveBusy=state.busy || pendingSaveId!=null || pendingDeleteId!=null
     val detail=remember(detailJson){detailJson?.let{BackupCodec.decode(it).single()}}
     val editingEntry=remember(editingJson){editingJson?.let{BackupCodec.decode(it).single()}}
@@ -45,6 +46,11 @@ import java.util.UUID
     fun openEditor(entry:Entry?,fromDetail:Boolean) {
         pendingSaveId=null;editingJson=entry?.let{BackupCodec.encode(listOf(it))}
         editorSession=UUID.randomUUID().toString();editorReturnToDetail=fromDetail;editing=true
+    }
+    LaunchedEffect(viewModel.instanceId) {
+        if(pendingOwner!=viewModel.instanceId) {
+            pendingSaveId=null;pendingDeleteId=null;pendingOwner=viewModel.instanceId
+        }
     }
     LaunchedEffect(state.completedOperationId,state.failedOperationId,pendingSaveId,pendingDeleteId) {
         state.completedOperationId?.let { completed->

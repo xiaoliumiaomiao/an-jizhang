@@ -2,7 +2,7 @@
 
 当前仓库使用功能分支开发，账本、工具、缓存、APK及签名密钥不会提交Git。先读 agent.md、REQUIREMENTS.md、HANDOFF.md。
 
-当前功能分支feat/ledger-query-v0.1.2为0.1.2/code3，完整技术测试通过，本机同签名APK已复制到output，作者手机验收待执行。新增所选月搜索/筛选仅影响列表，schema1、备份format1、依赖及权限保持原样。实际进度见[VALIDATION_V012](VALIDATION_V012.md)，技术测试不能替代[本轮手机验收](PHONE_ACCEPTANCE_V012.md)。
+0.1.2/code3 已由作者确认通过并合入 main。当前功能分支 `feat/ledger-ui-v0.1.3` 制作 0.1.3/code4：明细/统计/设置、日期分组、详情和全屏编辑；schema1、备份 format1、依赖及权限保持原样。本轮技术验证进行中，实际进度见 [VALIDATION_V013](VALIDATION_V013.md)，技术测试不能替代 [本轮手机验收](PHONE_ACCEPTANCE_V013.md)。
 
 ## 这台 Windows 的一条构建路径
 
@@ -38,7 +38,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -JavaHom
 - 回退代码可保留当前分支，再切回此前提交；不要用 `git reset --hard` 清除未保存工作。
 - 应用升级保留数据依赖签名及数据库迁移。卸载会删除账本，操作前先在应用中导出备份；备份是明文，选可信位置保管。
 
-## 0.1.2当前CI设备与升级路径
+## 0.1.3 CI 设备与升级路径
+
+当前工作流仅在含合成账目的临时 API35 AVD 运行 UI 测试。测试会清理 fixture 数据库；大字号用例还会暂时改变该 AVD 的尺寸、密度及字体并在 finally 还原。禁止在作者手机上运行仪器测试命令。CI-only 参数、QEMU 和 `ci-ledger` guard 先于新增配置与截图操作。
+
+```bash
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.ledgerCi=true \
+  -Pandroid.testInstrumentationRunnerArguments.notClass=com.xiaoliumiaomiao.anjizhang.LedgerUpgradeTest --no-daemon
+```
+
+connected 包含原 Smoke6/Query4、Flow3、LargeText1、Recovery2；实际执行数和结果以本轮 XML 为准。Recovery 模拟保存的 Compose UI 状态加新 VM，并未实际杀 Android 进程。原始证据和八张合成截图由 workflow 上传，CI job success 还须结合 runner、XML 与图片审查。
+
+升级基线固定已验收 `ff8479f75cd917bc49e5ab2173ad7e9906dc480c`，在 `baseline-v012` 构建 0.1.2/code3。connected 结束后，同一 job 的 debug 证书执行旧版 seed → 新版 0.1.3/code4 `install -r` → verify → 正常启动；中间不清库、卸载、再次 connected、重 seed 或降级。作者使用本机同旧签名包覆盖，CI 包仅供独立技术验证。
+
+## 0.1.2 历史 CI 设备与升级路径
 
 当前工作流在仅含合成数据的API35临时模拟器执行原6项LedgerSmokeTest与新增4项LedgerQueryTest，共10项UI行为。它们会清理测试数据库，禁止在作者手机上运行这条仪器测试命令；升级fixture的两个方法要求不同真实安装版本，因此由后面的专门链分别执行。最终CI37220141121在0076b6b代码上实读10/0/0/0（四Query、六Smoke），详见VALIDATION_V012.md。CI的UI命令为：
 

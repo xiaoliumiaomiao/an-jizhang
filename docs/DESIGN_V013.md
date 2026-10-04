@@ -6,7 +6,7 @@
 
 用户要求“界面重构和系统功能拓扑结构调整，具体方案参照市面已成熟软件方案”。本轮让四条路径清楚且一致：查看明细、记一笔、看月统计、本地备份。保留现有收支、分类、自定义分类、日期、备注、筛选、月份、CRUD、备份恢复、许可和隐私告知。新增日期分组、账目详情及全屏编辑作为呈现层行为。
 
-不新增多账本、资产、预算、账户、云同步、登录、联网、遥测、广告、货币、账本加密和应用锁；不改变业务规则、数据库 schema1、备份 format1、整数分金额、applicationId 和 Android8/minSdk26。没有第三方字体、图标库、Navigation 库或 chart 依赖。主入口保留单 Activity、单 LedgerViewModel。仅允许 LedgerUiState 增加 failedOperationId 作为失败结果ID，使呈现层同步提交锁可准确释放；不改变数据库操作和业务校验。
+不新增多账本、资产、预算、账户、云同步、登录、联网、遥测、广告、货币、账本加密和应用锁；不改变业务规则、数据库 schema1、备份 format1、整数分金额、applicationId 和 Android8/minSdk26。没有第三方字体、图标库、Navigation 库或 chart 依赖。主入口保留单 Activity、单 LedgerViewModel。呈现层只扩展 failedOperationId 和 VM 实例身份：前者按失败结果释放提交锁，后者识别恢复时已不存在的后台任务；不改变数据库操作和业务校验。
 
 ## 2. 成熟软件模式的采纳规则
 
@@ -77,6 +77,8 @@
 
 操作消费保留匹配规则：只有 completedOperationId 等于对应 pending ID 才结束会话；失败、旧成功、重新打开都不误关闭。每次打开清对应旧 pending；保存/删除已提交后重建仍由同一 Activity VM 执行。root有效busy = VM busy 或 pendingSaveId/pendingDeleteId非空；save/delete返回ID即同步锁定提交，避免等待IO获取Mutex前重复点击。失败结果增加failedOperationId且按ID释放pending，不能依赖短暂busy变化或错误字符串变化。保存 busy 时 Editor 字段沿用可编辑语义，但提交的是点击时的 candidate 快照；保存/取消/返回禁用，不能重复提交。全屏 Editor 继续 Dialog(usePlatformDefaultWidth=false)，不把编辑器塞入会被主导航卸载的页面。IME 的系统 Back 先收键盘；随后非 busy Back 等同取消。
 
+VM 每个实例生成独立 instanceId；root 的 pendingOwner 随 UI 保存。相同 VM 的 Activity 重建保留 pending 锁及正在执行的操作。保存 UI 状态恢复到新 VM 时，owner 不匹配仅清旧 pendingSaveId/pendingDeleteId，更新 owner；保留草稿、详情、编辑会话、页面、月份和筛选，等新 VM 真实读取完成后允许取消或重试。恢复不自动重放保存/删除，也不凭旧完成结果结束会话。两个 StateRestorationTester 用例验证保存 UI 状态加新 VM 的恢复路径；它们不实际杀 Android 进程，不替代作者手机生命周期验收。
+
 全局进度/错误/重试读取/操作消息由 root 管理，当前主页面顶部能发现；Editor 内显示保存错误；删除确认内显示删除错误。重要错误不只放瞬时 snackbar。三个主页面有独立 LazyListState，详情与 Editor 独立滚动。MainActivity 的系统文件 launcher、整本导出/验证合并、明文告知和许可原样沿用。
 
 ## 6. 验收标准
@@ -87,7 +89,7 @@ A03 月份1900-01至9999-12边界及本月复位可用；原 query（含前后�
 A04 全月统计不受筛选影响；空月份与无匹配不同；清除同时清query与kind且不改月份。
 A05 详情可读每个字段，返回保留上下文；详情编辑取消回原详情，保存成功回明细，取消没有数据库写入。
 A06 Editor 全屏、字段验证/类型重选/默认今天/UTC DatePicker 规则保持；全字段重建后原样保存同ID；A取消后B没有草稿泄漏。
-A07 原保存/删除运行中重建、同VM、10秒等待、错误保留和旧完成隔离用例全部保留；busy Back不关闭在途会话。
+A07 原保存/删除运行中重建、同VM、10秒等待、错误保留和旧完成隔离用例全部保留；busy Back不关闭在途会话。保存 UI 状态恢复到新 VM 后不遗留永久提交锁；草稿可取消或同 ID 重试，删除可取消且重试仅删除目标。
 A08 窄屏360dp与fontScale2.0在真实CI AVD执行，页面/筛选/金额/完整备注、Editor保存取消与错误均实际显示可操作，测试finally还原设备设置。
 A09 设置内明文、50000条/10MiB、事务合并冲突、卸载/云备份关闭、许可都实际可到达；警示取消不改账本。
 A10 0.1.2/code3固定ff8479f→0.1.3/code4同CI证书替换；schema1/全部字段/跨月统计不变，raw runner唯一OK及CODE -1门禁不变。

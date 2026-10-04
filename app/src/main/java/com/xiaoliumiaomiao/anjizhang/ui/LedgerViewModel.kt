@@ -21,6 +21,7 @@ data class LedgerUiState(val entries: List<Entry> = emptyList(), val busy: Boole
     val failedOperationId: String? = null)
 
 class LedgerViewModel(application: Application) : AndroidViewModel(application) {
+    val instanceId: String = UUID.randomUUID().toString()
     private val mutable = MutableStateFlow(LedgerUiState(busy = true))
     val state: StateFlow<LedgerUiState> = mutable.asStateFlow()
     private val lock = Mutex()
