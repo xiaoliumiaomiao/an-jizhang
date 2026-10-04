@@ -18,7 +18,20 @@ class LedgerSmokeTest {
         override fun before() { ApplicationProvider.getApplicationContext<Context>().deleteDatabase("ledger.db") }
     }
     @get:Rule val rules: RuleChain = RuleChain.outerRule(cleanDatabase).around(compose)
+    // Compose idling does not wait for the ViewModel's initial Dispatchers.IO load.
+    // Wait for the user-visible action to be enabled rather than clicking a disabled button.
+    private fun readyEntryAction(): SemanticsNodeInteraction {
+        val ready = hasText("记一笔") and hasClickAction() and isEnabled()
+        compose.waitUntil(10000) { compose.onAllNodes(ready).fetchSemanticsNodes().isNotEmpty() }
+        return compose.onAllNodes(ready)[0].assertIsDisplayed().assertIsEnabled()
+    }
+    private fun openEditor() {
+        readyEntryAction().performClick()
+        compose.waitUntil(10000) { compose.onAllNodesWithText("金额（元）").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("金额（元）").assertExists()
+    }
     @Test fun emptyLedgerAndNavigation() {
+        readyEntryAction()
         compose.onNodeWithText("安记账").assertIsDisplayed()
         compose.onNodeWithText("这个月还没有账目").assertIsDisplayed()
         compose.onAllNodesWithText("记一笔")[0].assertIsDisplayed()
@@ -28,7 +41,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("本地隐私").assertIsDisplayed()
     }
     @Test fun editorInputSurvivesActivityRecreation() {
-        compose.onAllNodesWithText("记一笔")[0].performClick()
+        openEditor()
         compose.onNodeWithText("金额（元）").performTextInput("12.34")
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("金额（元）").assertTextContains("12.34")
@@ -38,7 +51,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("支出分类").assertIsDisplayed()
     }
     @Test fun invalidAmountCannotSaveThenOneCentExpenseAppears() {
-        compose.onAllNodesWithText("记一笔")[0].performClick()
+        openEditor()
         compose.onNodeWithText("金额（元）").performTextInput("0")
         compose.onNodeWithText("保存").performScrollTo().performClick()
         compose.onNodeWithText("金额请输入0.01至999999999.99，最多两位小数").assertIsDisplayed()
@@ -58,7 +71,7 @@ class LedgerSmokeTest {
         return (field.get(model) as Mutex).also { assertTrue(it.tryLock()) }
     }
     @Test fun saveAndDeleteCompleteAfterActivityRecreationAndOldResultDoesNotCloseNewEditor() {
-        compose.onAllNodesWithText("记一笔")[0].performClick()
+        openEditor()
         compose.onNodeWithText("金额（元）").performTextInput("12.34")
         val saveLock = pauseWorker()
         try {
@@ -68,7 +81,7 @@ class LedgerSmokeTest {
         } finally { saveLock.unlock() }
         compose.waitUntil(10000) { compose.onAllNodesWithText("金额（元）").fetchSemanticsNodes().isEmpty() }
         compose.onNodeWithText("-¥12.34").assertIsDisplayed()
-        compose.onAllNodesWithText("记一笔")[0].performClick()
+        openEditor()
         compose.onNodeWithText("金额（元）").assertIsDisplayed()
         compose.onNodeWithText("取消").performScrollTo().performClick()
         compose.onNodeWithText("删除").performScrollTo().performClick()
@@ -82,7 +95,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("这个月还没有账目").assertIsDisplayed()
     }
     @Test fun databaseSaveFailureAfterRecreationKeepsEditorInputs() {
-        compose.onAllNodesWithText("记一笔")[0].performClick()
+        openEditor()
         compose.onNodeWithText("金额（元）").performTextInput("12.34")
         val workerLock = pauseWorker()
         try {
@@ -97,7 +110,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("取消").performScrollTo().performClick()
     }
     @Test fun reselectingExpenseKeepsCustomCategory() {
-        compose.onAllNodesWithText("记一笔")[0].performClick()
+        openEditor()
         compose.onNodeWithText("分类（可自定义）").performTextReplacement("自定义分类")
         compose.onNodeWithText("支出").performScrollTo().performClick()
         compose.onNodeWithText("分类（可自定义）").assertTextContains("自定义分类")
