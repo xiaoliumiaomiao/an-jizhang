@@ -154,12 +154,15 @@ class LedgerSmokeTest {
     @Test fun databaseSaveFailureAfterRecreationKeepsEditorInputs() {
         openEditor()
         compose.onNodeWithText("金额（元）").performTextInput("12.34")
+        val model = ledgerModel()
         val workerLock = pauseWorker()
         try {
+            val previousJobs = model.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
             val context = ApplicationProvider.getApplicationContext<Context>()
             val db = android.database.sqlite.SQLiteDatabase.openDatabase(context.getDatabasePath("ledger.db").path, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE)
             try { db.execSQL("DROP TABLE entries") } finally { db.close() }
             compose.onNodeWithText("保存").performScrollTo().performClick()
+            awaitSubmitted("failed save", model, previousJobs)
             compose.activityRule.scenario.recreate()
         } finally { workerLock.unlock() }
         compose.waitUntil(10000) { compose.onAllNodes(hasText("操作失败：", substring = true)).fetchSemanticsNodes().isNotEmpty() }
