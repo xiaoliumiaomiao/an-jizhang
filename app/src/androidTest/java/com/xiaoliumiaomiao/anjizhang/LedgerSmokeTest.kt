@@ -57,8 +57,12 @@ class LedgerSmokeTest {
         openEditor()
         compose.onNodeWithText("金额（元）").performTextInput("0")
         compose.onNodeWithText("保存").performScrollTo().performClick()
-        compose.onNodeWithText("金额请输入0.01至999999999.99，最多两位小数").assertIsDisplayed()
-        compose.onNodeWithText("金额（元）").performTextReplacement("0.01")
+        // Validation inserts a new row into the scrollable form after the save-button scroll.
+        // Reveal that row by a real scroll, preserving the actual-display assertion.
+        compose.onNodeWithText("金额请输入0.01至999999999.99，最多两位小数").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("金额（元）").assertTextContains("0")
+        assertTrue("非法金额不能生成账目", ledgerModel().state.value.entries.isEmpty())
+        compose.onNodeWithText("金额（元）").performScrollTo().performTextReplacement("0.01")
         compose.onNodeWithText("保存").performScrollTo().performClick()
         compose.waitUntil(10000) { compose.onAllNodesWithText("-¥0.01").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("-¥0.01").assertIsDisplayed()
