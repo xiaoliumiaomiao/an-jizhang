@@ -92,7 +92,7 @@ ROOT在当前代码HEAD再执行上方完整构建，`final-local-build-20261005
 - [x] 两处output新文件复制及新旧哈希、旧校验行原字节前缀核验。
 - [x] 私有draft [PR #3](https://github.com/xiaoliumiaomiao/an-jizhang/pull/3)已创建并附到本任务；2026-10-05 01:39:40实核private=true、OPEN/draft、三方HEAD均ed803ff4415c0ded54881817c0ca3ae4627081b2、工作区干净，main仍9768172。原始sync快照在delivery-sync-before-final-review.json；0076b6b之后仅七文档变化。
 - [x] `/root/v012_final_review`实际独立原始证据/实物/正式文档/live PR同步审查，`final-delivery-review.md`：Source Spec/Quality与Final technical Delivery均Approved，Critical0/Important0。
-- [ ] 作者独立执行0.1.2手机表并反馈；八项全未勾，不合main或正式发布。
+- [x] 作者于2026-10-05回复“已校验通过”，PHONE_ACCEPTANCE_V012.md八项据反馈勾选，手机型号/Android仍未提供。下方待验收表述为技术交付历史；本次可合入基线，商店发布另行决定。
 
 ## 两处APK交付与记录修正
 
@@ -125,3 +125,5 @@ ROOT只授权单变量：在该negative方法增加只读model、持锁后Jobs�
 独立/root/v012_delivery_guard_review补审实际交付后置条件与一行报告修正Approved，报告apk-delivery-compact-review.md；原审查漏查序列化问题已在补报告纠正。PS5.1只读内存探针确认ReadAllLines行无Provider附加元数据、按脚本结构序列化2412 bytes；当前compactmeta3059 bytes、现场新旧hash/prefix/新行均相符，reportingFixExecuted=false。没有重跑复制或修改APK。
 
 最终技术交付独立报告已返回Approved；本次只记录实际结论和技术步骤完成项。最后文档commit/push后，ROOT再次核对本机/远端/PR HEAD、private/draft/clean/main边界与新旧包，真实快照保存ignored delivery-sync-final.json；0076b6b之后只改文档，不把未重新执行的应用构建或手机验收记为通过。
+
+作者确认更新（2026-10-05）：本轮手机验收据作者“已校验通过”确认完成；这是作者反馈，未新增agent手机操作或技术测试。原始技术与交付历史保留，后续使用已验收0.1.2作为界面重构基线。
