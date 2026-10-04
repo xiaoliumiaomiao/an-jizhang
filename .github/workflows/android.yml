@@ -24,11 +24,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Prepare pinned Android SDK tools
+        run: bash .github/scripts/setup-android.sh
       - name: Verify wrapper and SDK
         run: |
           echo 'c5a643cf80162e665cc228f7b16f343fef868e47d3a4836f62e18b7e17ac018a  gradle/wrapper/gradle-wrapper.jar' | sha256sum --check
           chmod +x gradlew
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          sdkmanager 'platforms/android-35' 'build-tools/35.0.0' 'platform-tools'
       - name: Unit tests, lint and APK
         run: ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-daemon
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -53,10 +55,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Prepare pinned Android SDK tools
+        run: bash .github/scripts/setup-android.sh
       - name: Prepare emulator
         run: |
           sudo chmod 666 /dev/kvm
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'emulator' 'system-images;android-35;google_apis;x86_64'
+          sdkmanager 'platforms/android-35' 'build-tools/35.0.0' 'platform-tools' 'emulator' 'system-images/android-35/google_apis/x86_64'
           echo no | avdmanager create avd -n ci-ledger -k 'system-images;android-35;google_apis;x86_64' --device pixel_5
           "$ANDROID_HOME/emulator/emulator" -avd ci-ledger -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect > emulator.log 2>&1 &
           adb wait-for-device

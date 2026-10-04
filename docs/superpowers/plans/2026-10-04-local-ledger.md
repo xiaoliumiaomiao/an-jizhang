@@ -6,7 +6,7 @@
 
 **Architecture:** Kotlin + Compose Material3，单 Activity。纯 Kotlin domain 与 Android SQLite 数据层分离，ViewModel/StateFlow 驱动界面。JSON 备份通过系统文档选择器，以验证后事务合并方式恢复。
 
-**Tech Stack:** Gradle8.11.1，AGP8.9.2，Kotlin/Compose plugin2.1.20，Compose BOM2025.04.01，activity-compose1.10.1，lifecycle2.8.7，coroutines1.10.1，JUnit4.13.2，Robolectric4.14.1（如平台相容验证发现问题，以记录后最小兼容调整为准）。
+**Tech Stack:** Gradle8.11.1，AGP8.9.2，Kotlin/Compose plugin2.1.20，Compose BOM2025.04.01，activity-compose1.10.1，lifecycle2.8.7，coroutines1.10.2，JUnit4.13.2，Robolectric4.14.1。协程采用已验证发布的1.10.2补丁版本，并已通过Task1构建测试（如平台相容验证发现问题，以记录后最小兼容调整为准）。
 
 ## Global Constraints
 
@@ -38,7 +38,7 @@
 - `class LedgerDatabase(context:Context):SQLiteOpenHelper` exposes `fun listEntries():List<Entry>`, `fun save(entry:Entry):Unit`, `fun delete(id:String):Unit`, `fun merge(entries:List<Entry>):ImportResult`；`data class ImportResult(val imported:Int,val skipped:Int)`。
 - `object BackupCodec { const val MAX_BYTES:Int=10485760; fun encode(entries:List<Entry>):String; fun decode(json:String):List<Entry> }`。
 
-- [ ] Step 1: 配置固定版本构建并从审查过的固定SHA获取官方wrapper和许可证；只创建无业务实现的API骨架。添加能验证行为的测试：
+- [x] Step 1: 配置固定版本构建并从审查过的固定SHA获取官方wrapper和许可证；只创建无业务实现的API骨架。添加能验证行为的测试：
 ```kotlin
 @Test fun preciseCents() { assertEquals(1234L, Money.parse("12.34")) }
 @Test fun invalidAmount() { for (x in listOf("0","-1","1.234","1e2","1000000000")) assertNull(Money.parse(x)) }
@@ -48,10 +48,10 @@
   assertEquals(0L, MonthlySummary.calculate(x,YearMonth.of(2026,9)).incomeCents)
 }
 ```
-- [ ] Step 2: `./gradlew.bat :app:testDebugUnitTest --no-daemon`，记录预期断言失败（非拼写/环境故障），保存在任务报告。
-- [ ] Step 3: 实现规则与统计；Money.parse适配MoneyBook的BigDecimal片段并添加regex和上限，format不转double。数据库SQL列为id TEXT PRIMARY KEY, kind TEXT, amount_cents INTEGER, category TEXT, date TEXT, note TEXT。保存前validate，查询稳定排序。merge先验证整批，再在单一事务内对比已有记录；冲突抛异常回滚。BackupCodec严格验证根格式、version、currency、记录类型/范围/重复ID/UTF-8大小；不得用JSONObject.getLong静默截断小数。
-- [ ] Step 4: 通过真实SQLite/Robolectric测试插入编辑删除、关闭重开、全量roundtrip、重复导入、冲突回滚（冲突记录放批次末尾）、损坏JSON、小数金额、超限与未知版本。执行 `./gradlew.bat :app:testDebugUnitTest --no-daemon` 和 `git diff --check`，记录实际输出。
-- [ ] Step 5: 自检并显式add相关文件，提交 `feat: add exact money rules and transactional local ledger`；独立审查规格及代码，修复阻塞发现后复审。
+- [x] Step 2: `./gradlew.bat :app:testDebugUnitTest --no-daemon`，记录预期断言失败（非拼写/环境故障），保存在任务报告。
+- [x] Step 3: 实现规则与统计；Money.parse适配MoneyBook的BigDecimal片段并添加regex和上限，format不转double。数据库SQL列为id TEXT PRIMARY KEY, kind TEXT, amount_cents INTEGER, category TEXT, date TEXT, note TEXT。保存前validate，查询稳定排序。merge先验证整批，再在单一事务内对比已有记录；冲突抛异常回滚。BackupCodec严格验证根格式、version、currency、记录类型/范围/重复ID/UTF-8大小；不得用JSONObject.getLong静默截断小数。
+- [x] Step 4: 通过真实SQLite/Robolectric测试插入编辑删除、关闭重开、全量roundtrip、重复导入、冲突回滚（冲突记录放批次末尾）、损坏JSON、小数金额、超限与未知版本。执行 `./gradlew.bat :app:testDebugUnitTest --no-daemon` 和 `git diff --check`，记录实际输出。
+- [x] Step 5: 自检并显式add相关文件，提交 `feat: add exact money rules and transactional local ledger`；独立审查规格及代码，修复阻塞发现后复审。
 
 ### Task 2: 中文界面与系统备份/恢复
 
