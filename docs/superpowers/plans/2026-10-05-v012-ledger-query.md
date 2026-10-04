@@ -20,6 +20,7 @@
 - 空月显示“这个月还没有账目”；有本月记录但无匹配显示“没有符合条件的账目”；“清除筛选”可一键清空关键词及类型。
 - 只抽无状态筛选控件，不迁移 editing/editingJson/deletingJson/pendingSaveId/pendingDeleteId 或完成消费 LaunchedEffect；不重构原增删改流程。
 - 保留原 6 项 LedgerSmokeTest、业务断言及 10000ms 等待；新增 4 项真实 UI 行为测试。适应布局仅可真实滚动、真实关闭 IME、稳定节点选择；不删断言、不改测试为跳过、不延长等待、不直接改筛选状态使测试通过。
+- 阶段 A 可新增 KeyboardTestSupport.kt，抽取共用 ComposeTestRule.closeKeyboard()，旧 smoke 仅替换重复 IME helper 与去除无用 imports；六项业务、断言和 10000ms 保持，不提前改生产 UI/版本。
 - UI RED 必须在未接入筛选的 0.1.1 UI 上真实执行新测试，主 agent 实读因找不到搜索控件而失败的断言；编译错误、模拟器故障和故意破坏生产代码均不算 RED。RED 阶段保留旧版本和旧升级链，停于 UI 失败时不得声称升级已执行。
 - 0.1.2 最终 versionName 为 `0.1.2`、versionCode 为 `3`；升级链固定已验收 0.1.1/code2 到 0.1.2/code3，沿用现有工作流，不另加工作流。
 - 升级保留 `am instrument -w -r`、恰好一条 `OK (1 test)`、唯一 `INSTRUMENTATION_CODE: -1`、所有失败/崩溃检查、同证书三包、CI/单设备/QEMU/ci-ledger 检查和 timeout；seed 后至 verify 前禁止清库、卸载、重 seed、connected 测试和降级安装。
@@ -47,6 +48,7 @@
 | 1 | 新建 `app/src/main/java/com/xiaoliumiaomiao/anjizhang/domain/EntryFilter.kt` | 无 Android 依赖的纯列表筛选 |
 | 1 | 新建 `app/src/test/java/com/xiaoliumiaomiao/anjizhang/EntryFilterTest.kt` | 14 个命名行为与输入不变回归 |
 | 2 | 新建 `app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/LedgerQueryTest.kt` | 4 项真实 UI 集成行为 |
+| 2 | 新建 `app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/KeyboardTestSupport.kt` | 两组 UI 测试共用原生 IME 关闭逻辑 |
 | 2 | 新建 `app/src/main/java/com/xiaoliumiaomiao/anjizhang/ui/EntryFilters.kt` | 无状态输入、类型 chips 与清除控件 |
 | 2 | 修改 `app/src/main/java/com/xiaoliumiaomiao/anjizhang/ui/LedgerScreen.kt` | 顶层查询状态、派生列表、计数/空态、行 tag、设置版本 |
 | 2 | 修改 `app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/LedgerSmokeTest.kt` | 版本断言与必要真实滚动；保留原六项业务 |
@@ -223,22 +225,18 @@ git commit -m "feat: add pure monthly entry filter"
 
 **Interfaces:** 消费 Task 1 的 EntryFilter.apply；输出无状态 EntryFilters 接口、两个保存状态、文案及行 `entry-${entry.id}` tag。清除回调必须一次同时设置 query=""、kindName=""。
 
-- [ ] **Step 1：只新增以下完整 LedgerQueryTest.kt，先不改任何生产 UI/版本。** 测试种子只包含合成数据，在临时 CI AVD setup 创建数据库。四个行为均通过真实 UI 输入/点击、滚动、重建；只读 VM 用于异步就绪和数据持久化断言，不直接操作筛选状态。
+- [ ] **Step 1：新增以下完整 LedgerQueryTest.kt，共用 IME helper；先不改任何生产 UI/版本。** 测试种子只包含合成数据，在临时 CI AVD setup 创建数据库。四个行为均通过真实 UI 输入/点击、滚动、重建；只读 VM 用于异步就绪和数据持久化断言，不直接操作筛选状态。
 
 ```kotlin
 package com.xiaoliumiaomiao.anjizhang
 
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
-import android.view.KeyEvent
-import android.view.accessibility.AccessibilityWindowInfo
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.platform.app.InstrumentationRegistry
 import com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase
 import com.xiaoliumiaomiao.anjizhang.domain.*
 import com.xiaoliumiaomiao.anjizhang.ui.LedgerViewModel
@@ -288,20 +286,7 @@ class LedgerQueryTest {
         closeIme()
     }
     private fun closeIme() {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val automation = instrumentation.uiAutomation
-        val info = automation.serviceInfo
-        val previousFlags = info.flags
-        info.flags = previousFlags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
-        automation.serviceInfo = info
-        try {
-            compose.waitUntil(10000) { automation.windows.any { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } }
-            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-            compose.waitUntil(10000) { automation.windows.none { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } }
-        } finally {
-            info.flags = previousFlags
-            automation.serviceInfo = info
-        }
+        compose.closeKeyboard()
     }
     private fun count(visible: Int, total: Int) { text("显示 $visible / 本月 $total 条") }
     private fun summary(income: String, expense: String, balance: String) {
@@ -429,6 +414,36 @@ class LedgerQueryTest {
 }
 ```
 
+共用 test-only KeyboardTestSupport.kt 如下。LedgerSmokeTest 原 closeEditorKeyboard() 仅改为调用 compose.closeKeyboard()，删除相应无用 imports；原六项业务/断言/版本不变。初审重复逻辑 Important 与修后复审分别保存，不覆盖历史。
+
+```kotlin
+package com.xiaoliumiaomiao.anjizhang
+
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.view.KeyEvent
+import android.view.accessibility.AccessibilityWindowInfo
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.test.platform.app.InstrumentationRegistry
+
+internal fun ComposeTestRule.closeKeyboard() {
+    // Close the real IME with a user's Back key; Compose idling does not wait for native windows.
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val automation = instrumentation.uiAutomation
+    val info = automation.serviceInfo
+    val previousFlags = info.flags
+    info.flags = previousFlags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+    automation.serviceInfo = info
+    try {
+        waitUntil(10000) { automation.windows.any { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } }
+        instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+        waitUntil(10000) { automation.windows.none { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } }
+    } finally {
+        info.flags = previousFlags
+        automation.serviceInfo = info
+    }
+}
+```
+
 - [ ] **Step 2：编译新测试，主 agent 单独提交并推送取得真实 UI RED。**
 
 ```powershell
@@ -439,7 +454,7 @@ git diff --check
 预期编译成功；生产版本仍 0.1.1/code2、没有搜索控件。主 agent 执行：
 
 ```powershell
-git add app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/LedgerQueryTest.kt
+git add app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/LedgerQueryTest.kt app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/KeyboardTestSupport.kt app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/LedgerSmokeTest.kt
 git commit -m "test: specify ledger query UI behavior"
 git push -u origin feat/ledger-query-v0.1.2
 gh run list --branch feat/ledger-query-v0.1.2 --limit 5 --json databaseId,headSha,status,conclusion,url
