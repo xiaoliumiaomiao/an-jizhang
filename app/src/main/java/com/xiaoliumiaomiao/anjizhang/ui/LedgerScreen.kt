@@ -112,10 +112,11 @@ import java.time.YearMonth
                     item { Text("备份与恢复", style = MaterialTheme.typography.titleLarge)
                         Button(onClick = onExport, enabled = !state.busy) { Text("导出备份") }
                         OutlinedButton(onClick = onImport, enabled = !state.busy) { Text("恢复备份") }
-                        Text("备份文件包含明文账目，请保存在可信位置。恢复会合并账目，相同记录跳过；内容冲突时整批拒绝。") }
+                        Text("备份文件包含明文账目，请保存在可信位置。恢复会合并账目，相同记录跳过；内容冲突时整批拒绝。")
+                        Text("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。") }
                     item { HorizontalDivider(); Text("本地隐私", style = MaterialTheme.typography.titleLarge); Text("账目仅保存在此设备，无需登录，不联网，无广告或分析服务。") }
                     item { Text("卸载提醒", style = MaterialTheme.typography.titleLarge); Text("卸载应用会删除本地账目；更换设备或卸载前，请先导出备份。系统云备份已关闭。") }
-                    item { Text("版本 0.1.0"); TextButton(onClick = onLicenses) { Text("第三方许可") } }
+                    item { Text("版本 0.1.1"); TextButton(onClick = onLicenses) { Text("第三方许可") } }
                 }
             }
         }
