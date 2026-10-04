@@ -51,7 +51,7 @@
 | 2 | 新建 `app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/KeyboardTestSupport.kt` | 两组 UI 测试共用原生 IME 关闭逻辑 |
 | 2 | 新建 `app/src/main/java/com/xiaoliumiaomiao/anjizhang/ui/EntryFilters.kt` | 无状态输入、类型 chips 与清除控件 |
 | 2 | 修改 `app/src/main/java/com/xiaoliumiaomiao/anjizhang/ui/LedgerScreen.kt` | 顶层查询状态、派生列表、计数/空态、行 tag、设置版本 |
-| 2 | 修改 `app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/LedgerSmokeTest.kt` | 版本断言与必要真实滚动；保留原六项业务 |
+| 2 | 修改 `app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/LedgerSmokeTest.kt` | 版本断言与必要真实滚动；经失败诊断增加三行提交观测，保留原六项业务/10秒/断言 |
 | 2 | 修改 `app/build.gradle.kts` | 仅 versionName/code |
 | 3 | 修改 `app/src/androidTest/java/com/xiaoliumiaomiao/anjizhang/LedgerUpgradeTest.kt` | 两个真实安装版本断言 |
 | 3 | 修改 `.github/scripts/verify-upgrade.sh`、`.github/workflows/android.yml`、`.gitignore` | 固定 0.1.1 升级基线及目录，保留现有门禁 |
@@ -225,7 +225,7 @@ git commit -m "feat: add pure monthly entry filter"
 
 **Interfaces:** 消费 Task 1 的 EntryFilter.apply；输出无状态 EntryFilters 接口、两个保存状态、文案及行 `entry-${entry.id}` tag。清除回调必须一次同时设置 query=""、kindName=""。
 
-- [ ] **Step 1：新增以下完整 LedgerQueryTest.kt，共用 IME helper；先不改任何生产 UI/版本。** 测试种子只包含合成数据，在临时 CI AVD setup 创建数据库。四个行为均通过真实 UI 输入/点击、滚动、重建；只读 VM 用于异步就绪和数据持久化断言，不直接操作筛选状态。
+- [x] **Step 1：新增以下完整 LedgerQueryTest.kt，共用 IME helper；先不改任何生产 UI/版本。** 测试种子只包含合成数据，在临时 CI AVD setup 创建数据库。四个行为均通过真实 UI 输入/点击、滚动、重建；只读 VM 用于异步就绪和数据持久化断言，不直接操作筛选状态。
 
 ```kotlin
 package com.xiaoliumiaomiao.anjizhang
@@ -444,7 +444,7 @@ internal fun ComposeTestRule.closeKeyboard() {
 }
 ```
 
-- [ ] **Step 2：编译新测试，主 agent 单独提交并推送取得真实 UI RED。**
+- [x] **Step 2：编译新测试，主 agent 单独提交并推送取得真实 UI RED。**
 
 ```powershell
 .\scripts\build.ps1 -Tasks ':app:assembleDebugAndroidTest'
@@ -462,7 +462,9 @@ gh run list --branch feat/ledger-query-v0.1.2 --limit 5 --json databaseId,headSh
 
 选择 headSha 与本次 `git rev-parse HEAD` 相同的 run，后续使用本文“主 agent CI 取证”命令。预期 build 通过、原六 smoke 通过、新四 query 测试因 `搜索分类或备注` 控件不存在而在真实设备失败；逐项读取 XML 与栈。若测试发生早于该断言的 fixture/同步错误，修复测试再重新取得 RED。截图、XML 和原始日志保留；此时 connected 失败，后续升级链未执行，不能称为升级验证。主 agent 明确记录 RED 有效后才给 implementer 继续信号。
 
-- [ ] **Step 3：创建 EntryFilters.kt。**
+执行记录：tests-only 提交 `6c8c530b42d35dc000cd0c5e4dd82b65b668d9bb` 的 [CI 37217431685](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37217431685)，主 agent 实读 50 JVM 全通过、lint 0 Error / 9 Warning；设备 XML 为 10 tests / 4 failures / 0 errors / 0 skipped，原 6 smoke 通过，新 4 query 均以 `No node found…搜索分类或备注` 失败。有效 RED 已确认，升级未执行；原始日志、XML、ui-red-cases.json 和 ui-red-summary.json 保存在 ignored `test-artifacts/ci-v012-37217431685/`。初审的重复 IME 逻辑已提取为共享 test-only helper并独立复审通过，原 Changes requested 报告保留。
+
+- [x] **Step 3：创建 EntryFilters.kt。**
 
 ```kotlin
 package com.xiaoliumiaomiao.anjizhang.ui
@@ -503,7 +505,7 @@ fun EntryFilters(query: String, kind: EntryKind?, onQueryChange: (String) -> Uni
 }
 ```
 
-- [ ] **Step 4：最小接入 LedgerScreen。** 增加 `import androidx.compose.ui.platform.testTag`；在 month 定义之后、编辑状态之前增加：
+- [x] **Step 4：最小接入 LedgerScreen。** 增加 `import androidx.compose.ui.platform.testTag`；在 month 定义之后、编辑状态之前增加：
 
 ```kotlin
 var query by rememberSaveable { mutableStateOf("") }
@@ -536,7 +538,7 @@ if (monthEntries.isEmpty()) item {
 
 原 `items(entries, key = { it.id })` 替换为 `items(visibleEntries, key = { it.id })`，原行 Column modifier 的 `.fillMaxWidth()` 后增加 `.testTag("entry-${entry.id}")`；原行内部内容及编辑删除 onClick 保持。筛选控件中已始终提供清除按钮，无结果/空月时无需创建第二个同文案按钮。设置页仅将 `Text("版本 0.1.1")` 改成 `Text("版本 0.1.2")`。
 
-- [ ] **Step 5：更新版本及原 smoke 的必要滚动。** app/build.gradle.kts defaultConfig 仅两行：
+- [x] **Step 5：更新版本及原 smoke 的必要滚动。** app/build.gradle.kts defaultConfig 仅两行：
 
 ```kotlin
 versionCode = 3
@@ -566,7 +568,7 @@ revealLedgerText("支出 ¥0.01")
 
 原重建保存完成后的 `compose.onNodeWithText("-¥12.34").assertIsDisplayed()` 改用 `revealLedgerText("-¥12.34")`。原等待均仍 10000ms，真实列表和统计仍实际显示；需要点击的屏外“删除”先 `revealLedgerText("删除")` 再 performClick。不得把可见性断言改成只检查 VM 或 assertExists。
 
-- [ ] **Step 6：本机编译、完整 JVM、lint；设备 UI GREEN 留待 Task 3。**
+- [x] **Step 6：本机编译、完整 JVM、lint；设备 UI GREEN 留待 Task 3。**
 
 ```powershell
 .\scripts\build.ps1 -Tasks ':app:testDebugUnitTest', ':app:lintDebug', ':app:assembleDebug', ':app:assembleDebugAndroidTest'
@@ -581,7 +583,7 @@ git commit -m "feat: search and filter monthly ledger entries"
 ```
 
 此时只记录本机 JVM/lint/两APK编译 GREEN，Task 2 的设备 GREEN 明确保持待执行。版本已0.1.2，旧升级脚本尚期待0.1.1，不能推送制造必然的中间版本失败CI，也不能跳过升级门禁。Task 2代码先完成独立规格/质量审查和本地原子提交；Task 3同步新升级链并通过独立审查后，由根agent一次推送当前全部提交取得完整CI GREEN。该运行中实际10项UI全过，才完成Task 2设备验收并勾选对应步骤；代码审查通过不代替设备通过。
-- [ ] **Step 7：独立规格审查、质量审查。** 审查状态在分页条件外；统计/export 的全账本边界；清除两条件；默认行为；四测试真实交互、6 原测试完整；无操作 ID 迁移；IME 与 LazyColumn 使用现有版本 API。遇阻塞先修复再相应重跑。必要的测试同步修复不能改变 RED 的需求契约。
+- [x] **Step 7：独立规格审查、质量审查。** 审查状态在分页条件外；统计/export 的全账本边界；清除两条件；默认行为；四测试真实交互、6 原测试完整；无操作 ID 迁移；IME 与 LazyColumn 使用现有版本 API。遇阻塞先修复再相应重跑。必要的测试同步修复不能改变 RED 的需求契约。
 
 ## Task 3：固定升级链、完整验证、APK 与私有 PR 交付
 
@@ -589,7 +591,7 @@ git commit -m "feat: search and filter monthly ledger entries"
 
 **Interfaces:** 消费 0.1.2/code3 应用及测试 APK；旧 APK 必须由固定已验收 `976817290302e712519297cc5b810ce019d2d383` 在同 CI job 构建。同一 fixture 两方法分别在真实 0.1.1/code2 与 0.1.2/code3 进程执行，不得假造版本或重建旧数据库。
 
-- [ ] **Step 1：替换 fixture/脚本的版本常量，保留所有断言。** LedgerUpgradeTest 两行分别为：
+- [x] **Step 1：替换 fixture/脚本的版本常量，保留所有断言。** LedgerUpgradeTest 两行分别为：
 
 ```kotlin
 val context = installedVersion("0.1.1", 2) // seedOldVersionLedger
@@ -604,7 +606,7 @@ check_apk "$current_apk" current "$app" 3 0.1.2
 printf 'PASS: synthetic ledger survived 0.1.1/code2 -> 0.1.2/code3 replacement\n' | tee "$artifacts/summary.txt"
 ```
 
-- [ ] **Step 2：同步现有 CI 基线，保留完整工作流。** `.github/workflows/android.yml` 所有 `baseline-v010` 改 `baseline-v011`；注释/step name 中的 `fixed 0.1.0` 改 `fixed 0.1.1`；第二 checkout 的 ref 改为下列完整块。不要修改 action pins、notClass、设备和证据步骤。
+- [x] **Step 2：同步现有 CI 基线，保留完整工作流。** `.github/workflows/android.yml` 所有 `baseline-v010` 改 `baseline-v011`；注释/step name 中的 `fixed 0.1.0` 改 `fixed 0.1.1`；第二 checkout 的 ref 改为下列完整块。不要修改 action pins、notClass、设备和证据步骤。
 
 ```yaml
       - name: Checkout fixed 0.1.1 baseline
@@ -617,7 +619,7 @@ printf 'PASS: synthetic ledger survived 0.1.1/code2 -> 0.1.2/code3 replacement\n
 
 `.gitignore` 保留 `baseline-v010/` 并追加 `baseline-v011/`，不取消历史忽略、不纳入 APK/证据。
 
-- [ ] **Step 3：重新编译受影响 fixture，做静态门禁，再提交真实 CI。**
+- [x] **Step 3：重新编译受影响 fixture，做静态门禁，再提交真实 CI。**
 
 ```powershell
 .\scripts\build.ps1 -Tasks ':app:assembleDebugAndroidTest'
@@ -635,7 +637,7 @@ git commit -m "test: verify accepted 0.1.1 to 0.1.2 upgrade"
 git push
 ```
 
-- [ ] **Step 4：主 agent 真实 CI 取证，所有阶段必须通过。** 以下 PowerShell 获取当前提交运行并保存原始资料，不从 GitHub 绿色图标推断业务正确：
+- [x] **Step 4：主 agent 真实 CI 取证，所有阶段必须通过。** 以下 PowerShell 获取当前提交运行并保存原始资料，不从 GitHub 绿色图标推断业务正确：
 
 ```powershell
 $expectedHead = (git rev-parse HEAD).Trim()
@@ -673,7 +675,7 @@ $suites | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 (Join-Path $evide
 
 最终必须：两个 job success，50 JVM/10 UI 0失败0错误0跳过；lint 0 Error（warning如实）；seed/verify各恰1通过及唯一 completion=-1；安装旧版0.1.1/code2、新版0.1.2/code3；三包同公开证书；旧账目所有字段及两个月统计正确；replacement Success；launch Status: ok；Upgrade/Device exit0。打开 device-screen.png 检查中文界面真实启动。保存失败历史，不用后来通过抹除 RED 或失败；任何最终失败修复后重新在同一工作流取得通过。
 
-- [ ] **Step 5：本机最终构建并核验新旧公开证书、包信息与许可。**
+- [x] **Step 5：本机最终构建并核验新旧公开证书、包信息与许可。**
 
 ```powershell
 .\scripts\build.ps1 -Tasks ':app:testDebugUnitTest', ':app:lintDebug', ':app:assembleDebug', ':app:assembleDebugAndroidTest'
@@ -713,7 +715,7 @@ try {
 } finally { $zip.Dispose() }
 ```
 
-- [ ] **Step 6：以新文件名交付，拒绝覆盖异哈希目标，保留旧包和旧校验行。** 先完成证书相同门禁，再运行：
+- [x] **Step 6：以新文件名交付，拒绝覆盖异哈希目标，保留旧包和旧校验行。** 先完成证书相同门禁，再运行：
 
 ```powershell
 $source = (Resolve-Path 'app/build/outputs/apk/debug/app-debug.apk').Path
@@ -737,7 +739,7 @@ foreach ($directory in $destinations) {
 
 复制前后分别记录两个 output 中 0.1.0/0.1.1 的 SHA256，确认历史文件未变；不自动安装到作者手机，不更换签名，不触碰真实账本。回退保留旧 APK/基线，但 Android 拒绝降版本时不得指导卸载或 `-d` 强行覆盖；作者先导出备份并保留现装版本，修复后以更高版本继续。
 
-- [ ] **Step 7：写本轮证据文档和未勾手机验收。** 主agent已创建REUSE_V012.md，本任务先核对并最小补充，不覆盖已有内容；本轮真实调研归档包含：固定版本、MoneyBook SHA/MIT/不复制、官方 API 链接、无新依赖/权限、采用成本；保留既有授权。VALIDATION_V012.md 记录已执行命令及日志路径、Task1 RED断言、UI RED实际run/commit、最终GREEN实际run/commit、真实 suite/runner计数、lint、APK hash/公开证书、截图观察、未解决限制。REVIEW_V012.md 逐项列实际 reviewer、范围、结论、修复与复审证据；报告未返回前不得写 Approved。
+- [x] **Step 7：写本轮证据文档和未勾手机验收。** 主agent已创建REUSE_V012.md，本任务先核对并最小补充，不覆盖已有内容；本轮真实调研归档包含：固定版本、MoneyBook SHA/MIT/不复制、官方 API 链接、无新依赖/权限、采用成本；保留既有授权。VALIDATION_V012.md 记录已执行命令及日志路径、Task1 RED断言、UI RED实际run/commit、最终GREEN实际run/commit、真实 suite/runner计数、lint、APK hash/公开证书、截图观察、未解决限制。REVIEW_V012.md 逐项列实际 reviewer、范围、结论、修复与复审证据；报告未返回前不得写 Approved。
 
 PHONE_ACCEPTANCE_V012.md 的初始完整正文：
 
@@ -796,3 +798,10 @@ gh pr create --repo xiaoliumiaomiao/an-jizhang --base main --head feat/ledger-qu
 - [ ] 本文代码块与实际实现按当前源码验证；方案中不存在替代行为测试的编译错误或虚假证据。
 
 计划编写本身不表示上述构建、测试、审查或交付已经执行。
+
+## 完整CI失败后的最小诊断补充（2026-10-05）
+
+首次完整CI37218934264对应8f1c4c9：50 JVM通过，10 UI中4 Query/5 Smoke通过；唯一原negative case等待错误文字10000ms超时，升级未执行。只读Phase1/2尚未证明根因，原日志/失败报告保留。
+
+ROOT依照Step7已有“必要测试同步修复不能改变需求契约”授权单变量增加原negative方法三行：只读model、持锁后既有Jobs快照、真实点击后重建前复用awaitSubmitted。原DROP/recreate/unlock/错误与输入/取消断言逐字保留，不加IME关闭/重试/扩时/skip/生产改动。11秒编译4执行/40缓存，独立/root/v012_final_review Spec/Quality Approved；ROOT核验tree822835c9c336043fead7447d93850e2e865babe2后提交0076b6b11de015a81f7c2f4e2337f9408ccd9a41并启动CI37220141121。它是更明确的提交观测，不等于根因已修好；即使GREEN，也不从单次结果反推原失败必定未dispatch。新运行的完整实测结果及余下交付步骤仍按真实证据收口。
+实际收口证据：CI37220141121 / 0076b6b 两job成功，50 JVM/10 UI/seed1/verify1全0；negative新增提交观测日志jobs=1与原业务通过，不反推旧根因。两处output新SHA匹配审计8c82...，三旧APK不变；SHA256SUMS原94/188bytes前缀SHA与独立交付前快照一致。首次PowerShell报告元数据膨胀保留raw，compact基本类型记录实际复核，无APK变化；ReadAllLines单行报告修正未重新执行复制。最终draft PR同步与delivery审查待完成，作者八项仍未勾。

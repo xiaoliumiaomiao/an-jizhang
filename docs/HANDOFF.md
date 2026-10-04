@@ -2,14 +2,17 @@
 
 日期：2026-10-05（Asia/Shanghai）。
 
-## 当前迭代0.1.2（需求与计划阶段）
+## 当前迭代0.1.2（技术验证通过，待手机验收）
 
-作者于2026-10-05确认0.1.1“经验证全部通过”，并要求继续迭代。0.1.1已快进合入main并推送，验收基线976817290302e712519297cc5b810ce019d2d383，PR #2实际MERGED。本轮按已公开推荐的账目搜索与收支筛选推进；偏好问题已发，作者尚未提出其他优先项。
+作者已确认0.1.1“经验证全部通过”并要求继续。已验收main固定976817290302e712519297cc5b810ce019d2d383，PR #2 MERGED；本轮沿用隔离工作区、feat/ledger-query-v0.1.2，不合main或正式发布，作者0.1.2手机表八项全未勾。
 
-沿用已附的干净隔离工作区，切换新分支feat/ledger-query-v0.1.2。0.1.1基线在build-20261005-001147.log通过--rerun-tasks实际重新执行36项JVM，0失败/0错误/0跳过，XML保存test-artifacts/sdd-v012/baseline-9768172。开发前源结构审查及GitHub/官方复用调研完成，见REUSE_V012.md；正在写分任务计划，尚未实现或声称新功能通过。
+0.1.2/code3增加所选月分类/备注字面搜索、全部/收入/支出AND筛选、一键清除、切页/切月/Activity重建保留原输入/类型；月统计与整本导出仍为完整数据。生产来源895cea973e5084a1d63b51d7b8ad6f59313c5edc；升级链8f1c4c9后仅三行test-only提交观测形成最终受测代码0076b6b11de015a81f7c2f4e2337f9408ccd9a41。schema1、format1、依赖/权限/VM/DB/Backup/Editor无新改动。开发前已实际官方/GitHub复用审查，见REUSE_V012.md。
 
-目标：只筛选所选月的账目列表，分类/备注关键词与收支类型组合、清空条件；整月统计与整本导出保持原数据。新版本计划0.1.2/code3，沿用schema1、备份format1及现有依赖/权限；新技术和手机验收分别记录，不继承旧版通过结果。
+新增14项先RED12失败→GREEN14/全50；旧UI真实CI37217431685四Query因缺控件失败，原六通过。首次完整CI37218934264四新Query/五旧Smoke通过，唯一保存失败重建用例等待错误超时；原失败/诊断保留，根因未证明。三行只读提交观测与原业务/10秒保留，经独立复审后新[CI37220141121](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37220141121)两job success：50 JVM/10 UI/seed1/verify1全0。固定976旧0.1.1/code2→0.1.2/code3实际替换，schema1/全部字段/跨月统计保留；三包同CI证书、原始runner唯一成功、install/launch/exit及中文首页截图均ROOT实读。详见VALIDATION_V012.md，不能以本次GREEN反推旧根因。
 
+本机APK与完整包装审计相同：9408857 bytes，SHA256 8c82dbc30e482232b537868174ffb1aa2c5ec1e9c878420ee9fb7857b381ae42，公开证书209fe650f40d48d32167be84b0d59576ecc3fc90c3af4169fc811a13e700109d与旧本机包相同；无联网/广泛存储、自动备份全域排除、三完整许可实核。已以新文件名复制到工作区output与D:/AIproject/an-jizhang/output，旧APK和旧校验原字节均保留。PowerShell报告元数据膨胀已保留原记录并生成compact meta、实际后置条件再次核验，APK不变。
+
+Task1/Task2/Task3/完整源码/三行观测独立审查Approved；最终交付文档与私有draft PR/附件/HEAD同步正收口，delivery review尚待正式报告。技术交付后作者先在0.1.1导出备份，再正常覆盖安装本机同签名新包并执行PHONE_ACCEPTANCE_V012.md；CI包不覆盖作者应用，安装异常保留原应用与账本，不卸载/清库/强降级。
 ## 已验收基线0.1.1
 
 作者已确认范围：公开备份容量、JSON边界回归、覆盖升级保留账目验证。0.1.0已验收并快进合入main，基线57799ca1751a98e801c091f1cd6cc69f50cb4c77，PR #1已merged。0.1.1在附到本任务的隔离工作区、feat/ledger-hardening-v0.1.1开发；官方复用调研、实现、两任务及全分支独立审查已完成。本机36项JVM通过、lint0错误/9提示、升级fixture实际编译；新旧本机包公开证书同一，新APK签名/权限/许可已核验。最终包81a92bf36f1867cab1aa2df9b318b5d42e18e16dd65eeb864209f6bd0e8d7448复制到本工作区与原项目output，旧包保留。[PR #2](https://github.com/xiaoliumiaomiao/an-jizhang/pull/2)草稿已附。首次CI37211853745的36 JVM、6 UI和旧版seed通过，随后脚本因缺-r原始输出参数停止；修复1971199及增量审查完成，14项脚本门禁探针通过。[最终CI37213110853](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37213110853)在测试提交1971199上两个job均success，主agent实读36 JVM/6 UI/seed1/verify1全通过，全部账目字段及跨月统计保留，升级后启动与截图已核验，作者于2026-10-05确认“经验证全部通过”，PHONE_ACCEPTANCE_V011.md据本次确认勾选，手机型号和Android版本未提供。
