@@ -1,6 +1,6 @@
 # 安记账 V1.0 S1 补齐实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 在现有0.1.3修复版上补齐最新V1.0的S1，交付可覆盖安装的0.1.4/code6测试包。
 
@@ -36,9 +36,9 @@
 - `hasChangesFrom(initial:EntryEditorState):Boolean`：仅比较kind/amount/category/date/note五项可编辑内容，ID不是可编辑字段；不把折叠状态、错误或光标当改动。
 - `RecentCategories.forKind(entries:List<Entry>, kind:EntryKind):List<String>`：只选指定类型，date降序、同日id升序，trim名称、去重后最多6个；不修改Entry。默认建议支出餐饮/交通/购物/住房/其他、收入工资/奖金/其他由UI继续提供。
 
-- [ ] 先写行为测试并取得实际RED，再实现GREEN。必须覆盖新增空分类、编辑空白分类/备注和稳定ID、未改动/单字段改动、同日ID稳定排序、跨类型隔离、trim去重、最多6个与输入不变。未定义API编译报错不当行为RED；必要时测试先写，再加最小可编译未实现体，使断言真正失败。
-- [ ] 本机命令：`& .\scripts\build.ps1 -Tasks @(':app:testDebugUnitTest')`；保留RED/GREEN日志与XML，不删旧测试。
-- [ ] `git diff --check`后只提交本任务文件；报告写test-artifacts/sdd-v1-s1/task1-report.md。独立规格/质量审查通过后才进入Task2。
+- [x] 先写行为测试并取得实际RED，再实现GREEN。必须覆盖新增空分类、编辑空白分类/备注和稳定ID、未改动/单字段改动、同日ID稳定排序、跨类型隔离、trim去重、最多6个与输入不变。未定义API编译报错不当行为RED；必要时测试先写，再加最小可编译未实现体，使断言真正失败。
+- [x] 本机命令：`& .\scripts\build.ps1 -Tasks @(':app:testDebugUnitTest')`；保留RED/GREEN日志与XML，不删旧测试。
+- [x] `git diff --check`后只提交本任务文件；报告写test-artifacts/sdd-v1-s1/task1-report.md。独立规格/质量审查通过后才进入Task2。
 
 ### Task 2: S1界面与状态集成
 
