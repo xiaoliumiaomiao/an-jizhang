@@ -85,7 +85,7 @@ class LedgerFlowTest {
     @Test fun allEditorFieldsSurviveRecreationAndSaveKeepsStableId(){
         ready();open(first);compose.onNodeWithText("编辑").performScrollTo().performClick()
         compose.onNodeWithText("收入").performScrollTo().performClick()
-        set("金额（元）","987654321.09");set("日期（yyyy-MM-dd）","2020-02-29")
+        compose.setAmountWithKeypad("987654321.09");set("日期（yyyy-MM-dd）","2020-02-29")
         set("分类（可自定义）","自定义收入");set("备注（可选，最多200字）","完整备注\n第二行")
         compose.closeKeyboard()
         compose.onNodeWithText("金额（元）").performScrollTo().assertIsDisplayed();captureLedgerScreen("editor")
@@ -121,7 +121,7 @@ class LedgerFlowTest {
         compose.onNodeWithTag("settings-list").assertIsDisplayed();captureLedgerScreen("settings")
         compose.onNodeWithTag("nav-stats").performClick()
         compose.onNodeWithTag("add-entry").performClick()
-        set("金额（元）","77.77");set("分类（可自定义）","取消草稿");compose.closeKeyboard()
+        compose.setAmountWithKeypad("77.77");set("分类（可自定义）","取消草稿");compose.closeKeyboard()
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
         compose.onNodeWithTag("nav-stats").assertIsSelected();assertEquals(2,model().state.value.entries.size)
         compose.onNodeWithTag("add-entry").performClick()

@@ -85,7 +85,7 @@ class LedgerQueryTest {
     }
     private fun add(category: String, amount: String) {
         compose.onAllNodes(hasText("记一笔") and hasClickAction() and isEnabled())[0].performClick()
-        compose.onNodeWithText("金额（元）").performTextInput(amount)
+        compose.setAmountWithKeypad(amount)
         compose.onNodeWithText("分类（可自定义）").performScrollTo().performTextReplacement(category)
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().performTextInput("匹配词")
         closeIme()

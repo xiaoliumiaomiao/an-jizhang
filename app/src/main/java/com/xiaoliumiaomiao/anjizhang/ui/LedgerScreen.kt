@@ -1,4 +1,5 @@
 package com.xiaoliumiaomiao.anjizhang.ui
+import android.os.SystemClock
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaoliumiaomiao.anjizhang.data.BackupCodec
 import com.xiaoliumiaomiao.anjizhang.domain.*
+import kotlinx.coroutines.delay
 import java.time.YearMonth
 import java.util.UUID
 
@@ -51,6 +53,12 @@ import java.util.UUID
         if(pendingOwner!=viewModel.instanceId) {
             pendingSaveId=null;pendingDeleteId=null;pendingOwner=viewModel.instanceId
         }
+    }
+    LaunchedEffect(viewModel.instanceId, state.messageId) {
+        val messageId = state.messageId ?: return@LaunchedEffect
+        val remaining = (state.messageExpiresAt ?: 0L) - SystemClock.elapsedRealtime()
+        if (remaining > 0) delay(remaining)
+        viewModel.clearMessage(messageId)
     }
     LaunchedEffect(state.completedOperationId,state.failedOperationId,pendingSaveId,pendingDeleteId) {
         state.completedOperationId?.let { completed->

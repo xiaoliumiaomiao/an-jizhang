@@ -35,7 +35,7 @@ class LedgerUpgradeTest {
     }
 
     @Test fun verifyUpgradedLedger() {
-        val context = installedVersion("0.1.3", 4)
+        val context = installedVersion("0.1.3", 5)
         // No save, merge, delete, or reseed: a missing database must fail.
         assertLedgerOnDisk(context, "upgrade-opened")
         assertLedgerOnDisk(context, "upgrade-reopened")

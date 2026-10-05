@@ -1,14 +1,17 @@
 package com.xiaoliumiaomiao.anjizhang.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -16,6 +19,7 @@ import androidx.compose.ui.platform.testTag
 import com.xiaoliumiaomiao.anjizhang.domain.*
 import java.time.*
 import java.util.UUID
+import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable fun EntryEditor(entry: Entry?, busy: Boolean, saveError: String?, onDismiss: () -> Unit,
@@ -29,6 +33,18 @@ import java.util.UUID
     var datePicker by rememberSaveable { mutableStateOf(false) }
     val id = rememberSaveable { entry?.id ?: UUID.randomUUID().toString() }
     Dialog(onDismissRequest = { if (!busy) onDismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        val focusManager = LocalFocusManager.current
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val amountInteractionSource = remember { MutableInteractionSource() }
+        fun dismissIme() {
+            focusManager.clearFocus(force = true)
+            keyboardController?.hide()
+        }
+        LaunchedEffect(amountInteractionSource, focusManager, keyboardController) {
+            amountInteractionSource.interactions.collect { interaction ->
+                if (interaction is PressInteraction.Release) dismissIme()
+            }
+        }
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column(Modifier.fillMaxSize().systemBarsPadding().imePadding().testTag("editor-form").verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(if (entry == null) "记一笔" else "编辑账目", style = MaterialTheme.typography.headlineSmall)
@@ -37,7 +53,12 @@ import java.util.UUID
                         FilterChip(selected = kindName == kind.name, onClick = { if (kindName != kind.name) { kindName = kind.name; category = if (kind == EntryKind.EXPENSE) "餐饮" else "工资" } }, label = { Text(label) }, modifier = Modifier.padding(end = 8.dp).heightIn(min = 48.dp))
                     }
                 }
-                OutlinedTextField(amount, { amount = it }, label = { Text("金额（元）") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(amount, {}, label = { Text("金额（元）") }, singleLine = true, readOnly = true,
+                    interactionSource = amountInteractionSource,
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) keyboardController?.hide() })
+                AmountKeypad(enabled = !busy, onKey = { key -> dismissIme(); amount = AmountKeypadInput.append(amount, key) },
+                    onBackspace = { dismissIme(); amount = AmountKeypadInput.backspace(amount) },
+                    onClear = { dismissIme(); amount = "" })
                 OutlinedTextField(date, { date = it }, label = { Text("日期（yyyy-MM-dd）") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 TextButton(onClick = { datePicker = true }) { Text("选择日期") }
                 OutlinedTextField(category, { category = it }, label = { Text("分类（可自定义）") }, singleLine = true, modifier = Modifier.fillMaxWidth())

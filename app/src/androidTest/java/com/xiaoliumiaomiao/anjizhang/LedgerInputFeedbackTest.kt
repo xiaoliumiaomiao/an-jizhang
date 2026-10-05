@@ -79,6 +79,25 @@ class LedgerInputFeedbackTest {
         }
         compose.onNodeWithText("已删除").assertIsDisplayed()
         val observedAt = SystemClock.elapsedRealtime()
+        val vm = model()
+        val feedback = vm.state.value
+        assertEquals("已删除", feedback.message)
+        assertNotNull("成功反馈必须有稳定身份", feedback.messageId)
+        assertNotNull("成功反馈必须有原始截止时间", feedback.messageExpiresAt)
+        val messageId = feedback.messageId!!
+        val expiresAt = feedback.messageExpiresAt!!
+        compose.activityRule.scenario.recreate()
+        assertSame("反馈重建必须保留同一 VM", vm, model())
+        val restoredFeedback = vm.state.value
+        if (restoredFeedback.message != null) {
+            assertEquals("已删除", restoredFeedback.message)
+            assertEquals("重建不能换成功反馈身份", messageId, restoredFeedback.messageId)
+            assertEquals("重建不能延长原截止时间", expiresAt, restoredFeedback.messageExpiresAt)
+        } else {
+            assertTrue("反馈只能在原截止时间之后被清除", SystemClock.elapsedRealtime() >= expiresAt)
+            assertNull(restoredFeedback.messageId)
+            assertNull(restoredFeedback.messageExpiresAt)
+        }
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("已删除").fetchSemanticsNodes().isEmpty()
         }
@@ -106,6 +125,13 @@ class LedgerInputFeedbackTest {
         compose.pressAmountKey("clear"); compose.assertAmountDraft("")
         compose.pressAmountKey("backspace"); compose.assertAmountDraft("")
         invalidAmountMustNotSave()
+        val errorMustRemainUntil = SystemClock.elapsedRealtime() + 3100L
+        compose.waitUntil(10000) { SystemClock.elapsedRealtime() >= errorMustRemainUntil }
+        compose.onNodeWithText("金额请输入0.01至999999999.99，最多两位小数")
+            .performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("editor-form").assertExists()
+        assertEquals(setOf(first, second), databaseEntries().toSet())
+        assertEquals(setOf(first, second), model().state.value.entries.toSet())
         compose.setAmountWithKeypad(".")
         invalidAmountMustNotSave()
         compose.setAmountWithKeypad("0")

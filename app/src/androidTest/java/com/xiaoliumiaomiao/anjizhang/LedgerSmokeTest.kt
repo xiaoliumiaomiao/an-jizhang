@@ -56,7 +56,7 @@ class LedgerSmokeTest {
     }
     @Test fun editorInputSurvivesActivityRecreation() {
         openEditor()
-        compose.onNodeWithText("金额（元）").performTextInput("12.34")
+        compose.setAmountWithKeypad("12.34")
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         compose.onNodeWithText("取消").performScrollTo().performClick()
@@ -66,8 +66,7 @@ class LedgerSmokeTest {
     }
     @Test fun invalidAmountCannotSaveThenOneCentExpenseAppears() {
         openEditor()
-        compose.onNodeWithText("金额（元）").performClick().performTextInput("0")
-        compose.closeKeyboard()
+        compose.setAmountWithKeypad("0")
         compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
         // Validation inserts a new row into the scrollable form after the save-button scroll.
         // Reveal that row by a real scroll, preserving the actual-display assertion.
@@ -79,8 +78,7 @@ class LedgerSmokeTest {
         }
         compose.onNodeWithText("金额（元）").assertTextContains("0")
         assertTrue("非法金额不能生成账目", ledgerModel().state.value.entries.isEmpty())
-        compose.onNodeWithText("金额（元）").performScrollTo().performClick().performTextReplacement("0.01")
-        compose.closeKeyboard()
+        compose.setAmountWithKeypad("0.01")
         compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
         val savedModel = ledgerModel()
         compose.waitUntil(10000) {
@@ -128,8 +126,7 @@ class LedgerSmokeTest {
     }
     @Test fun saveAndDeleteCompleteAfterActivityRecreationAndOldResultDoesNotCloseNewEditor() {
         openEditor()
-        compose.onNodeWithText("金额（元）").performTextInput("12.34")
-        closeEditorKeyboard()
+        compose.setAmountWithKeypad("12.34")
         compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         val saveModel = ledgerModel()
         val saveLock = pauseWorker()
@@ -173,8 +170,7 @@ class LedgerSmokeTest {
     }
     @Test fun databaseSaveFailureAfterRecreationKeepsEditorInputs() {
         openEditor()
-        compose.onNodeWithText("金额（元）").performClick().performTextInput("12.34")
-        closeEditorKeyboard()
+        compose.setAmountWithKeypad("12.34")
         val model = ledgerModel()
         val workerLock = pauseWorker()
         try {

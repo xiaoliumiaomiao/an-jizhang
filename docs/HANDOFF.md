@@ -4,7 +4,7 @@
 
 ## 当前修复：成功提示与金额内置键盘
 
-作者本轮报告“已删除”持久显示，并要求金额改内置数字键盘、备注保留系统IME；先只修此两项。复用当前feat/ledger-ui-v0.1.3与私有draft PR4，保留原0.1.3交付/旧APK、主目录作者未提交文档及main。计划见[修复计划](superpowers/plans/2026-10-05-input-feedback-fix.md)，本轮实际证据见[修复验证](VALIDATION_INPUT_FEEDBACK.md)。当前5项新逻辑已真实RED60/5→GREEN60/0，AndroidTest编译通过；新界面/IME及自动消失尚待真实仪器回归，不称已修复交付，不继承旧55/16结果。
+作者本轮报告“已删除”持久显示，并要求金额改内置数字键盘、备注保留系统IME；先只修此两项。复用当前feat/ledger-ui-v0.1.3与私有draft PR4，保留原0.1.3交付/旧APK、主目录作者未提交文档及main。计划见[修复计划](superpowers/plans/2026-10-05-input-feedback-fix.md)，本轮实际证据见[修复验证](VALIDATION_INPUT_FEEDBACK.md)。5项新逻辑已真实RED60/5→GREEN60/0；旧界面CI37272983725 attempt2真实19UI/仅新3失败，原16通过。已实现原期限清成功反馈、只读金额及内联数字键、Dialog内IME交接；原16只适配11金额动作及5次金额收键盘。完整本机构建145721成功38秒，60JVM/0失败错误跳过、lint0E9W；Task2独立源码Spec/Quality Approved C0/I0/M0，见[本轮审查](REVIEW_INPUT_FEEDBACK.md)。新0.1.3/code5包尚未复制，实际设备GREEN、覆盖升级、11新图和作者手机9项仍待，不继承旧交付结果。
 
 ## 0.1.3 当前：技术交付完成，待作者手机验收
 
