@@ -194,9 +194,13 @@ class LedgerS1Test {
     }
     private fun fontViewport(scale: Float) {
         emulatorOnly(); val old = shell("settings get system font_scale")
+        fun override(kind: String) = shell("wm $kind").lineSequence().firstOrNull { it.startsWith("Override ") }?.substringAfter(": ")
+        val oldSize = override("size"); val oldDensity = override("density")
         try {
+            shell("wm size 720x1280"); shell("wm density 320")
             shell("settings put system font_scale $scale"); compose.activityRule.scenario.recreate()
-            compose.waitUntil(10000) { kotlin.math.abs(compose.activity.resources.configuration.fontScale - scale) < .01f }; ready()
+            compose.waitUntil(10000) { kotlin.math.abs(compose.activity.resources.configuration.fontScale - scale) < .01f && compose.activity.resources.configuration.screenWidthDp <= 360 }
+            assertTrue(compose.activity.resources.configuration.screenWidthDp in 320..360); ready()
             listOf("nav-stats", "nav-settings", "nav-ledger").forEach { compose.onNodeWithTag(it).assertIsDisplayed().performClick().assertIsSelected() }
             compose.onNodeWithTag("ledger-list").performScrollToIndex(0)
             val button = compose.onNodeWithTag("add-entry").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
@@ -219,7 +223,14 @@ class LedgerS1Test {
             compose.onNodeWithText("取消").performScrollTo().performClick()
             compose.onNodeWithTag("discard-draft").assertIsDisplayed()
             compose.onNodeWithText("放弃修改").performClick(); unchanged()
-        } finally { shell(if(old == "null") "settings delete system font_scale" else "settings put system font_scale $old"); compose.activityRule.scenario.recreate() }
+        } finally {
+            shell(if(oldSize == null) "wm size reset" else "wm size $oldSize")
+            shell(if(oldDensity == null) "wm density reset" else "wm density $oldDensity")
+            shell(if(old == "null" || old.isEmpty()) "settings delete system font_scale" else "settings put system font_scale $old")
+            compose.activityRule.scenario.recreate()
+            assertEquals(oldSize, override("size")); assertEquals(oldDensity, override("density"))
+            assertEquals(old, shell("settings get system font_scale"))
+        }
     }
     @Test fun fontOneHasUncoveredViewportAndReachableActions() = fontViewport(1f)
     @Test fun fontOnePointThreeHasUncoveredViewportAndReachableActions() = fontViewport(1.3f)
