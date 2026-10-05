@@ -381,17 +381,32 @@ class LedgerS1Test {
             assertEquals(360, compose.activity.resources.configuration.screenWidthDp); ready()
             listOf("nav-stats", "nav-settings", "nav-ledger").forEach { compose.onNodeWithTag(it).assertIsDisplayed().performClick().assertIsSelected() }
             compose.onNodeWithTag("ledger-list").performScrollToIndex(0)
-            val button = compose.onNodeWithTag("add-entry").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-            val viewport = compose.onNodeWithTag("ledger-list").fetchSemanticsNode().boundsInRoot
+            val initialButtonNode = compose.onNodeWithTag("add-entry").assertIsDisplayed().fetchSemanticsNode()
+            val initialViewportNode = compose.onNodeWithTag("ledger-list").fetchSemanticsNode()
+            val (button, viewport) = compose.runOnIdle {
+                assertTrue(initialButtonNode.layoutInfo.isAttached && initialButtonNode.layoutInfo.isPlaced)
+                assertTrue(initialViewportNode.layoutInfo.isAttached && initialViewportNode.layoutInfo.isPlaced)
+                initialButtonNode.boundsInRoot to initialViewportNode.boundsInRoot
+            }
             android.util.Log.i("LedgerS1", "font=$scale wm=${override("size")} density=${override("density")} configurationWidthDp=${compose.activity.resources.configuration.screenWidthDp} viewportPx=$viewport")
             assertTrue("List viewport must end above add button at font $scale: $viewport / $button", viewport.bottom <= button.top)
             compose.onNodeWithTag("ledger-list").performScrollToNode(hasTestTag("entry-${records.first().id}"))
-            val row = compose.onNodeWithTag("entry-${records.first().id}").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-            val currentButton = compose.onNodeWithTag("add-entry").fetchSemanticsNode().boundsInRoot
-            val currentViewport = compose.onNodeWithTag("ledger-list").fetchSemanticsNode().boundsInRoot
+            val rowNode = compose.onNodeWithTag("entry-${records.first().id}").assertIsDisplayed().fetchSemanticsNode()
+            val currentButtonNode = compose.onNodeWithTag("add-entry").fetchSemanticsNode()
+            val currentViewportNode = compose.onNodeWithTag("ledger-list").fetchSemanticsNode()
+            // boundsInRoot reads live layout coordinates. Read all three on the same
+            // UI turn; a pre-scroll button rectangle can belong to an older inset layout.
+            val (row, currentButton, currentViewport) = compose.runOnIdle {
+                listOf(rowNode, currentButtonNode, currentViewportNode).forEach {
+                    assertTrue(it.layoutInfo.isAttached && it.layoutInfo.isPlaced)
+                }
+                Triple(rowNode.boundsInRoot, currentButtonNode.boundsInRoot, currentViewportNode.boundsInRoot)
+            }
             android.util.Log.i("LedgerS1", "font=$scale afterScroll rowPx=$row originalButtonPx=$button currentButtonPx=$currentButton originalViewportPx=$viewport currentViewportPx=$currentViewport")
-            if (row.bottom > button.top) captureLedgerScreen("s1-viewport-failure-${scale.toString().replace('.', '-')}")
-            assertTrue("Visible row must end above original add button at font $scale: row=$row originalButton=$button currentButton=$currentButton viewport=$currentViewport", row.bottom <= button.top)
+            if (row.bottom > currentButton.top || currentViewport.bottom > currentButton.top)
+                captureLedgerScreen("s1-viewport-failure-${scale.toString().replace('.', '-')}")
+            assertTrue("Current list viewport must end above current add button at font $scale: $currentViewport / $currentButton", currentViewport.bottom <= currentButton.top)
+            assertTrue("Visible row must end above current add button at font $scale: row=$row initialButton=$button currentButton=$currentButton viewport=$currentViewport", row.bottom <= currentButton.top)
             compose.onNodeWithTag("entry-${records.first().id}").performClick()
             compose.onNodeWithTag("add-entry").assertDoesNotExist()
             compose.onNodeWithText("编辑").performScrollTo().performClick()
