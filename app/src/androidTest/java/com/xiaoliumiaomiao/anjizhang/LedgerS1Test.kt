@@ -277,7 +277,10 @@ class LedgerS1Test {
             compose.onNodeWithText("年份（1900–9999）").performTextReplacement(year); compose.closeKeyboard()
             compose.onNodeWithTag("month-$selectedMonth").performScrollTo().performClick()
         }
-        picker("1900", 1); captureLedgerScreen("s1-month-picker"); compose.onNodeWithText("确定").performClick()
+        picker("1900", 1)
+        compose.onNodeWithTag("month-1").assertIsSelected()
+        compose.waitForIdle()
+        captureLedgerScreen("s1-month-picker"); compose.onNodeWithText("确定").performClick()
         compose.onNodeWithTag("month-select").assertTextContains("1900年1月")
         compose.onNodeWithText("上月").assertIsNotEnabled()
         picker("9999", 12); compose.onNodeWithText("确定").performClick()
