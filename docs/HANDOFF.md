@@ -2,6 +2,15 @@
 
 日期：2026-10-05（Asia/Shanghai）。
 
+
+## 当前迭代：V1.0 S1补齐 / 0.1.4（实施中）
+
+作者要求参照最新V1.0迭代；主目录main仍已验收0.1.2，本轮复用feat/ledger-ui-v0.1.3，原主目录两未提交文档与两处旧产物hash已冻结，原字节不改。计划见[本轮计划](superpowers/plans/2026-10-05-v1-s1-completion.md)，目标0.1.4/code6，保持schema1/format1及原安全/搜索/operation ID合同，S2等待作者S1手机验收。
+
+作者本轮明确反馈：成功提示自动消失已通过；金额键盘要弹出式，现有页面式未通过。当前键盘修正为初始隐藏、点金额后在底部独立面板弹出，可收起，Back先收面板，备注/日期/分类切系统IME时收起金额面板；保留全部草稿。PHONE_INPUT_FEEDBACK记录部分反馈，未将复合项目全勾。
+
+Task1草稿与最近分类规则已独立Spec/Quality Approved，真实RED77/14→GREEN77/0，原60保留；SDK XML已有告警如实记录。Task2测试-only61789d9、初始CI37280091275进行中，本机RED77/1（导出失败新提示），尚未改生产UI；新弹出键盘测试将另取真实RED。下文0.1.3/fix1技术交付为历史，不能作为0.1.4已通过。新的手机验收表[PHONE_ACCEPTANCE_V014](PHONE_ACCEPTANCE_V014.md)全部待作者，不合main或正式发布。
+
 ## 当前修复：成功提示与金额内置键盘
 
 作者本轮报告“已删除”持久显示，并要求金额改内置数字键盘、备注保留系统IME；本轮只修此两项。复用feat/ledger-ui-v0.1.3与私有draft PR4，保留原0.1.3交付/旧APK、主目录作者未提交文档及main。计划见[修复计划](superpowers/plans/2026-10-05-input-feedback-fix.md)，本轮实际证据见[修复验证](VALIDATION_INPUT_FEEDBACK.md)。5项新逻辑真实RED60/5→GREEN60/0；旧界面CI37272983725 attempt2真实19UI/仅新3失败，原16通过。成功提示约3秒按原期限/独立ID清除；金额为只读String草稿与内联数字键，备注IME正常，整数分/原操作ID/草稿及字段合同保持。

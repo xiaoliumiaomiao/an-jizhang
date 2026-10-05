@@ -1,6 +1,6 @@
 # 金额键盘与成功提示修复：作者手机验收
 
-状态：**待本轮作者真实手机验收，以下全部未勾选**。本轮本机同签名测试包为 `an-jizhang-0.1.3-fix1-debug.apk`，versionName 0.1.3、versionCode 5，已核验并复制至项目 output。技术审查状态见 [REVIEW_INPUT_FEEDBACK.md](REVIEW_INPUT_FEEDBACK.md)，本表不表示作者已验收。
+状态：**2026-10-05作者已反馈，整版未通过**。成功提示自动消失已通过；金额键盘需要弹出式，现有页面内联式未通过。本轮本机同签名测试包为 `an-jizhang-0.1.3-fix1-debug.apk`，versionName 0.1.3、versionCode 5，已核验并复制至项目 output。技术审查状态见 [REVIEW_INPUT_FEEDBACK.md](REVIEW_INPUT_FEEDBACK.md)，该部分反馈不代表全部项目通过；原复合检查项的其余行为仍未确认。
 
 本轮只验金额应用内键盘与成功短提示，以及它们对既有账目/输入流程的影响。[原 0.1.3 手机表](PHONE_ACCEPTANCE_V013.md)保持原状态；旧版通过或上一候选技术验证不继承为本轮通过，也不由 CI/截图代勾作者结果。
 
@@ -28,6 +28,6 @@
 
 实际 APK：项目 `output/an-jizhang-0.1.3-fix1-debug.apk`，9458013 bytes；独立校验文件 `output/SHA256SUMS-v0.1.3-fix1.txt`。
 
-SHA-256：`cc131a6a3624e44b82f96589d399af7c2d3b33cbafe87780377f34f51ab12f15`。旧包保留。作者结果与异常：待提供。
+SHA-256：`cc131a6a3624e44b82f96589d399af7c2d3b33cbafe87780377f34f51ab12f15`。旧包保留。作者结果与异常（2026-10-05）：成功提示自动消失已通过；“内置金额键盘我要的是弹出式键盘而不是页面式键盘，这个不通过”。本轮0.1.4/S1修正按需底部弹出与收起，旧fix1包保留作为历史。
 
-技术验证另见 [VALIDATION_INPUT_FEEDBACK.md](VALIDATION_INPUT_FEEDBACK.md)；本表保持待验，直到收到作者针对本轮包的实际反馈。
+技术验证另见 [VALIDATION_INPUT_FEEDBACK.md](VALIDATION_INPUT_FEEDBACK.md)；上述复合检查项未因单项反馈整项勾选；提示旋转期限、连续提示隔离、其他数据/输入路径仍待具体反馈。
