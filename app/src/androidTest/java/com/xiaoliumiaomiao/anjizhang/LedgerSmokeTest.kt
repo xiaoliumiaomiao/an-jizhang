@@ -52,7 +52,7 @@ class LedgerSmokeTest {
         revealLedgerText("本地隐私")
         compose.onNodeWithText("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。")
             .performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("版本 0.1.3").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("版本 0.1.4").performScrollTo().assertIsDisplayed()
     }
     @Test fun editorInputSurvivesActivityRecreation() {
         openEditor()
@@ -60,6 +60,8 @@ class LedgerSmokeTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         compose.onNodeWithText("取消").performScrollTo().performClick()
+        compose.onNodeWithText("放弃未保存的修改？").assertIsDisplayed()
+        compose.onNodeWithText("放弃修改").performClick()
         compose.onNodeWithTag("nav-stats").performClick()
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("支出分类").assertIsDisplayed()
@@ -79,6 +81,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("金额（元）").assertTextContains("0")
         assertTrue("非法金额不能生成账目", ledgerModel().state.value.entries.isEmpty())
         compose.setAmountWithKeypad("0.01")
+        compose.onNodeWithText("餐饮").performScrollTo().performClick()
         compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
         val savedModel = ledgerModel()
         compose.waitUntil(10000) {
@@ -127,6 +130,7 @@ class LedgerSmokeTest {
     @Test fun saveAndDeleteCompleteAfterActivityRecreationAndOldResultDoesNotCloseNewEditor() {
         openEditor()
         compose.setAmountWithKeypad("12.34")
+        compose.onNodeWithText("餐饮").performScrollTo().performClick()
         compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         val saveModel = ledgerModel()
         val saveLock = pauseWorker()
@@ -171,6 +175,7 @@ class LedgerSmokeTest {
     @Test fun databaseSaveFailureAfterRecreationKeepsEditorInputs() {
         openEditor()
         compose.setAmountWithKeypad("12.34")
+        compose.onNodeWithText("餐饮").performScrollTo().performClick()
         val model = ledgerModel()
         val workerLock = pauseWorker()
         try {
@@ -186,6 +191,8 @@ class LedgerSmokeTest {
         compose.onNodeWithText("保存").performScrollTo().assertIsEnabled()
         compose.onNodeWithText("金额（元）").assertTextContains("12.34")
         compose.onNodeWithText("取消").performScrollTo().performClick()
+        compose.onNodeWithText("放弃未保存的修改？").assertIsDisplayed()
+        compose.onNodeWithText("放弃修改").performClick()
     }
     @Test fun reselectingExpenseKeepsCustomCategory() {
         openEditor()

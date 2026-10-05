@@ -37,7 +37,7 @@ check_apk() {
   sha256sum "$apk" > "$artifacts/$label-apk-sha256.txt"
 }
 check_apk "$baseline_apk" baseline "$app" 3 0.1.2
-check_apk "$current_apk" current "$app" 5 0.1.3
+check_apk "$current_apk" current "$app" 6 0.1.4
 check_apk "$test_apk" test "$test_package" '' ''
 certificate() {
   local file=$1 digest

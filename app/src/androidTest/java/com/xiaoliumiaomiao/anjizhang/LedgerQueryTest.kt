@@ -87,6 +87,7 @@ class LedgerQueryTest {
         compose.onAllNodes(hasText("记一笔") and hasClickAction() and isEnabled())[0].performClick()
         compose.setAmountWithKeypad(amount)
         compose.onNodeWithText("分类（可自定义）").performScrollTo().performTextReplacement(category)
+        compose.onNodeWithTag("note-toggle").performScrollTo().performClick()
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().performTextInput("匹配词")
         closeIme()
         saveEditor()

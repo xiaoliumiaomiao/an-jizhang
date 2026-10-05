@@ -6,7 +6,8 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xiaoliumiaomiao.anjizhang.domain.*
+import com.xiaoliumiaomiao.anjizhang.BuildConfig
 import java.time.YearMonth
 
 @Composable internal fun DestinationIcon(key:String) {
@@ -41,12 +43,16 @@ import java.time.YearMonth
 }
 @OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun MonthNavigator(month:YearMonth,onChange:(YearMonth)->Unit) {
+    var choosing by rememberSaveable { mutableStateOf(false) }
     FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(4.dp)) {
         TextButton(enabled=month>YearMonth.of(1900,1),onClick={onChange(month.minusMonths(1))}){Text("上月")}
-        Text("${month.year}年${month.monthValue}月",style=MaterialTheme.typography.titleLarge,modifier=Modifier.padding(vertical=12.dp))
+        TextButton(onClick={choosing=true},modifier=Modifier.heightIn(min=48.dp).testTag("month-select")) {
+            Text("${month.year}年${month.monthValue}月",style=MaterialTheme.typography.titleLarge)
+        }
         TextButton(enabled=month<YearMonth.of(9999,12),onClick={onChange(month.plusMonths(1))}){Text("下月")}
         TextButton(onClick={onChange(YearMonth.now())}){Text("本月")}
     }
+    if(choosing) MonthPicker(month,onDismiss={choosing=false},onConfirm={onChange(it);choosing=false})
 }
 @OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun MonthlyOverview(summary:MonthlySummary) {
@@ -56,11 +62,11 @@ import java.time.YearMonth
             Text("收入 ${Money.format(summary.incomeCents)}",color=MaterialTheme.colorScheme.secondary)
             Text("支出 ${Money.format(summary.expenseCents)}",color=MaterialTheme.colorScheme.error)
         }
-        Text("本月结余 ${Money.format(summary.balanceCents)}",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
+        Text("本月结余 ${Money.format(summary.balanceCents)}",style=MaterialTheme.typography.headlineMedium,fontWeight=FontWeight.Bold)
     }
 }
 @Composable internal fun LedgerPage(month:YearMonth,summary:MonthlySummary,visible:List<Entry>,total:Int,query:String,kind:EntryKind?,busy:Boolean,listState:LazyListState,onMonth:(YearMonth)->Unit,onQuery:(String)->Unit,onKind:(EntryKind?)->Unit,onClear:()->Unit,onAdd:()->Unit,onDetail:(Entry)->Unit) {
-    LazyColumn(Modifier.fillMaxSize().testTag("ledger-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,bottom=96.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+    LazyColumn(Modifier.fillMaxSize().testTag("ledger-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,bottom=16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         item { MonthNavigator(month,onMonth) }
         item { MonthlyOverview(summary) }
         item { EntryFilters(query,kind,onQuery,onKind,onClear) }
@@ -72,13 +78,13 @@ import java.time.YearMonth
             }
         } else if(visible.isEmpty()) item { Text("没有符合条件的账目",style=MaterialTheme.typography.titleMedium) }
         EntryGroups.forDisplay(visible).forEach { day->
-            item(key="day-${day.date}") { Text(day.date.toString(),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(top=8.dp)) }
+            item(key="day-${day.date}") { Text("${day.date} · ${day.entries.size}条",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(top=8.dp)) }
             items(day.entries,key={it.id}) { entry-> EntryRow(entry,busy){onDetail(entry)} }
         }
     }
 }
 @Composable private fun EntryRow(entry:Entry,busy:Boolean,onClick:()->Unit) {
-    Column(Modifier.fillMaxWidth().testTag("entry-${entry.id}").clickable(enabled=!busy,onClick=onClick).padding(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("entry-${entry.id}").clickable(enabled=!busy,onClick=onClick).padding(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val availableWidth=maxWidth
             val amount=(if(entry.kind==EntryKind.EXPENSE)"-" else "+")+Money.format(entry.amountCents)
@@ -86,11 +92,11 @@ import java.time.YearMonth
             if(LocalDensity.current.fontScale<1.5f && maxWidth>=320.dp) {
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                     Text(entry.category,style=MaterialTheme.typography.titleMedium,modifier=Modifier.weight(1f),maxLines=2,overflow=TextOverflow.Ellipsis)
-                    Text(amount,style=MaterialTheme.typography.titleLarge,textAlign=TextAlign.End,modifier=Modifier.widthIn(max=availableWidth*.6f),color=amountColor)
+                    Text(amount,style=MaterialTheme.typography.headlineMedium,textAlign=TextAlign.End,modifier=Modifier.widthIn(max=availableWidth*.6f),color=amountColor)
                 }
             } else Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                 Text(entry.category,style=MaterialTheme.typography.titleMedium)
-                Text(amount,style=MaterialTheme.typography.titleLarge,textAlign=TextAlign.End,modifier=Modifier.fillMaxWidth(),color=amountColor)
+                Text(amount,style=MaterialTheme.typography.headlineMedium,textAlign=TextAlign.End,modifier=Modifier.fillMaxWidth(),color=amountColor)
             }
         }
         Text(if(entry.kind==EntryKind.EXPENSE)"支出" else "收入",style=MaterialTheme.typography.bodySmall)
@@ -99,7 +105,7 @@ import java.time.YearMonth
     }
 }
 @Composable internal fun StatisticsPage(month:YearMonth,summary:MonthlySummary,listState:LazyListState,onMonth:(YearMonth)->Unit) {
-    LazyColumn(Modifier.fillMaxSize().testTag("stats-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,bottom=96.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+    LazyColumn(Modifier.fillMaxSize().testTag("stats-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,bottom=16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         item { MonthNavigator(month,onMonth) }; item { MonthlyOverview(summary) }
         item { Text("支出分类",style=MaterialTheme.typography.titleLarge) }
         if(summary.expensesByCategory.isEmpty()) item { Text("这个月还没有支出") }
@@ -112,15 +118,16 @@ import java.time.YearMonth
     }
 }
 @Composable internal fun SettingsPage(busy:Boolean,listState:LazyListState,onExport:()->Unit,onImport:()->Unit,onLicenses:()->Unit) {
-    LazyColumn(Modifier.fillMaxSize().testTag("settings-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,top=16.dp,bottom=96.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+    LazyColumn(Modifier.fillMaxSize().testTag("settings-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,top=16.dp,bottom=16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         item { Text("备份与恢复",style=MaterialTheme.typography.titleLarge) }
         item { Button(onClick=onExport,enabled=!busy){Text("导出备份")}; OutlinedButton(onClick=onImport,enabled=!busy){Text("恢复备份")} }
         item { Text("备份文件包含明文账目，请保存在可信位置。恢复会合并账目，相同记录跳过；内容冲突时整批拒绝。") }
         item { Text("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。") }
+        item { Text("系统文件选择器的提供者可能包含云盘，请自行选择可信位置；建议在另一个可信位置保留第二份备份。") }
         item { HorizontalDivider();Text("本地隐私",style=MaterialTheme.typography.titleLarge) }
         item { Text("账目仅保存在此设备，无需登录，不联网，无广告或分析服务。") }
         item { Text("卸载提醒",style=MaterialTheme.typography.titleLarge);Text("卸载应用会删除本地账目；更换设备或卸载前，请先导出备份。系统云备份已关闭。") }
-        item { HorizontalDivider();Text("关于",style=MaterialTheme.typography.titleLarge);Text("版本 0.1.3");TextButton(onClick=onLicenses){Text("第三方许可")} }
+        item { HorizontalDivider();Text("关于",style=MaterialTheme.typography.titleLarge);Text("版本 ${BuildConfig.VERSION_NAME}");TextButton(onClick=onLicenses){Text("第三方许可")} }
     }
 }
 @Composable internal fun EntryDetail(entry:Entry,busy:Boolean,onEdit:()->Unit,onDelete:()->Unit) {

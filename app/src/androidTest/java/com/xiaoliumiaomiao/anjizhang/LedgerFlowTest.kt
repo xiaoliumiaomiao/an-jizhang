@@ -62,6 +62,8 @@ class LedgerFlowTest {
         compose.onNodeWithText("编辑").performScrollTo().performClick()
         set("分类（可自定义）","未保存分类");compose.closeKeyboard()
         compose.onNodeWithText("取消").performScrollTo().performClick()
+        compose.onNodeWithText("放弃未保存的修改？").assertIsDisplayed()
+        compose.onNodeWithText("放弃修改").performClick()
         // Native Back targets the focused window; Compose idling alone does not wait for Dialog focus transfer.
         compose.waitUntil(10000) {
             val editorClosed=compose.onAllNodesWithTag("editor-form").fetchSemanticsNodes().isEmpty()
@@ -123,10 +125,14 @@ class LedgerFlowTest {
         compose.onNodeWithTag("add-entry").performClick()
         compose.setAmountWithKeypad("77.77");set("分类（可自定义）","取消草稿");compose.closeKeyboard()
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+        compose.onNodeWithText("放弃未保存的修改？").assertIsDisplayed()
+        compose.onNodeWithText("放弃修改").performClick()
         compose.onNodeWithTag("nav-stats").assertIsSelected();assertEquals(2,model().state.value.entries.size)
         compose.onNodeWithTag("add-entry").performClick()
         compose.onNodeWithText("金额（元）").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText,AnnotatedString("")))
         compose.onNodeWithText("日期（yyyy-MM-dd）").performScrollTo().assertTextContains(java.time.LocalDate.now().toString())
+        compose.onNodeWithText("分类（可自定义）").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText,AnnotatedString("")))
+        set("分类（可自定义）","餐饮")
         compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("餐饮")
     }
 }

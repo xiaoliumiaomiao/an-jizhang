@@ -138,6 +138,7 @@ class LedgerInputFeedbackTest {
         invalidAmountMustNotSave()
         compose.setAmountWithKeypad("0.01")
         compose.assertSystemImeVisible(false)
+        compose.onNodeWithText("餐饮").performScrollTo().performClick()
         save()
         val vm = model()
         compose.waitUntil(10000) {
@@ -158,6 +159,7 @@ class LedgerInputFeedbackTest {
         compose.setAmountWithKeypad("12.34")
         compose.assertSystemImeVisible(false)
         val note = "备注仍用系统键盘\n重建后保留"
+        compose.onNodeWithTag("note-toggle").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().assertIsDisplayed()
             .performTouchInput { click() }
         compose.assertSystemImeVisible(true)

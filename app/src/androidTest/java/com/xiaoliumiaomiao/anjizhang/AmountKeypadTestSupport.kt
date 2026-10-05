@@ -20,6 +20,9 @@ internal fun ComposeTestRule.setAmountWithKeypad(value: String) {
 
 internal fun ComposeTestRule.pressAmountKey(key: String) {
     require(key in setOf("dot", "backspace", "clear") || (key.length == 1 && key[0] in '0'..'9'))
+    if (onAllNodesWithTag("amount-keypad").fetchSemanticsNodes().isEmpty()) {
+        onNodeWithText("金额（元）").performScrollTo().assertIsDisplayed().performTouchInput { click() }
+    }
     onNodeWithTag("amount-key-$key").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
     onNodeWithText("金额（元）").assertIsNotFocused()
 }

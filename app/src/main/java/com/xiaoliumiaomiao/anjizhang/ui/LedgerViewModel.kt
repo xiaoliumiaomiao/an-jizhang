@@ -47,7 +47,7 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
                 } catch (cancelled: CancellationException) { throw cancelled
                 } catch (failure: Exception) {
                     mutable.update { it.copy(error = "操作失败：${failureText(failure)}。原有账目未被替换。",
-    failedOperationId = operationId ?: it.failedOperationId) }
+                        failedOperationId = operationId ?: it.failedOperationId) }
                 } finally { mutable.update { it.copy(busy = false) } }
             }
         }
@@ -75,27 +75,27 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
     fun restore(open: () -> InputStream?) {
         var stage = RestoreStage.READ
         work({
-        val bytes = (open() ?: error("无法读取备份文件")).use { input ->
-            val output = java.io.ByteArrayOutputStream()
-            val buffer = ByteArray(8192)
-            var remaining = BackupCodec.MAX_BYTES + 1
-            while (remaining > 0) {
-                val count = input.read(buffer, 0, minOf(buffer.size, remaining))
-                if (count < 0) break
-                if (count == 0) continue
-                output.write(buffer, 0, count); remaining -= count
+            val bytes = (open() ?: error("无法读取备份文件")).use { input ->
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                var remaining = BackupCodec.MAX_BYTES + 1
+                while (remaining > 0) {
+                    val count = input.read(buffer, 0, minOf(buffer.size, remaining))
+                    if (count < 0) break
+                    if (count == 0) continue
+                    output.write(buffer, 0, count); remaining -= count
+                }
+                output.toByteArray()
             }
-            output.toByteArray()
-        }
-        stage = RestoreStage.SIZE
-        require(bytes.size <= BackupCodec.MAX_BYTES) { "备份超过 10 MiB" }
-        stage = RestoreStage.DECODE
-        val text = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
-            .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString()
-        val validated = BackupCodec.decode(text)
-        stage = RestoreStage.MERGE
-        val result = db().merge(validated)
-        "恢复完成：新增 ${result.imported} 条，跳过 ${result.skipped} 条"
+            stage = RestoreStage.SIZE
+            require(bytes.size <= BackupCodec.MAX_BYTES) { "备份超过 10 MiB" }
+            stage = RestoreStage.DECODE
+            val text = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString()
+            val validated = BackupCodec.decode(text)
+            stage = RestoreStage.MERGE
+            val result = db().merge(validated)
+            "恢复完成：新增 ${result.imported} 条，跳过 ${result.skipped} 条"
         }, failureText = { failure ->
             when (stage) {
                 RestoreStage.READ -> "读取失败，请确认备份文件可访问"

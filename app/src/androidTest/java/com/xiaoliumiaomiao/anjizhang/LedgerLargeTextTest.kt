@@ -43,6 +43,7 @@ class LedgerLargeTextTest {
             compose.onNodeWithText("金额请输入0.01至999999999.99，最多两位小数").performScrollTo().assertIsDisplayed()
             compose.setAmountWithKeypad("999999999.99")
             compose.onNodeWithText("分类（可自定义）").performScrollTo().performTextReplacement("长".repeat(20))
+            compose.onNodeWithTag("note-toggle").performScrollTo().performClick()
             compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().performTextReplacement("记".repeat(200))
             compose.closeKeyboard()
             compose.onNodeWithText("金额（元）").performScrollTo().assertIsDisplayed();captureLedgerScreen("narrow-large-editor")
