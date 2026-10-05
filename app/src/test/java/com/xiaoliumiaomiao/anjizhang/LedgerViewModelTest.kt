@@ -39,6 +39,55 @@ class LedgerViewModelTest {
         assertTrue("等待后台操作超时：${model.state.value}", predicate())
     }
     private fun entry(cents: Long = 1) = Entry(UUID.randomUUID().toString(), EntryKind.EXPENSE, cents, "餐饮", LocalDate.now())
+    @Test fun repeatedSuccessHasOwnExpiryAndStaleDismissDoesNotClearNewMessage() {
+        val first = entry(); val second = entry(2)
+        val saved = model.save(first)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        val savedSecond = model.save(second)
+        await { model.state.value.completedOperationId == savedSecond && !model.state.value.busy }
+        val deletedFirst = model.delete(first)
+        await { model.state.value.completedOperationId == deletedFirst && !model.state.value.busy }
+        assertNotNull("成功提示应有自己的身份", model.state.value.messageId)
+        val firstMessage = model.state.value.messageId!!
+        assertNotNull(model.state.value.messageExpiresAt)
+        assertTrue(model.state.value.messageExpiresAt!! > android.os.SystemClock.elapsedRealtime())
+        val deletedSecond = model.delete(second)
+        await { model.state.value.completedOperationId == deletedSecond && !model.state.value.busy }
+        assertEquals("已删除", model.state.value.message)
+        val secondMessage = model.state.value.messageId!!
+        assertNotEquals(firstMessage, secondMessage)
+        model.clearMessage(firstMessage)
+        assertEquals("已删除", model.state.value.message)
+        assertEquals(secondMessage, model.state.value.messageId)
+        model.clearMessage(secondMessage)
+        assertNull(model.state.value.message)
+        assertNull(model.state.value.messageId)
+        assertNull(model.state.value.messageExpiresAt)
+        assertEquals(deletedSecond, model.state.value.completedOperationId)
+        assertTrue(model.state.value.entries.isEmpty())
+    }
+    @Test fun exportWithoutOperationIdGetsFreshMessageAndDismissKeepsFailedState() {
+        val valid = entry(); val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        model.export { ByteArrayOutputStream() }
+        await { model.state.value.message?.startsWith("备份已导出") == true && !model.state.value.busy }
+        assertNotNull(model.state.value.messageId)
+        val exported = model.state.value.messageId!!
+        model.export { ByteArrayOutputStream() }
+        await { model.state.value.messageId != exported && !model.state.value.busy }
+        assertNotNull(model.state.value.messageId)
+        val latest = model.state.value.messageId!!
+        model.clearMessage(exported)
+        assertEquals(latest, model.state.value.messageId)
+        val failed = model.save(valid.copy(amountCents = 0))
+        await { model.state.value.failedOperationId == failed && !model.state.value.busy }
+        val before = model.state.value
+        model.clearMessage(latest)
+        assertEquals(before, model.state.value)
+        assertEquals(listOf(valid), model.state.value.entries)
+        assertNotNull(model.state.value.error)
+        assertEquals(saved, model.state.value.completedOperationId)
+    }
     @Test fun databaseReadFailureShowsErrorAndRetryRecovers() {
         val outside = com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase(application)
         try {

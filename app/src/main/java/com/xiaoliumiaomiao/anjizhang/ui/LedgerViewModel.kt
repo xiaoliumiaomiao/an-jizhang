@@ -1,6 +1,7 @@
 package com.xiaoliumiaomiao.anjizhang.ui
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.xiaoliumiaomiao.anjizhang.data.BackupCodec
@@ -18,12 +19,15 @@ import java.nio.charset.CodingErrorAction
 
 data class LedgerUiState(val entries: List<Entry> = emptyList(), val busy: Boolean = false,
     val error: String? = null, val message: String? = null, val completedOperationId: String? = null,
-    val failedOperationId: String? = null)
+    val failedOperationId: String? = null, val messageId: String? = null, val messageExpiresAt: Long? = null)
 
 class LedgerViewModel(application: Application) : AndroidViewModel(application) {
     val instanceId: String = UUID.randomUUID().toString()
     private val mutable = MutableStateFlow(LedgerUiState(busy = true))
     val state: StateFlow<LedgerUiState> = mutable.asStateFlow()
+    fun clearMessage(messageId: String) {
+        mutable.update { if (it.messageId == messageId) it.copy(message = null, messageId = null, messageExpiresAt = null) else it }
+    }
     private val lock = Mutex()
     private var database: LedgerDatabase? = null
     private fun db(): LedgerDatabase = database ?: LedgerDatabase(getApplication()).also { database = it }
@@ -31,11 +35,14 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
     private fun work(action: suspend () -> String?, operationId: String? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             lock.withLock {
-                mutable.update { it.copy(busy = true, error = null, message = null) }
+                mutable.update { it.copy(busy = true, error = null, message = null, messageId = null, messageExpiresAt = null) }
                 try {
                     val message = action()
                     val entries = db().listEntries()
-                    mutable.update { it.copy(entries = entries, message = message, completedOperationId = operationId ?: it.completedOperationId) }
+                    val messageId = message?.let { UUID.randomUUID().toString() }
+                    val expiresAt = message?.let { SystemClock.elapsedRealtime() + 3000L }
+                    mutable.update { it.copy(entries = entries, message = message, messageId = messageId, messageExpiresAt = expiresAt,
+                        completedOperationId = operationId ?: it.completedOperationId) }
                 } catch (cancelled: CancellationException) { throw cancelled
                 } catch (failure: Exception) {
                     mutable.update { it.copy(error = "操作失败：${failure.message ?: "请重试"}。原有账目未被替换。",
