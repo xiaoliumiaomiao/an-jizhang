@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.os.ParcelFileDescriptor
 import android.view.KeyEvent
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
@@ -61,6 +62,20 @@ class LedgerS1Test {
         open(); compose.setAmountWithKeypad("0.01"); save()
         compose.onNodeWithText("请选择或填写分类").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("editor-form").assertExists(); unchanged()
+    }
+    @Test fun semanticAmountClickOpensPanelAndKeysEnterOneCentWithoutIme() {
+        open(); compose.onNodeWithTag("amount-keypad-panel").assertDoesNotExist()
+        compose.onNodeWithText("金额（元）").performScrollTo().assertIsDisplayed()
+            .performSemanticsAction(SemanticsActions.OnClick) { click -> assertTrue(click()) }
+        compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed()
+        compose.assertSystemImeVisible(false)
+        compose.pressAmountKey("clear")
+        listOf("0", "dot", "0", "1").forEach { compose.pressAmountKey(it) }
+        compose.assertAmountDraft("0.01")
+        compose.onNodeWithTag("amount-keypad-close").performScrollTo().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("amount-keypad-panel").assertDoesNotExist()
+        compose.assertAmountDraft("0.01"); compose.assertSystemImeVisible(false); unchanged()
     }
     @Test fun amountPanelPopsOnDemandBackClosesItBeforeDiscardAndNoteUsesIme() {
         open(); compose.onNodeWithTag("amount-keypad").assertDoesNotExist()
