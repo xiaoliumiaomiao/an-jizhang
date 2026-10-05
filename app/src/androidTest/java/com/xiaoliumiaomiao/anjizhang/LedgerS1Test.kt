@@ -218,6 +218,7 @@ class LedgerS1Test {
         compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("面板交接分类")
         compose.onNodeWithText("日期（yyyy-MM-dd）").performScrollTo().assertTextContains("2020-02-29")
         back(); compose.onNodeWithTag("discard-draft").assertIsDisplayed()
+        captureLedgerScreen("s1-discard-draft")
         compose.onNodeWithText("放弃修改").performClick(); unchanged()
     }
     @Test fun dirtyBackConfirmationAndBaselineSurviveRotation() {
@@ -255,6 +256,7 @@ class LedgerS1Test {
     }
     @Test fun recentCategoriesUseSixNewestDistinctForCurrentKind() {
         open(); compose.onNodeWithTag("recent-categories").performScrollTo().assertIsDisplayed()
+        captureLedgerScreen("s1-recent-categories")
         val recentSuggestion = hasAnyAncestor(hasTestTag("recent-categories"))
         compose.onNode(hasText("最近分类12") and recentSuggestion).performScrollTo().performClick()
         compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("最近分类12")
@@ -275,7 +277,7 @@ class LedgerS1Test {
             compose.onNodeWithText("年份（1900–9999）").performTextReplacement(year); compose.closeKeyboard()
             compose.onNodeWithTag("month-$selectedMonth").performScrollTo().performClick()
         }
-        picker("1900", 1); compose.onNodeWithText("确定").performClick()
+        picker("1900", 1); captureLedgerScreen("s1-month-picker"); compose.onNodeWithText("确定").performClick()
         compose.onNodeWithTag("month-select").assertTextContains("1900年1月")
         compose.onNodeWithText("上月").assertIsNotEnabled()
         picker("9999", 12); compose.onNodeWithText("确定").performClick()
@@ -334,6 +336,7 @@ class LedgerS1Test {
         compose.onNodeWithText("导出备份").performClick()
         compose.onNodeWithText("导出明文备份").assertIsDisplayed()
         compose.onNode(hasText("50000", substring = true) and hasText("10 MiB", substring = true) and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        captureLedgerScreen("s1-export-warning")
         compose.onNodeWithTag("add-entry").assertDoesNotExist()
         compose.onNodeWithText("取消").performClick()
         compose.onNodeWithTag("add-entry").assertIsDisplayed(); unchanged()

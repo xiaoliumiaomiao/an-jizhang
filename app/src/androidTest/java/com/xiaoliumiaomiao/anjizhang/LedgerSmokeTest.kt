@@ -52,6 +52,7 @@ class LedgerSmokeTest {
         revealLedgerText("本地隐私")
         compose.onNodeWithText("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。")
             .performScrollTo().assertIsDisplayed()
+        revealLedgerText("版本 0.1.4")
         compose.onNodeWithText("版本 0.1.4").performScrollTo().assertIsDisplayed()
     }
     @Test fun editorInputSurvivesActivityRecreation() {
