@@ -87,7 +87,22 @@ class LedgerQueryTest {
         compose.onAllNodes(hasText("记一笔") and hasClickAction() and isEnabled())[0].performClick()
         compose.setAmountWithKeypad(amount)
         compose.onNodeWithText("分类（可自定义）").performScrollTo().performTextReplacement(category)
-        compose.onNodeWithTag("note-toggle").performScrollTo().performClick()
+        // Text replacement focuses category and starts a native IME transition.
+        // Finish that transition before locating the real touch target.
+        closeIme()
+        compose.waitForIdle()
+        val toggle = compose.onNodeWithTag("note-toggle").performScrollTo().assert(hasText("添加备注"))
+        val before = toggle.fetchSemanticsNode()
+        android.util.Log.i("LedgerQuery", "Before note touch: category=$category bounds=${before.boundsInRoot} semantics=${before.config}")
+        try {
+            toggle.performClick()
+            compose.waitUntil(10000) { compose.onAllNodesWithText("备注（可选，最多200字）").fetchSemanticsNodes().size == 1 }
+            compose.onNodeWithTag("note-toggle").assert(hasText("收起备注"))
+        } catch (failure: AssertionError) {
+            android.util.Log.e("LedgerQuery", "Note expansion failed: toggle=${compose.onAllNodesWithTag("note-toggle").fetchSemanticsNodes().map { "${it.boundsInRoot} ${it.config}" }}", failure)
+            runCatching { captureLedgerScreen("query-note-expansion-failure") }.exceptionOrNull()?.let(failure::addSuppressed)
+            throw failure
+        }
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().performTextInput("匹配词")
         closeIme()
         saveEditor()

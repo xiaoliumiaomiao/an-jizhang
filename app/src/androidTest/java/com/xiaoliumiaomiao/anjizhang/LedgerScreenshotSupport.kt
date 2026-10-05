@@ -2,6 +2,7 @@ package com.xiaoliumiaomiao.anjizhang
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import android.view.ViewTreeObserver
 import android.view.inspector.WindowInspector
 import androidx.test.platform.app.InstrumentationRegistry
@@ -22,23 +23,53 @@ internal fun captureLedgerScreen(name:String) {
     assertTrue(sourcePath.matches(Regex("[a-zA-Z0-9/._-]+")))
     assertTrue("frame commit requires the public API 29 or newer",Build.VERSION.SDK_INT>=29)
     val committed=CountDownLatch(1)
+    val deadline=SystemClock.elapsedRealtime()+10000L
     var observer:ViewTreeObserver?=null
+    var framedRoot:android.view.View?=null
+    val focusObservers=mutableListOf<Pair<ViewTreeObserver,ViewTreeObserver.OnWindowFocusChangeListener>>()
+    var frameRequested=false
     val callback=Runnable { committed.countDown() }
+    fun requestFocusedFrame() {
+        if(frameRequested) return
+        val roots=WindowInspector.getGlobalWindowViews().filter {
+            it.isAttachedToWindow && it.isShown && it.hasWindowFocus()
+        }
+        if(roots.isEmpty()) return
+        assertEquals("$name must have one current focused window",1,roots.size)
+        val root=roots.single()
+        assertTrue("$name frame commit requires hardware rendering",root.isHardwareAccelerated)
+        frameRequested=true
+        framedRoot=root
+        observer=root.viewTreeObserver
+        observer!!.registerFrameCommitCallback(callback)
+        root.invalidate()
+    }
     try {
         registry.runOnMainSync {
             val roots=WindowInspector.getGlobalWindowViews().filter {
-                it.isAttachedToWindow && it.isShown && it.hasWindowFocus()
+                it.isAttachedToWindow && it.isShown
             }
-            assertEquals("$name must have one current focused window",1,roots.size)
-            val root=roots.single()
-            assertTrue("$name frame commit requires hardware rendering",root.isHardwareAccelerated)
-            observer=root.viewTreeObserver
-            observer!!.registerFrameCommitCallback(callback)
-            root.invalidate()
+            assertTrue("$name must have an attached shown window",roots.isNotEmpty())
+            roots.forEach { root ->
+                val focusObserver=root.viewTreeObserver
+                val listener=ViewTreeObserver.OnWindowFocusChangeListener { focused -> if(focused) requestFocusedFrame() }
+                focusObserver.addOnWindowFocusChangeListener(listener)
+                focusObservers += focusObserver to listener
+            }
+            // Check after registration too, so an already-focused window cannot miss its frame.
+            requestFocusedFrame()
         }
-        assertTrue("$name frame must commit within 10000 ms",committed.await(10,TimeUnit.SECONDS))
+        val remaining=deadline-SystemClock.elapsedRealtime()
+        assertTrue("$name focused frame must commit within one total 10000 ms budget",remaining>0 && committed.await(remaining,TimeUnit.MILLISECONDS))
+        registry.runOnMainSync {
+            val roots=WindowInspector.getGlobalWindowViews().filter { it.isAttachedToWindow && it.isShown && it.hasWindowFocus() }
+            assertEquals("$name must have one current focused window",1,roots.size)
+            assertSame("$name screenshot must retain the window whose frame committed",framedRoot,roots.single())
+            assertTrue("$name frame commit requires hardware rendering",roots.single().isHardwareAccelerated)
+        }
     } finally {
         registry.runOnMainSync {
+            focusObservers.forEach { (registered,listener) -> if(registered.isAlive) registered.removeOnWindowFocusChangeListener(listener) }
             observer?.takeIf { it.isAlive }?.unregisterFrameCommitCallback(callback)
         }
     }
