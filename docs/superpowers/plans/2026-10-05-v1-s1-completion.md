@@ -33,7 +33,7 @@
 **Interfaces:**
 - `data class EntryEditorState(val id:String, val kind:EntryKind, val amount:String, val category:String, val date:String, val note:String)`，原始输入字符串不会因旋转而重新校验或修剪。
 - `EntryEditorState.from(entry:Entry?, today:LocalDate)`：新增为EXPENSE、空金额、空分类、today、空备注且稳定UUID；编辑保留全部原始字段。
-- `hasChangesFrom(initial:EntryEditorState):Boolean`：仅比较六项账目字段；不把折叠状态、错误或光标当改动。
+- `hasChangesFrom(initial:EntryEditorState):Boolean`：仅比较kind/amount/category/date/note五项可编辑内容，ID不是可编辑字段；不把折叠状态、错误或光标当改动。
 - `RecentCategories.forKind(entries:List<Entry>, kind:EntryKind):List<String>`：只选指定类型，date降序、同日id升序，trim名称、去重后最多6个；不修改Entry。默认建议支出餐饮/交通/购物/住房/其他、收入工资/奖金/其他由UI继续提供。
 
 - [ ] 先写行为测试并取得实际RED，再实现GREEN。必须覆盖新增空分类、编辑空白分类/备注和稳定ID、未改动/单字段改动、同日ID稳定排序、跨类型隔离、trim去重、最多6个与输入不变。未定义API编译报错不当行为RED；必要时测试先写，再加最小可编译未实现体，使断言真正失败。
