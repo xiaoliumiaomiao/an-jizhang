@@ -133,6 +133,9 @@ class LedgerViewModelTest {
         model.export { object : java.io.OutputStream() { override fun write(value: Int) { throw java.io.IOException("输出失败") } } }
         await { model.state.value.error?.contains("输出失败") == true && !model.state.value.busy }
         assertEquals(listOf(valid), model.state.value.entries)
+        assertTrue(model.state.value.error!!.contains("新文件可能不完整"))
+        assertTrue(model.state.value.error!!.contains("保留旧备份"))
+        assertFalse(model.state.value.error!!.contains(valid.id))
     }
     @Test fun startsEmptyWithoutDemoData() { assertTrue(model.state.value.entries.isEmpty()); assertNull(model.state.value.error) }
     @Test fun failedSaveKeepsDataAndAllowsRetry() {
