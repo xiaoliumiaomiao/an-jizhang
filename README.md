@@ -17,7 +17,7 @@ schema1、备份format1、稳定记录ID、依赖和权限合同保持。无广�
 
 金额面板初始隐藏，触摸和直接语义点击均可打开；三字号1.0／1.3／2.0逐个金额键及输入值通过。font2最后一行键需在面板内部滚动，不代表全部键同时出现在屏幕上。恢复场景模拟保存UI状态及新ViewModel，没有真实杀死Android进程。自动语义测试不代替作者完整TalkBack验收。
 
-原生截图保存于 `output/v0.1.4-screenshots/`，本轮全部23张及升级首页已逐张核对。源码及运行／视觉独立审查Approved C0/I0/M0，APK与最终技术交付待独立FullDelivery复核。私有草稿 [PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4) 保持OPEN/draft，main仍为已验收0.1.2；本轮没有合并或正式发布。
+原生截图保存于 `output/v0.1.4-screenshots/`，本轮全部23张及升级首页已逐张核对。源码、运行／视觉、APK与最终技术交付独立审查均Approved C0/I0/M0。私有草稿 [PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4) 保持OPEN/draft，main仍为已验收0.1.2；本轮没有合并或正式发布。
 
 ## 安装
 

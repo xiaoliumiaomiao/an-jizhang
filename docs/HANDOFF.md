@@ -2,7 +2,7 @@
 
 日期：2026-10-05（Asia/Shanghai）。
 
-## 当前迭代：V1.0 S1／0.1.4，技术交付 Pending final technical FullDelivery，手机待验
+## 当前迭代：V1.0 S1／0.1.4，技术交付 Approved，C0/I0/M0，手机待验
 
 作者要求按最新V1.0方案迭代，并明确成功提示自动消失已通过、页面式金额键盘不通过。本轮应用0.1.4/code6补齐S1：点金额从底部弹应用键盘，Back先收起，备注使用系统IME；空分类必填、最近分类按收支最多6个、折叠备注、草稿及放弃确认旋转保留、稳定ID详情／编辑／删除、年月选择、系统浅深主题、真实viewport避开记账按钮。保持整数分、schema1／format1、字面搜索、完整月统计、原操作ID和失败草稿，没有新增依赖、联网或广泛存储权限。
 
@@ -12,7 +12,7 @@ Task1／Task2／整分支及连续源码测试增量Spec／Quality Approved，�
 
 本机clean exact受测HEAD的APK原生身份／精确权限／全域备份排除／完整许可／旧本机公开debug签名均实核。新包9918020 bytes，SHA256 `5f71a8bf1a9c1e617b6a87dd6852ee45c2e6cdf18b084dbf070381c34c656af6`，文件名an-jizhang-0.1.4-debug.apk；两output各有APK、独立SHA256SUMS-v0.1.4.txt和23张原始PNG，所有副本hash读回，ROOT及独立审查者逐张看图及升级首页。原57文件、16合同和主目录作者HANDOFF／未跟踪方案原字节保持，归档V1.0方案checkbox未改。
 
-最终技术FullDelivery独立结论 Pending final technical FullDelivery，仅实际返回后写回。复用隔离分支feat/ledger-ui-v0.1.3与私有 [draft PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)，main仍已验收ff8479f／0.1.2。最新文档commit后的local／remote／PR HEAD、private／OPEN／draft／clean与实物只读同步核验见ignored delivery-sync-final.json；受测提交之后仅文档变化，不合main或正式发布。
+最终技术FullDelivery独立结论 Approved，C0/I0/M0，已据实际独立报告final-full-delivery-review-3bf5142.md写回。复用隔离分支feat/ledger-ui-v0.1.3与私有 [draft PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)，main仍已验收ff8479f／0.1.2。最新文档commit后的local／remote／PR HEAD、private／OPEN／draft／clean与实物只读同步核验见ignored delivery-sync-final.json；受测提交之后仅文档变化，不合main或正式发布。
 
 下一步先在手机现有应用导出有效备份，再正常覆盖安装本机同签名0.1.4，执行 [19项手机清单](PHONE_ACCEPTANCE_V014.md)，全部保持未勾。API35合成模拟器不代替作者自然手机／API26实机／真实进程kill／完整TalkBack；font2末行键需内部滚动。安装异常保留原应用与账本，不卸载、清库或强制降级。S1手机通过后进入S2月度／年度统计，S3分类库／预算／format2另行确认。旧0.1.3及fix1章节为历史快照，部分成功消息反馈通过不继承为0.1.4验收。
 

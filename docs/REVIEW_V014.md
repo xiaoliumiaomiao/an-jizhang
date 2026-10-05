@@ -9,7 +9,7 @@
 | 专项测试与readiness完整增量 | Approved，C0/I0/M0；原35项／19项和严格断言保留 |
 | 完整分支＋连续增量Source Spec／Quality | Approved，C0/I0/M0 |
 | 最终真实Runtime／Visual | Runtime Approved / Visual Approved，C0/I0/M0 |
-| 本机APK与两处实物／文档／同步FullDelivery | Pending final technical FullDelivery |
+| 本机APK与两处实物／文档／同步FullDelivery | Approved，C0/I0/M0 |
 
 ## 审查范围
 
@@ -43,6 +43,6 @@ ROOT和独立reviewer逐张读取本轮23场景原生PNG与升级首页，核190
 
 本机clean exact testedHEAD重新绑定assembleDebug，原生aapt／apksigner与ZIP核包名、0.1.4/code6、min26／target35、唯一应用内signature receiver权限、自动备份全域排除、旧本机公开debug证书和三完整许可。新APK 9918020 bytes、SHA256 `5f71a8bf1a9c1e617b6a87dd6852ee45c2e6cdf18b084dbf070381c34c656af6`；双output的APK／独立校验内容及46原图副本逐项hash读回。原57文件和16合同保持，作者主目录两文档及main未改。
 
-最后技术交付审查读取当前README／DEVELOPMENT／HANDOFF／验证／审查／手机表、实际本机APK与副本、新CI原件／图、local／remote／PR HEAD和private／OPEN／draft同步。本节最终结论 Pending final technical FullDelivery，仅在审查者实际返回后写回；最后写回结论的文档提交和同步另作只读后置核验，不改变受测源码。
+最后技术交付审查读取当前README／DEVELOPMENT／HANDOFF／验证／审查／手机表、实际本机APK与副本、新CI原件／图、local／remote／PR HEAD和private／OPEN／draft同步。本节最终结论 Approved，C0/I0/M0，已依据实际独立报告final-full-delivery-review-3bf5142.md写回；最后写回结论的文档提交和同步另作只读后置核验，不改变受测源码。
 
 私有 [PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4) 保持草稿，main为ff8479f已验收0.1.2。下一步作者先导出备份，正常覆盖安装本机同签名包执行 [19项手机验收](PHONE_ACCEPTANCE_V014.md)。S1手机通过再进S2；分类库、预算、format2及正式发布另行确认。

@@ -64,6 +64,6 @@
 
 - [x] ROOT实读本轮JVM/设备XML、lint、升级seed/verify原始runner、安装/启动/签名，不以BUILD成功代替UI与升级。读取实际截图，检查浅深、三字号、放弃确认、最近分类与月选择。
 - [x] 本机APK用原debug证书，原applicationId/min26/target35、schema1/format1、权限/备份排除/许可全部核对。APK新名an-jizhang-0.1.4-debug.apk，独立SHA256SUMS-v0.1.4.txt；复制到两output，旧文件逐项hash保持。
-- [ ] 整分支与最终技术交付独立审查通过，更新私有draft PR #4标题描述与本任务附件。所有手机验收框保持未勾；禁止合main。
-- [ ] 文档小步commit/push，实核local/remote/PR HEAD一致、private、draft、工作区干净；主目录main和两原文档hash与dirty状态不变。
-- [ ] 给作者APK、校验/手机表和限制。下一步先导出备份、同签名正常覆盖安装验收。不能卸载/清库/强制降级；S2等待作者S1确认。
+- [x] 整分支与最终技术交付独立审查通过，更新私有draft PR #4标题描述与本任务附件。所有手机验收框保持未勾；禁止合main。
+- [x] 文档小步commit/push，实核local/remote/PR HEAD一致、private、draft、工作区干净；主目录main和两原文档hash与dirty状态不变。
+- [x] 给作者APK、校验/手机表和限制。下一步先导出备份、同签名正常覆盖安装验收。不能卸载/清库/强制降级；S2等待作者S1确认。

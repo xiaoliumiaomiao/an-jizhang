@@ -1,6 +1,6 @@
 # 0.1.4／V1.0 S1 实际验证
 
-日期：2026-10-05（Asia/Shanghai）。本轮技术交付状态：Pending final technical FullDelivery；作者手机验收待执行，19项未勾。V1.0为方案版本，应用为0.1.4/code6，保持私有draft PR4，不合main或正式发布。
+日期：2026-10-05（Asia/Shanghai）。本轮技术交付状态：Approved，C0/I0/M0；作者手机验收待执行，19项未勾。V1.0为方案版本，应用为0.1.4/code6，保持私有draft PR4，不合main或正式发布。
 
 ## 最终受测来源与结果
 
@@ -72,7 +72,7 @@ c06第一次新增备注失败，stack为add():91／测试:144，不是第二add
 
 ## 原生 APK 和实物副本
 
-`an-jizhang-0.1.4-debug.apk`：9918020 bytes，SHA256 `5f71a8bf1a9c1e617b6a87dd6852ee45c2e6cdf18b084dbf070381c34c656af6`。公开本机证书 `209fe650f40d48d32167be84b0d59576ecc3fc90c3af4169fc811a13e700109d` 与旧本机包一致，apksigner原生验证通过；CI与本机签名分别记录。
+`an-jizhang-0.1.4-debug.apk`：9918020 bytes，SHA256 `5f71a8bf1a9c1e617b6a87dd6852ee45c2e6cdf18b084dbf070381c34c656af6`。公开本机证书 `209fe650f40d48d32167be84b0d59576ecc3fc90c3af4169fc811a13e700109d` 与原0.1.3及已交付的fix1/code5本机包一致，apksigner原生验证通过；CI与本机签名分别记录。
 
 aapt实际身份com.xiaoliumiaomiao.anjizhang、0.1.4/code6、min26／target35。唯一uses-permission为应用自己的签名级AndroidX动态receiver保护 `com.xiaoliumiaomiao.anjizhang.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`，不称“完全无权限”；无INTERNET或广泛媒体／存储权限。allowBackup=false，旧备份五域及cloud／device transfer共十域全部path="."排除。APK ZIP中的Android-Architecture-Samples-LICENSE、MoneyBook-LICENSE、NOTICE.txt三完整文件与app资产及third_party逐字节／hash一致。
 
