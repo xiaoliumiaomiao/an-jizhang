@@ -384,7 +384,12 @@ class LedgerS1Test {
             assertTrue("List viewport must end above add button at font $scale: $viewport / $button", viewport.bottom <= button.top)
             compose.onNodeWithTag("ledger-list").performScrollToNode(hasTestTag("entry-${records.first().id}"))
             val row = compose.onNodeWithTag("entry-${records.first().id}").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-            assertTrue(row.bottom <= button.top); compose.onNodeWithTag("entry-${records.first().id}").performClick()
+            val currentButton = compose.onNodeWithTag("add-entry").fetchSemanticsNode().boundsInRoot
+            val currentViewport = compose.onNodeWithTag("ledger-list").fetchSemanticsNode().boundsInRoot
+            android.util.Log.i("LedgerS1", "font=$scale afterScroll rowPx=$row originalButtonPx=$button currentButtonPx=$currentButton originalViewportPx=$viewport currentViewportPx=$currentViewport")
+            if (row.bottom > button.top) captureLedgerScreen("s1-viewport-failure-${scale.toString().replace('.', '-')}")
+            assertTrue("Visible row must end above original add button at font $scale: row=$row originalButton=$button currentButton=$currentButton viewport=$currentViewport", row.bottom <= button.top)
+            compose.onNodeWithTag("entry-${records.first().id}").performClick()
             compose.onNodeWithTag("add-entry").assertDoesNotExist()
             compose.onNodeWithText("编辑").performScrollTo().performClick()
             compose.onNodeWithTag("add-entry").assertDoesNotExist()

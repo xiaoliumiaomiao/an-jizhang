@@ -13,6 +13,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -21,7 +23,7 @@ import java.time.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable fun EntryEditor(entry: Entry?, busy: Boolean, saveError: String?, onDismiss: () -> Unit,
-    onSave: (Entry) -> Unit, recentEntries: List<Entry> = emptyList()) {
+    onSave: (Entry) -> Unit, recentEntries: List<Entry> = emptyList(), isOperationBlocked: () -> Boolean = { busy }) {
     val initial = rememberSaveable(saver = EntryEditorStateSaver) { EntryEditorState.from(entry, LocalDate.now()) }
     var draft by rememberSaveable(stateSaver = EntryEditorStateSaver) { mutableStateOf(initial) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
@@ -29,22 +31,29 @@ import java.time.*
     var noteExpanded by rememberSaveable { mutableStateOf(initial.note.isNotEmpty()) }
     var discard by rememberSaveable { mutableStateOf(false) }
     var keypadOpen by rememberSaveable { mutableStateOf(false) }
+    val currentOperationBlocked by rememberUpdatedState(isOperationBlocked)
+    fun operationBlocked() = busy || currentOperationBlocked()
     fun requestDismiss() {
-        if (!busy) {
+        if (!operationBlocked()) {
             keypadOpen = false
             if (draft.hasChangesFrom(initial)) discard = true else onDismiss()
         }
     }
     Dialog(onDismissRequest = {
-        if (!busy) { if (keypadOpen) keypadOpen = false else requestDismiss() }
+        if (!operationBlocked()) { if (keypadOpen) keypadOpen = false else requestDismiss() }
     }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         val focusManager = LocalFocusManager.current
         val keyboardController = LocalSoftwareKeyboardController.current
         val amountInteractionSource = remember { MutableInteractionSource() }
         fun dismissIme() { focusManager.clearFocus(force = true); keyboardController?.hide() }
+        fun openAmountPanel(): Boolean {
+            if (operationBlocked()) return false
+            dismissIme(); keypadOpen = true
+            return true
+        }
         LaunchedEffect(amountInteractionSource, busy, focusManager, keyboardController) {
             amountInteractionSource.interactions.collect { interaction ->
-                if (interaction is PressInteraction.Release && !busy) { dismissIme(); keypadOpen = true }
+                if (interaction is PressInteraction.Release) openAmountPanel()
             }
         }
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -65,7 +74,8 @@ import java.time.*
                         OutlinedTextField(draft.amount, {}, label = { Text("金额（元）") }, singleLine = true,
                             textStyle = MaterialTheme.typography.headlineMedium, readOnly = true, enabled = !busy,
                             interactionSource = amountInteractionSource,
-                            modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) keyboardController?.hide() })
+                            modifier = Modifier.fillMaxWidth().semantics { onClick(label = "输入金额") { openAmountPanel() } }
+                                .onFocusChanged { if (it.isFocused) keyboardController?.hide() })
                         OutlinedTextField(draft.date, { draft = draft.copy(date = it) }, label = { Text("日期（yyyy-MM-dd）") },
                             singleLine = true, enabled = !busy,
                             modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) keypadOpen = false })
@@ -102,6 +112,7 @@ import java.time.*
                         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                             TextButton(enabled = !busy, onClick = { dismissIme(); requestDismiss() }) { Text("取消") }
                             Button(enabled = !busy, onClick = {
+                                if (operationBlocked()) return@Button
                                 dismissIme(); keypadOpen = false
                                 val cents = Money.parse(draft.amount)
                                 if (cents == null) { error = "金额请输入0.01至999999999.99，最多两位小数"; return@Button }
@@ -121,7 +132,7 @@ import java.time.*
                                 onKey = { dismissIme(); draft = draft.copy(amount = AmountKeypadInput.append(draft.amount, it)) },
                                 onBackspace = { dismissIme(); draft = draft.copy(amount = AmountKeypadInput.backspace(draft.amount)) },
                                 onClear = { dismissIme(); draft = draft.copy(amount = "") },
-                                onClose = { dismissIme(); keypadOpen = false })
+                                onClose = { if (!operationBlocked()) { dismissIme(); keypadOpen = false } })
                         }
                     }
                 }
@@ -129,10 +140,10 @@ import java.time.*
         }
     }
     if (discard) AlertDialog(modifier = Modifier.testTag("discard-draft"),
-        onDismissRequest = { if (!busy) discard = false }, title = { Text("放弃未保存的修改？") },
+        onDismissRequest = { if (!operationBlocked()) discard = false }, title = { Text("放弃未保存的修改？") },
         text = { Text("放弃后本次输入不会保存。") },
-        confirmButton = { TextButton(enabled = !busy, onClick = { discard = false; onDismiss() }) { Text("放弃修改") } },
-        dismissButton = { TextButton(enabled = !busy, onClick = { discard = false }) { Text("继续编辑") } })
+        confirmButton = { TextButton(enabled = !busy, onClick = { if (!operationBlocked()) { discard = false; onDismiss() } }) { Text("放弃修改") } },
+        dismissButton = { TextButton(enabled = !busy, onClick = { if (!operationBlocked()) discard = false }) { Text("继续编辑") } })
     if (datePicker) {
         val selected = runCatching { LocalDate.parse(draft.date).takeIf { it.year in 1900..9999 }
             ?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli() }.getOrNull()

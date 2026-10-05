@@ -51,8 +51,11 @@ import java.util.UUID
     val ledgerScroll = rememberLazyListState()
     val statsScroll = rememberLazyListState()
     val settingsScroll = rememberLazyListState()
+    // Callbacks can be invoked again before recomposition updates effectiveBusy.
+    fun operationBlocked() = viewModel.state.value.busy || pendingSaveId != null || pendingDeleteId != null
     fun closeEditor() { editing = false; editorStates.removeState(editorSession) }
     fun openEditor(entry: Entry?, fromDetail: Boolean) {
+        if (operationBlocked()) return
         editorStates.removeState(editorSession)
         pendingSaveId = null; editingFields = entrySnapshot(entry)
         editorSession = UUID.randomUUID().toString(); editorReturnToDetail = fromDetail; editing = true
@@ -81,11 +84,11 @@ import java.util.UUID
             if (failed == pendingDeleteId) pendingDeleteId = null
         }
     }
-    BackHandler(enabled = detailId != null && !editing && deletingId == null) { if (!effectiveBusy) detailId = null }
+    BackHandler(enabled = detailId != null && !editing && deletingId == null) { if (!operationBlocked()) detailId = null }
     Scaffold(topBar = {
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (detailId != null) TextButton(onClick = { detailId = null }, enabled = !effectiveBusy,
+            if (detailId != null) TextButton(onClick = { if (!operationBlocked()) detailId = null }, enabled = !effectiveBusy,
                 modifier = Modifier.testTag("detail-back")) { Text("返回") }
             Text(if (detailId != null) "账目详情" else when (page) { "stats" -> "月统计"; "settings" -> "设置"; else -> "安记账" },
                 style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(vertical = 8.dp))
@@ -95,7 +98,7 @@ import java.util.UUID
             // The action's measured height is part of Scaffold's content padding, even on the first frame.
             if (!editing && deletingId == null && !modalVisible) Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
-                ExtendedFloatingActionButton(onClick = { if (!effectiveBusy) openEditor(null, false) },
+                ExtendedFloatingActionButton(onClick = { openEditor(null, false) },
                     modifier = Modifier.testTag("add-entry").semantics { if (effectiveBusy) disabled() }) { Text("记一笔") }
             }
             NavigationBar {
@@ -117,36 +120,36 @@ import java.util.UUID
             state.message?.let { Text(it, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp)) }
             if (detailId != null) {
                 if (detail != null) EntryDetail(detail, effectiveBusy,
-                    onEdit = { openEditor(detail, true) }, onDelete = { pendingDeleteId = null; deletingId = detail.id })
+                    onEdit = { openEditor(detail, true) }, onDelete = { if (!operationBlocked()) deletingId = detail.id })
                 else Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(when { state.busy -> "正在读取账目…"; state.error != null -> "无法读取账目，请重试"; else -> "这笔账目已不存在" })
-                    TextButton(onClick = { detailId = null }, enabled = !effectiveBusy) { Text("返回明细") }
+                    TextButton(onClick = { if (!operationBlocked()) detailId = null }, enabled = !effectiveBusy) { Text("返回明细") }
                 }
             } else when (page) {
                 "stats" -> StatisticsPage(month, summary, statsScroll) { monthText = it.toString() }
                 "settings" -> SettingsPage(effectiveBusy, settingsScroll, onExport, onImport, onLicenses)
                 else -> LedgerPage(month, summary, visible, monthEntries.size, query, kind, effectiveBusy, ledgerScroll,
                     { monthText = it.toString() }, { query = it }, { kindName = it?.name.orEmpty() }, { query = ""; kindName = "" },
-                    { openEditor(null, false) }, { detailId = it.id })
+                    { openEditor(null, false) }, { if (!operationBlocked()) detailId = it.id })
             }
         }
     }
     if (editing && !unavailableEdit) editorStates.SaveableStateProvider(editorSession) {
         key(editorSession) {
             EntryEditor(editingEntry, effectiveBusy, state.error,
-                onDismiss = { if (!effectiveBusy) closeEditor() },
+                onDismiss = { if (!operationBlocked()) closeEditor() },
                 onSave = { candidate ->
-                    if (!effectiveBusy && (editingEntry == null || state.entries.any { it.id == editingEntry.id }))
+                    if (!operationBlocked() && (editingEntry == null || viewModel.state.value.entries.any { it.id == editingEntry.id }))
                         pendingSaveId = viewModel.save(candidate)
-                }, recentEntries = state.entries)
+                }, recentEntries = state.entries, isOperationBlocked = ::operationBlocked)
         }
     }
-    if (unavailableEdit) AlertDialog(onDismissRequest = { closeEditor() },
+    if (unavailableEdit) AlertDialog(onDismissRequest = { if (!operationBlocked()) closeEditor() },
         title = { Text(if (state.error == null) "这笔账目已不存在" else "无法读取账目，请重试") },
         text = { Text("请返回并重新读取账目。") },
-        confirmButton = { TextButton(onClick = { closeEditor() }) { Text("返回") } },
+        confirmButton = { TextButton(onClick = { if (!operationBlocked()) closeEditor() }) { Text("返回") } },
         dismissButton = { if (state.error != null) TextButton(onClick = viewModel::load) { Text("重试读取") } })
-    if (deletingId != null) AlertDialog(onDismissRequest = { if (!effectiveBusy) deletingId = null },
+    if (deletingId != null) AlertDialog(onDismissRequest = { if (!operationBlocked()) deletingId = null },
         title = { Text("删除账目？") }, text = {
             Column {
                 if (deletingEntry != null) Text("${deletingEntry.date} ${deletingEntry.category} ${Money.format(deletingEntry.amountCents)}，删除后无法撤销。")
@@ -155,7 +158,7 @@ import java.util.UUID
             }
         }, confirmButton = {
             if (deletingEntry != null) TextButton(enabled = !effectiveBusy, onClick = {
-                if (!effectiveBusy) pendingDeleteId = viewModel.delete(deletingEntry)
+                if (!operationBlocked()) pendingDeleteId = viewModel.delete(deletingEntry)
             }) { Text("确认删除") }
-        }, dismissButton = { TextButton(enabled = !effectiveBusy, onClick = { if (!effectiveBusy) deletingId = null }) { Text("取消") } })
+        }, dismissButton = { TextButton(enabled = !effectiveBusy, onClick = { if (!operationBlocked()) deletingId = null }) { Text("取消") } })
 }
