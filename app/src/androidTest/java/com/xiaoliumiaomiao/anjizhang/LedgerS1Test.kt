@@ -139,11 +139,13 @@ class LedgerS1Test {
     }
     @Test fun recentCategoriesUseSixNewestDistinctForCurrentKind() {
         open(); compose.onNodeWithTag("recent-categories").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("最近分类12").performScrollTo().performClick()
+        val recentSuggestion = hasAnyAncestor(hasTestTag("recent-categories"))
+        compose.onNode(hasText("最近分类12") and recentSuggestion).performScrollTo().performClick()
         compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("最近分类12")
-        compose.onNodeWithText("最近分类7").assertExists(); compose.onNodeWithText("最近分类6").assertDoesNotExist()
+        compose.onNode(hasText("最近分类7") and recentSuggestion).assertExists()
+        compose.onNode(hasText("最近分类6") and recentSuggestion).assertDoesNotExist()
         compose.onNode(hasText("收入") and isSelectable()).performScrollTo().performClick()
-        compose.onNodeWithText("最近分类12").assertDoesNotExist()
+        compose.onNode(hasText("最近分类12") and recentSuggestion).assertDoesNotExist()
         compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("最近分类12"); unchanged()
     }
     @Test fun monthPickerConfirmsBoundariesKeepsQueryAndCancelKeepsMonth() {
