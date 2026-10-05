@@ -95,4 +95,4 @@ timeout 30s adb -s "$serial" shell am start -W -n "$app/.MainActivity" 2>&1 | te
 tr -d '\r' < "$artifacts/launch-raw.txt" > "$artifacts/launch.txt"
 grep -qx 'Status: ok' "$artifacts/launch.txt" || fail 'Upgraded app launch did not report Status: ok'
 if grep -qiE 'Error:|Exception|unable to resolve' "$artifacts/launch.txt"; then fail 'Upgraded app launch failed'; fi
-printf 'PASS: synthetic ledger survived 0.1.2/code3 -> 0.1.3/code5 replacement\n' | tee "$artifacts/summary.txt"
+printf 'PASS: synthetic ledger survived 0.1.2/code3 -> 0.1.4/code6 replacement\n' | tee "$artifacts/summary.txt"
