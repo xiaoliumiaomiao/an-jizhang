@@ -32,7 +32,8 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
     private var database: LedgerDatabase? = null
     private fun db(): LedgerDatabase = database ?: LedgerDatabase(getApplication()).also { database = it }
     init { load() }
-    private fun work(action: suspend () -> String?, operationId: String? = null) {
+    private fun work(action: suspend () -> String?, operationId: String? = null,
+        failureText: (Exception) -> String = { "无法完成操作，请重试" }) {
         viewModelScope.launch(Dispatchers.IO) {
             lock.withLock {
                 mutable.update { it.copy(busy = true, error = null, message = null, messageId = null, messageExpiresAt = null) }
@@ -45,13 +46,13 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
                         completedOperationId = operationId ?: it.completedOperationId) }
                 } catch (cancelled: CancellationException) { throw cancelled
                 } catch (failure: Exception) {
-                    mutable.update { it.copy(error = "操作失败：${failure.message ?: "请重试"}。原有账目未被替换。",
+                    mutable.update { it.copy(error = "操作失败：${failureText(failure)}。原有账目未被替换。",
     failedOperationId = operationId ?: it.failedOperationId) }
                 } finally { mutable.update { it.copy(busy = false) } }
             }
         }
     }
-    fun load() = work({ null })
+    fun load() = work({ null }, failureText = { "读取账目失败，请重试" })
     fun save(entry: Entry): String = UUID.randomUUID().toString().also { operationId ->
         work({ db().save(entry); "已保存" }, operationId)
     }
@@ -62,8 +63,18 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
         val bytes = BackupCodec.encode(db().listEntries()).toByteArray(Charsets.UTF_8)
         (open() ?: error("无法打开备份位置")).use { it.write(bytes) }
         "备份已导出，请妥善保管"
+    }, failureText = { failure ->
+        val reason = when (failure.message) {
+            "备份超过 10 MiB" -> "备份超过 10 MiB"
+            "备份最多 50000 条" -> "备份最多 50000 条"
+            else -> "输出失败"
+        }
+        "$reason。新文件可能不完整，请保留旧备份并重新导出"
     })
-    fun restore(open: () -> InputStream?) = work({
+    private enum class RestoreStage { READ, SIZE, DECODE, MERGE }
+    fun restore(open: () -> InputStream?) {
+        var stage = RestoreStage.READ
+        work({
         val bytes = (open() ?: error("无法读取备份文件")).use { input ->
             val output = java.io.ByteArrayOutputStream()
             val buffer = ByteArray(8192)
@@ -76,13 +87,29 @@ class LedgerViewModel(application: Application) : AndroidViewModel(application) 
             }
             output.toByteArray()
         }
+        stage = RestoreStage.SIZE
         require(bytes.size <= BackupCodec.MAX_BYTES) { "备份超过 10 MiB" }
+        stage = RestoreStage.DECODE
         val text = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
             .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString()
         val validated = BackupCodec.decode(text)
+        stage = RestoreStage.MERGE
         val result = db().merge(validated)
         "恢复完成：新增 ${result.imported} 条，跳过 ${result.skipped} 条"
-    })
+        }, failureText = { failure ->
+            when (stage) {
+                RestoreStage.READ -> "读取失败，请确认备份文件可访问"
+                RestoreStage.SIZE -> "备份超过 10 MiB"
+                RestoreStage.DECODE -> when (failure.message) {
+                    "备份无效：不支持的备份版本", "备份无效：不支持的币种", "备份无效：不是安记账备份" -> "备份格式不兼容"
+                    "备份无效：备份最多 50000 条" -> "备份最多 50000 条"
+                    else -> "备份无效或已损坏，请选择有效备份"
+                }
+                RestoreStage.MERGE -> if (failure is IllegalArgumentException &&
+                    failure.message?.endsWith("内容冲突，整批未导入") == true) "内容冲突，整批未导入" else "恢复失败，请重试"
+            }
+        })
+    }
     override fun onCleared() {
         super.onCleared()
         CoroutineScope(Dispatchers.IO).launch { lock.withLock { database?.close(); database = null } }

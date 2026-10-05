@@ -127,15 +127,17 @@ class LedgerViewModelTest {
         assertTrue(model.state.value.entries.isEmpty())
     }
     @Test fun failedOutputReportsErrorWithoutChangingLedger() {
-        val valid = entry()
+        val valid = entry().copy(note = "不能回显的合成备注")
         val saved = model.save(valid)
         await { model.state.value.completedOperationId == saved && !model.state.value.busy }
-        model.export { object : java.io.OutputStream() { override fun write(value: Int) { throw java.io.IOException("输出失败") } } }
+        model.export { object : java.io.OutputStream() { override fun write(value: Int) { throw java.io.IOException("输出失败：${valid.id}/${valid.category}/${valid.note}") } } }
         await { model.state.value.error?.contains("输出失败") == true && !model.state.value.busy }
         assertEquals(listOf(valid), model.state.value.entries)
         assertTrue(model.state.value.error!!.contains("新文件可能不完整"))
         assertTrue(model.state.value.error!!.contains("保留旧备份"))
         assertFalse(model.state.value.error!!.contains(valid.id))
+        assertFalse(model.state.value.error!!.contains(valid.category))
+        assertFalse(model.state.value.error!!.contains(valid.note))
     }
     @Test fun startsEmptyWithoutDemoData() { assertTrue(model.state.value.entries.isEmpty()); assertNull(model.state.value.error) }
     @Test fun failedSaveKeepsDataAndAllowsRetry() {
@@ -168,15 +170,35 @@ class LedgerViewModelTest {
         model.restore { ByteArrayInputStream(conflict.toByteArray()) }
         await { model.state.value.error?.contains("冲突") == true && !model.state.value.busy }
         assertEquals(listOf(valid), model.state.value.entries)
+        assertFalse(model.state.value.error!!.contains(valid.id))
     }
     @Test fun failedReadDoesNotMergeAndCanRecover() {
-        model.restore { throw java.io.IOException("读取失败") }
+        val secret = "不能回显的合成provider账本片段"
+        model.restore { throw java.io.IOException("读取失败：$secret") }
         await { model.state.value.error != null && !model.state.value.busy }
         assertTrue(model.state.value.entries.isEmpty())
+        assertTrue(model.state.value.error!!.contains("读取失败"))
+        assertFalse(model.state.value.error!!.contains(secret))
         val valid = entry()
         model.restore { ByteArrayInputStream(BackupCodec.encode(listOf(valid)).toByteArray()) }
         await { model.state.value.entries.size == 1 && !model.state.value.busy }
         assertEquals("恢复完成：新增 1 条，跳过 0 条", model.state.value.message)
+    }
+    private fun invalidBackupErrorMustBePrivate(mutate: (String) -> String, secret: String) {
+        val valid = entry().copy(date = LocalDate.of(2026, 1, 1))
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        model.restore { ByteArrayInputStream(mutate(BackupCodec.encode(listOf(valid))).toByteArray()) }
+        await { model.state.value.error != null && !model.state.value.busy }
+        assertTrue(model.state.value.error!!.contains("备份无效"))
+        assertFalse(model.state.value.error!!.contains(secret))
+        assertEquals(listOf(valid), model.state.value.entries)
+    }
+    @Test fun invalidBackupDateDoesNotEchoRawValue() {
+        invalidBackupErrorMustBePrivate({ it.replace("2026-01-01", "2026-02-30") }, "2026-02-30")
+    }
+    @Test fun invalidBackupKindDoesNotEchoRawValue() {
+        invalidBackupErrorMustBePrivate({ it.replace("EXPENSE", "敏感错误类型") }, "敏感错误类型")
     }
     @Test fun oversizedStreamReadsOnlyLimitPlusOneBytes() {
         var read = 0
