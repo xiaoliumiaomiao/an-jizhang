@@ -8,7 +8,9 @@
 
 当前冻结源码ee9b718c6a7a6dc3b8a2ccd5d739196e61b07d65，[CI37275582803](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37275582803) attempt1两个job success，实际60JVM/19UI/seed1/verify1全部0失败/错误/跳过，原55/16逐名缺失0，lint0E9W。本次删除旋转原期限、备注IME正负交接、数字实际按键和1分保存、错误持续、大字滚动均实际通过。ROOT实读code3→5原始runner、三同证书、替换安装/启动及schema1/全部字段/跨月统计；已逐张view原11图+升级首页，边界见验证文档。Task1/Task2与整分支最高能力Source Spec/Quality Approved C0/I0/M0，见[本轮审查](REVIEW_INPUT_FEEDBACK.md)。
 
-本机新0.1.3/code5包9458013bytes，SHA256 cc131a6a3624e44b82f96589d399af7c2d3b33cbafe87780377f34f51ab12f15；原生身份/权限/完整许可与旧本机同签名209fe…审计通过。已以新文件名an-jizhang-0.1.3-fix1-debug.apk及独立校验复制至两output，旧7APK及校验前缀保留。独立Runtime/Visual Spec/Quality Approved C0/I0/M0，原11图已复制为两处22同源PNG，旧18保留；普通末行/初屏FAB、font2实际点击范围等边界见本轮审查。当前PR文档/三方同步及最终FullDelivery审查收尾中。PHONE_INPUT_FEEDBACK.md九项和原PHONE_ACCEPTANCE_V013十三项仍全待作者，不继承旧验证结果；main固定已验收ff8479f，主目录作者两文件改动保持。
+本机新0.1.3/code5包9458013bytes，SHA256 cc131a6a3624e44b82f96589d399af7c2d3b33cbafe87780377f34f51ab12f15；原生身份/权限/完整许可与旧本机同签名209fe…审计通过。已以新文件名an-jizhang-0.1.3-fix1-debug.apk及独立校验复制至两output，旧7APK及校验前缀保留。独立Runtime/Visual Spec/Quality Approved C0/I0/M0，原11图已复制为两处22同源PNG，旧18保留；普通末行/初屏FAB、font2实际点击范围等边界见本轮审查。
+
+最终最高能力独立Spec/Quality/Final technical FullDelivery Approved C0/I0/M0，报告final-full-delivery-review.md；独立raw/XML/12原图、fresh native APK/完整许可、2APK22PNG/29旧物保护/两作者文档均实核。审查时local/remote/PR HEAD2814f1e一致、private且PR4 OPEN/draft，工作区干净；受测ee9之后仅文档提交。ROOT写回实际结论后再按本轮工具核同步，最后证据delivery-sync-final.json。PHONE_INPUT_FEEDBACK.md九项和原PHONE_ACCEPTANCE_V013十三项仍全待作者，不继承旧验证结果；main固定已验收ff8479f，主目录作者两文件及dirty状态保持。手机先导出备份，再本机fix1/code5覆盖安装，不合main或正式发布。
 
 ## 0.1.3 当前：技术交付完成，待作者手机验收
 

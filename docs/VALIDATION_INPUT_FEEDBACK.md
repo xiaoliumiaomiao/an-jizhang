@@ -1,6 +1,6 @@
 # 0.1.3 金额键盘与成功提示修复验证
 
-状态：本轮冻结源码的完整 CI、原始升级 runner、独立源码及视觉审查、实际 APK/截图交付已通过；最终完整交付审查与同步收尾中。作者手机验收仍待。
+状态：本轮冻结源码的完整 CI、原始升级 runner、独立源码及视觉审查、实际 APK/截图与最终完整技术交付审查均通过。作者手机验收仍待。
 
 用户报告删除后“已删除”长期留在标题下，重启才消失；要求金额使用应用内数字键盘，备注使用系统IME。本轮仅处理这两项，原0.1.3技术交付79d0a89及旧APK450d保留，作者手机十三项仍待。主目录现有作者文档改动不覆盖。
 
@@ -60,4 +60,8 @@ ROOT 已逐张查看本次11张原始 device-ui-screens PNG及升级首页 devic
 
 同次11张已由ROOT及独立agent查看的原图复制至两处 `output/v0.1.3-fix1-screenshots`，22个唯一目标与各原图hash/bytes一致，旧18图保留；升级首页原图仍存本次CI材料。ROOT随后重算两APK/22PNG来源及目标和全部27项非总校验旧物/两作者文档，实际一致。ignored `apk-audit/audit.json`、`apk-delivery.json`、`screen-delivery.json`保存实物记录，不使用旧code4审计。
 
-最终完整技术交付审查和local/remote/PR同步仍待实际记录。新[手机9项](PHONE_INPUT_FEEDBACK.md)及旧[手机13项](PHONE_ACCEPTANCE_V013.md)全未勾，main保持已验收0.1.2；先导出备份，再用本机同签名fix1覆盖安装。技术CI/原图不代替手机验收。
+最终最高能力独立 Spec/Quality/Final technical FullDelivery **Approved C0/I0/M0**，原报告 `final-full-delivery-review.md` 已由ROOT完整读取。审查者独立重读原CI/升级runner、逐view12图，fresh native公开APK签名/权限/身份和三份ZIP完整许可，并重算2新APK/22唯一PNG、29初始旧物保护及两作者文档，实物均相同。
+
+`delivery-sync-pre-review.json` 实际15:25通过：local/remote/PR一致2814f1ef049b8990a25d7a8abc61705751d53057，private、OPEN/draft，工作区干净；primary/remote main固定ff8479f，主目录作者M HANDOFF及未跟踪规划状态和字节保留。审查者另live独立核验这些条件，受测ee9后唯一提交逐项只有6份文档。结论回写后不改变受测源码或APK，ROOT再执行同一有界工具；实际最后提交/PR/副本/手机未勾状态以 ignored `fix-v013-input-feedback/delivery-sync-final.json` 为准。
+
+新[手机9项](PHONE_INPUT_FEEDBACK.md)及旧[手机13项](PHONE_ACCEPTANCE_V013.md)全未勾，main保持已验收0.1.2；先导出备份，再用本机同签名fix1覆盖安装。技术CI/原图不代替手机验收。

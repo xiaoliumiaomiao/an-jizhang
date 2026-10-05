@@ -1,6 +1,6 @@
 # 安记账
 
-中文安卓本地记账软件，当前测试候选为 **0.1.3-fix1（versionCode 5）**，支持Android8.0及以上。0.1.0、0.1.1和0.1.2均已由作者确认验收通过；本轮界面重构、金额内置键盘与成功短提示已通过完整CI和独立源码、运行/视觉审查，最终交付审查、同步及作者手机验收仍待。
+中文安卓本地记账软件，当前测试候选为 **0.1.3-fix1（versionCode 5）**，支持Android8.0及以上。0.1.0、0.1.1和0.1.2均已由作者确认验收通过；本轮界面重构、金额内置键盘与成功短提示已通过完整CI和独立源码、运行/视觉及最终完整技术交付审查，作者手机验收仍待。
 
 - 收入/支出新增、编辑、确认删除，内置与自定义分类、日期、备注。
 - 月份切换、收入/支出/结余、支出分类统计。金额始终使用整数分。
@@ -17,7 +17,7 @@
 
 fix1 将删除等成功反馈改为约3秒自动清除；旋转按原单调截止时间处理，旧消息回调不能误清新消息。金额使用表单内数字、小数点、退格和清空按钮，在末尾编辑；点金额不唤系统键盘，从备注切回金额会收起系统IME。备注继续使用系统输入法，金额仍经原精确校验后保存，不改变账目或备份格式。[本轮复用与取舍](docs/REUSE_INPUT_FEEDBACK.md)
 
-受测源码 `ee9b718c6a7a6dc3b8a2ccd5d739196e61b07d65` 的 [CI37275582803](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37275582803) attempt1 两个job均成功：**60单元/19设备测试全部0失败、0错误、0跳过**，原55/16逐名保留，lint0错误/9原有提示。严格0.1.2/code3→0.1.3/code5同证书覆盖升级的seed/verify各1项及安装、启动通过，账目字段与跨月统计保留。11张本轮原生场景图及升级首页已逐张查看，独立源码与运行/视觉审查Approved，C0/I0/M0；最终完整交付审查和同步尚待。[实际验证](docs/VALIDATION_INPUT_FEEDBACK.md)、[本轮审查](docs/REVIEW_INPUT_FEEDBACK.md)
+受测源码 `ee9b718c6a7a6dc3b8a2ccd5d739196e61b07d65` 的 [CI37275582803](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37275582803) attempt1 两个job均成功：**60单元/19设备测试全部0失败、0错误、0跳过**，原55/16逐名保留，lint0错误/9原有提示。严格0.1.2/code3→0.1.3/code5同证书覆盖升级的seed/verify各1项及安装、启动通过，账目字段与跨月统计保留。11张本轮原生场景图及升级首页已逐张查看，独立源码、运行/视觉及最终完整技术交付审查均Approved，C0/I0/M0；最终结论写回后的同步记录见实际验证。[实际验证](docs/VALIDATION_INPUT_FEEDBACK.md)、[本轮审查](docs/REVIEW_INPUT_FEEDBACK.md)
 
 当前本机fix1包已通过身份、公开签名、权限及完整许可审计，并以新文件名复制到两个output；旧7个APK与原校验前缀保留。两处 `output/v0.1.3-fix1-screenshots` 各保存11张本轮原始PNG，22副本与本次CI源图hash相同，旧18图保留。作者[本轮9项手机清单](docs/PHONE_INPUT_FEEDBACK.md)全部待验，[原0.1.3十三项](docs/PHONE_ACCEPTANCE_V013.md)保持原状态。私有草稿[PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)继续待作者确认；main保留已验收0.1.2，不合并或正式发布。
 
@@ -37,7 +37,7 @@ fix1 将删除等成功反馈改为约3秒自动清除；旋转按原单调截�
 
 当前本机debug候选文件为 `output/an-jizhang-0.1.3-fix1-debug.apk`（0.1.3/code5），校验文件为 `output/SHA256SUMS-v0.1.3-fix1.txt`；主目录 `D:/AIproject/an-jizhang/output` 也有同一副本。包大小9458013 bytes，SHA-256为 `cc131a6a3624e44b82f96589d399af7c2d3b33cbafe87780377f34f51ab12f15`，与旧本机包使用同一公开签名证书。原0.1.0/0.1.1/0.1.2及修复前0.1.3包、旧校验文件保留。
 
-待ROOT完成本轮交付确认后，先在手机现有应用中导出整本备份，再正常安装本机同签名fix1/code5覆盖现有应用，按[本轮手机验收清单](docs/PHONE_INPUT_FEEDBACK.md)验证。安装报错保留原应用和账本；卸载会删除数据，不卸载/清库/强制降级。备份为明文，请保存到可信位置；旧版通过不继承为本轮结果，原0.1.3手机表不代勾或重置。
+先在手机现有应用中导出整本备份，再正常安装本机同签名fix1/code5覆盖现有应用，按[本轮手机验收清单](docs/PHONE_INPUT_FEEDBACK.md)验证。安装报错保留原应用和账本；卸载会删除数据，不卸载/清库/强制降级。备份为明文，请保存到可信位置；旧版通过不继承为本轮结果，原0.1.3手机表不代勾或重置。
 
 [GitHub Actions](https://github.com/xiaoliumiaomiao/an-jizhang/actions)的`android-build`产物用于独立技术验证；本机与CI签名可能不同，CI包不用于覆盖作者手机账本。
 
