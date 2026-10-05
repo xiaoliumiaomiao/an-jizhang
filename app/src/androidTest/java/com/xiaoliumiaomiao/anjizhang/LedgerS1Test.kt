@@ -46,6 +46,32 @@ class LedgerS1Test {
         compose.onNodeWithText("请选择或填写分类").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("editor-form").assertExists(); unchanged()
     }
+    @Test fun amountPanelPopsOnDemandBackClosesItBeforeDiscardAndNoteUsesIme() {
+        open(); compose.onNodeWithTag("amount-keypad").assertDoesNotExist()
+        compose.setAmountWithKeypad("12.34")
+        compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed()
+        compose.assertSystemImeVisible(false)
+        back(); compose.onNodeWithTag("amount-keypad").assertDoesNotExist()
+        compose.onNodeWithTag("discard-draft").assertDoesNotExist()
+        compose.assertAmountDraft("12.34")
+        compose.onNodeWithTag("note-toggle").performScrollTo().performClick()
+        compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().performTouchInput { click() }
+        compose.assertSystemImeVisible(true); field("备注（可选，最多200字）", "面板交接备注")
+        back(); compose.assertSystemImeVisible(false)
+        compose.onNodeWithTag("discard-draft").assertDoesNotExist()
+        compose.onNodeWithText("金额（元）").performScrollTo().performTouchInput { click() }
+        compose.assertSystemImeVisible(false)
+        compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed()
+        compose.pressAmountKey("backspace"); compose.assertAmountDraft("12.3")
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed()
+        compose.assertAmountDraft("12.3")
+        compose.onNodeWithTag("amount-keypad-close").performScrollTo().performClick()
+        compose.onNodeWithTag("amount-keypad").assertDoesNotExist()
+        compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().assertTextContains("面板交接备注")
+        back(); compose.onNodeWithTag("discard-draft").assertIsDisplayed()
+        compose.onNodeWithText("放弃修改").performClick(); unchanged()
+    }
     @Test fun dirtyBackConfirmationAndBaselineSurviveRotation() {
         open(); compose.setAmountWithKeypad("12.34")
         field("分类（可自定义）", "自定义草稿"); compose.closeKeyboard()
@@ -112,6 +138,35 @@ class LedgerS1Test {
         compose.onNodeWithText("搜索分类或备注").assertTextContains("最近")
         compose.onNodeWithText("仅支出").assertIsSelected(); unchanged()
     }
+    @Test fun detailReadsLatestEntryAndDoesNotRecreateMissingId() {
+        ready(); val original = records.last()
+        compose.onNodeWithTag("ledger-list").performScrollToNode(hasTestTag("entry-${original.id}"))
+        compose.onNodeWithTag("entry-${original.id}").performClick()
+        val vm = model(); val updated = original.copy(category = "更新分类", note = "读取最新备注")
+        val saved = vm.save(updated)
+        compose.waitUntil(10000) { !vm.state.value.busy && vm.state.value.completedOperationId == saved }
+        compose.onNodeWithText("分类：更新分类").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("备注：读取最新备注").performScrollTo().assertIsDisplayed()
+        val deleted = vm.delete(updated)
+        compose.waitUntil(10000) { !vm.state.value.busy && vm.state.value.completedOperationId == deleted }
+        compose.onNodeWithText("这笔账目已不存在").assertIsDisplayed()
+        compose.onNodeWithText("编辑").assertDoesNotExist(); compose.onNodeWithText("删除").assertDoesNotExist()
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithText("这笔账目已不存在").assertIsDisplayed()
+        compose.onNodeWithTag("detail-back").performClick()
+        assertEquals(records.filter { it.id != original.id }.toSet(), vm.state.value.entries.toSet())
+        LedgerDatabase(ApplicationProvider.getApplicationContext<Context>()).use { assertEquals(vm.state.value.entries.toSet(), it.listEntries().toSet()) }
+    }
+    @Test fun exportWarningShowsCapacityAndHidesGlobalEntryAction() {
+        ready(); compose.onNodeWithTag("nav-settings").performClick()
+        compose.onNodeWithTag("settings-list").performScrollToNode(hasText("导出备份"))
+        compose.onNodeWithText("导出备份").performClick()
+        compose.onNodeWithText("导出明文备份").assertIsDisplayed()
+        compose.onNode(hasText("50000", substring = true) and hasText("10 MiB", substring = true) and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        compose.onNodeWithTag("add-entry").assertDoesNotExist()
+        compose.onNodeWithText("取消").performClick()
+        compose.onNodeWithTag("add-entry").assertIsDisplayed(); unchanged()
+    }
     private fun shell(command: String): String = ParcelFileDescriptor.AutoCloseInputStream(
         InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)).bufferedReader().use { it.readText().trim() }
     private fun emulatorOnly() {
@@ -154,9 +209,16 @@ class LedgerS1Test {
             compose.onNodeWithText("编辑").performScrollTo().performClick()
             compose.onNodeWithTag("add-entry").assertDoesNotExist()
             compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed()
+            compose.setAmountWithKeypad("0.01")
+            "0123456789".forEach { compose.pressAmountKey(it.toString()) }
+            compose.pressAmountKey("backspace"); compose.pressAmountKey("dot"); compose.pressAmountKey("clear")
+            compose.onNodeWithTag("amount-keypad-close").performScrollTo().assertIsDisplayed().performClick()
+            compose.onNodeWithTag("amount-keypad").assertDoesNotExist()
+            compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed()
             captureLedgerScreen("s1-font-${scale.toString().replace('.', '-')}")
             compose.onNodeWithText("取消").performScrollTo().performClick()
-            compose.onNodeWithTag("discard-draft").assertDoesNotExist(); unchanged()
+            compose.onNodeWithTag("discard-draft").assertIsDisplayed()
+            compose.onNodeWithText("放弃修改").performClick(); unchanged()
         } finally { shell(if(old == "null") "settings delete system font_scale" else "settings put system font_scale $old"); compose.activityRule.scenario.recreate() }
     }
     @Test fun fontOneHasUncoveredViewportAndReachableActions() = fontViewport(1f)
