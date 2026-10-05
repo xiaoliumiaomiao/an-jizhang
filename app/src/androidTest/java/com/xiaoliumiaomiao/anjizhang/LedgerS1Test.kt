@@ -2,12 +2,16 @@ package com.xiaoliumiaomiao.anjizhang
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.BitmapFactory
 import android.os.ParcelFileDescriptor
 import android.view.KeyEvent
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.graphics.ColorUtils
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
@@ -25,6 +29,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import java.time.YearMonth
+import java.io.File
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -365,7 +370,32 @@ class LedgerS1Test {
                     if (android.graphics.Color.rgb((pixels[x,y].red*255).toInt(), (pixels[x,y].green*255).toInt(), (pixels[x,y].blue*255).toInt()) == expected) matches++
                 }
                 assertTrue("Rendered ${if(dark) "dark" else "light"} palette, matches=$matches", matches > 100)
-                captureLedgerScreen(if(dark) "s1-dark" else "s1-light")
+                val screenshot = if(dark) "s1-dark" else "s1-light"
+                captureLedgerScreen(screenshot)
+                val statusHeight = compose.runOnIdle {
+                    val window = compose.activity.window
+                    val icons = WindowInsetsControllerCompat(window, window.decorView)
+                    assertEquals("Status icon appearance must follow night mode", !dark, icons.isAppearanceLightStatusBars)
+                    assertEquals("Navigation icon appearance must follow night mode", !dark, icons.isAppearanceLightNavigationBars)
+                    WindowInsetsCompat.toWindowInsetsCompat(requireNotNull(window.decorView.rootWindowInsets))
+                        .getInsets(WindowInsetsCompat.Type.statusBars()).top
+                }
+                val native = requireNotNull(BitmapFactory.decodeFile(File(
+                    InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null),
+                    "v013-screens/$screenshot.png").absolutePath))
+                try {
+                    assertTrue("Full native image must include the actual status bar", statusHeight > 0 && statusHeight < native.height)
+                    var backgroundPixels = 0; var clockContrastPixels = 0
+                    for (y in 0 until statusHeight) for (x in 0 until native.width) {
+                        val color = native.getPixel(x, y)
+                        if (color == expected) backgroundPixels++
+                        // Inspect the real clock area, without cropping or changing the saved full image.
+                        if (x < native.width * 2 / 5 && ColorUtils.calculateContrast(color, expected) >= 3.0) clockContrastPixels++
+                    }
+                    android.util.Log.i("LedgerS1", "night=$dark nativeStatusHeight=$statusHeight background=$backgroundPixels/${native.width * statusHeight} clockContrastPixels=$clockContrastPixels")
+                    assertTrue("Transparent status bar must reveal the active window palette", backgroundPixels > native.width * statusHeight * 3 / 4)
+                    assertTrue("The real clock must contain visible pixels with contrast >= 3", clockContrastPixels > 20)
+                } finally { native.recycle() }
             }
         } finally { shell("cmd uimode night ${if(wasNight) "yes" else "no"}"); compose.activityRule.scenario.recreate() }
     }
