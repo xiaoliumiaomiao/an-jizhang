@@ -46,7 +46,7 @@
 
 ## Task 3：可安装交付
 
-- [ ] frozen code真实CI全套、旧同证书覆盖、原始runner和图像核验；原55/16与新测试逐名读取实际XML。
-- [ ] 新包version/code/权限/完整许可/公开签名审计，固定新文件双output复制和SHA；旧APK/校验前缀保留。
+- [x] frozen code真实CI全套、旧同证书覆盖、原始runner和图像核验；原55/16与新测试逐名读取实际XML。
+- [x] 新包version/code/权限/完整许可/公开签名审计，固定新文件双output复制和SHA；旧APK/校验前缀保留。
 - [ ] 更新PR4及正式交付文档；最终独立完整审查、local/remote/PR同步，main与作者改动保留。
 - [ ] 提供修复APK及本轮手机检查入口；未由作者验证项保持未勾，不合main。

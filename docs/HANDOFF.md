@@ -4,7 +4,11 @@
 
 ## 当前修复：成功提示与金额内置键盘
 
-作者本轮报告“已删除”持久显示，并要求金额改内置数字键盘、备注保留系统IME；先只修此两项。复用当前feat/ledger-ui-v0.1.3与私有draft PR4，保留原0.1.3交付/旧APK、主目录作者未提交文档及main。计划见[修复计划](superpowers/plans/2026-10-05-input-feedback-fix.md)，本轮实际证据见[修复验证](VALIDATION_INPUT_FEEDBACK.md)。5项新逻辑已真实RED60/5→GREEN60/0；旧界面CI37272983725 attempt2真实19UI/仅新3失败，原16通过。已实现原期限清成功反馈、只读金额及内联数字键、Dialog内IME交接；原16只适配11金额动作及5次金额收键盘。完整本机构建145721成功38秒，60JVM/0失败错误跳过、lint0E9W；Task2独立源码Spec/Quality Approved C0/I0/M0，见[本轮审查](REVIEW_INPUT_FEEDBACK.md)。新0.1.3/code5包尚未复制，实际设备GREEN、覆盖升级、11新图和作者手机9项仍待，不继承旧交付结果。
+作者本轮报告“已删除”持久显示，并要求金额改内置数字键盘、备注保留系统IME；本轮只修此两项。复用feat/ledger-ui-v0.1.3与私有draft PR4，保留原0.1.3交付/旧APK、主目录作者未提交文档及main。计划见[修复计划](superpowers/plans/2026-10-05-input-feedback-fix.md)，本轮实际证据见[修复验证](VALIDATION_INPUT_FEEDBACK.md)。5项新逻辑真实RED60/5→GREEN60/0；旧界面CI37272983725 attempt2真实19UI/仅新3失败，原16通过。成功提示约3秒按原期限/独立ID清除；金额为只读String草稿与内联数字键，备注IME正常，整数分/原操作ID/草稿及字段合同保持。
+
+当前冻结源码ee9b718c6a7a6dc3b8a2ccd5d739196e61b07d65，[CI37275582803](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37275582803) attempt1两个job success，实际60JVM/19UI/seed1/verify1全部0失败/错误/跳过，原55/16逐名缺失0，lint0E9W。本次删除旋转原期限、备注IME正负交接、数字实际按键和1分保存、错误持续、大字滚动均实际通过。ROOT实读code3→5原始runner、三同证书、替换安装/启动及schema1/全部字段/跨月统计；已逐张view原11图+升级首页，边界见验证文档。Task1/Task2与整分支最高能力Source Spec/Quality Approved C0/I0/M0，见[本轮审查](REVIEW_INPUT_FEEDBACK.md)。
+
+本机新0.1.3/code5包9458013bytes，SHA256 cc131a6a3624e44b82f96589d399af7c2d3b33cbafe87780377f34f51ab12f15；原生身份/权限/完整许可与旧本机同签名209fe…审计通过。已以新文件名an-jizhang-0.1.3-fix1-debug.apk及独立校验复制至两output，旧7APK及校验前缀保留。独立Runtime/Visual Spec/Quality Approved C0/I0/M0，原11图已复制为两处22同源PNG，旧18保留；普通末行/初屏FAB、font2实际点击范围等边界见本轮审查。当前PR文档/三方同步及最终FullDelivery审查收尾中。PHONE_INPUT_FEEDBACK.md九项和原PHONE_ACCEPTANCE_V013十三项仍全待作者，不继承旧验证结果；main固定已验收ff8479f，主目录作者两文件改动保持。
 
 ## 0.1.3 当前：技术交付完成，待作者手机验收
 
