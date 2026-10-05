@@ -2,16 +2,21 @@
 
 日期：2026-10-05（Asia/Shanghai）。
 
+## 当前迭代：V1.0 S1／0.1.4，技术交付 Pending final technical FullDelivery，手机待验
 
-## 当前迭代：V1.0 S1补齐 / 0.1.4（实施中）
+作者要求按最新V1.0方案迭代，并明确成功提示自动消失已通过、页面式金额键盘不通过。本轮应用0.1.4/code6补齐S1：点金额从底部弹应用键盘，Back先收起，备注使用系统IME；空分类必填、最近分类按收支最多6个、折叠备注、草稿及放弃确认旋转保留、稳定ID详情／编辑／删除、年月选择、系统浅深主题、真实viewport避开记账按钮。保持整数分、schema1／format1、字面搜索、完整月统计、原操作ID和失败草稿，没有新增依赖、联网或广泛存储权限。
 
-作者要求参照最新V1.0迭代；主目录main仍已验收0.1.2，本轮复用feat/ledger-ui-v0.1.3，原主目录两未提交文档与两处旧产物hash已冻结，原字节不改。计划见[本轮计划](superpowers/plans/2026-10-05-v1-s1-completion.md)，目标0.1.4/code6，保持schema1/format1及原安全/搜索/operation ID合同，S2等待作者S1手机验收。
+冻结受测 `3bf514249f6a920d2c3d8f89299830f72520eb82` 的 [CI 37301576955](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37301576955) 两job success，实际81 JVM／35 UI／旧版seed1及新版verify1全部0失败／错误／跳过，原77／19逐名保留，16S1与两隐私回归核对，两项新增native窗口回归通过，lint0E9W。同job同证书code3→6真实替换后schema1、UUID及全部账目字段和跨月统计保留，安装／runner／启动原件实读。
 
-作者本轮明确反馈：成功提示自动消失已通过；金额键盘要弹出式，现有页面式未通过。本轮将键盘改为初始隐藏、点金额后在底部独立面板弹出，可收起，Back先收面板，备注/日期/分类切系统IME时收起金额面板；保留全部草稿。PHONE_INPUT_FEEDBACK记录部分反馈，未将复合项目全勾。
+Task1／Task2／整分支及连续源码测试增量Spec／Quality Approved，当前C0/I0/M0；Runtime／Visual Runtime Approved / Visual Approved，C0/I0/M0。源码审查发现的金额语义入口和同步防重有三个真实RED后修复并设备通过。readiness两个test-only补丁未改当时生产c06：备注点击前处理nativeIME、截图焦点＋frame共原10s预算，严格业务／几何及原名称保留。519的font2跨时刻Rect假失败已证实并修正；更早缺现场的font2与c06备注点击根因未完整证实，不据最终GREEN倒推；203实际自动全通过后，24原图复核发现深色native状态栏低对比I1；最小windowBackground日／夜资源修复有81／2F真实RED→81全GREEN及独立全增量Approved，原night用例增加全幅状态栏背景／前景与图标合同。最终新CI24原图及136px系统状态栏实读获Runtime/Visual Approved C0/I0/M0，旧Visual I1据新图关闭。取消、失败及旧Visual reject原始证据保留在 [VALIDATION_V014](VALIDATION_V014.md)，详见 [REVIEW_V014](REVIEW_V014.md)。
 
-Task1草稿与最近分类规则已独立Spec/Quality Approved，真实RED77/14→GREEN77/0，原60保留；SDK XML已有告警如实记录。Task2首轮测试-only61789d9的CI37280091275实际28UI/9失败，第二轮11eaf45的CI37281957639实际31UI/12失败，均0错误/0跳过、原19逐名全通过；第二轮明确检测到旧内联键盘初始存在、详情快照未更新和导出容量提示缺失。三个字号第二轮已固定720×1280/density320；其后独立测试专项发现的面板几何/直接IME交接等问题已补强为13场景，增强版尚待最终GREEN，不能称在第二轮执行过。VM安全错误映射单独真实RED79/5→GREEN79/0，4256c21保持Codec/DB不变；完整UI正在接入，本轮整体验证与独立源码/运行/视觉审查尚未完成。下文0.1.3/fix1技术交付为历史，不能作为0.1.4已通过。新的手机验收表[PHONE_ACCEPTANCE_V014](PHONE_ACCEPTANCE_V014.md)全部待作者，不合main或正式发布。
+本机clean exact受测HEAD的APK原生身份／精确权限／全域备份排除／完整许可／旧本机公开debug签名均实核。新包9918020 bytes，SHA256 `5f71a8bf1a9c1e617b6a87dd6852ee45c2e6cdf18b084dbf070381c34c656af6`，文件名an-jizhang-0.1.4-debug.apk；两output各有APK、独立SHA256SUMS-v0.1.4.txt和23张原始PNG，所有副本hash读回，ROOT及独立审查者逐张看图及升级首页。原57文件、16合同和主目录作者HANDOFF／未跟踪方案原字节保持，归档V1.0方案checkbox未改。
 
-## 当前修复：成功提示与金额内置键盘
+最终技术FullDelivery独立结论 Pending final technical FullDelivery，仅实际返回后写回。复用隔离分支feat/ledger-ui-v0.1.3与私有 [draft PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4)，main仍已验收ff8479f／0.1.2。最新文档commit后的local／remote／PR HEAD、private／OPEN／draft／clean与实物只读同步核验见ignored delivery-sync-final.json；受测提交之后仅文档变化，不合main或正式发布。
+
+下一步先在手机现有应用导出有效备份，再正常覆盖安装本机同签名0.1.4，执行 [19项手机清单](PHONE_ACCEPTANCE_V014.md)，全部保持未勾。API35合成模拟器不代替作者自然手机／API26实机／真实进程kill／完整TalkBack；font2末行键需内部滚动。安装异常保留原应用与账本，不卸载、清库或强制降级。S1手机通过后进入S2月度／年度统计，S3分类库／预算／format2另行确认。旧0.1.3及fix1章节为历史快照，部分成功消息反馈通过不继承为0.1.4验收。
+
+## 0.1.3 fix1 历史技术交付
 
 作者本轮报告“已删除”持久显示，并要求金额改内置数字键盘、备注保留系统IME；本轮只修此两项。复用feat/ledger-ui-v0.1.3与私有draft PR4，保留原0.1.3交付/旧APK、主目录作者未提交文档及main。计划见[修复计划](superpowers/plans/2026-10-05-input-feedback-fix.md)，本轮实际证据见[修复验证](VALIDATION_INPUT_FEEDBACK.md)。5项新逻辑真实RED60/5→GREEN60/0；旧界面CI37272983725 attempt2真实19UI/仅新3失败，原16通过。成功提示约3秒按原期限/独立ID清除；金额为只读String草稿与内联数字键，备注IME正常，整数分/原操作ID/草稿及字段合同保持。
 
@@ -21,7 +26,7 @@ Task1草稿与最近分类规则已独立Spec/Quality Approved，真实RED77/14�
 
 最终最高能力独立Spec/Quality/Final technical FullDelivery Approved C0/I0/M0，报告final-full-delivery-review.md；独立raw/XML/12原图、fresh native APK/完整许可、2APK22PNG/29旧物保护/两作者文档均实核。审查时local/remote/PR HEAD2814f1e一致、private且PR4 OPEN/draft，工作区干净；受测ee9之后仅文档提交。ROOT写回实际结论后再按本轮工具核同步，最后证据delivery-sync-final.json。PHONE_INPUT_FEEDBACK.md九项和原PHONE_ACCEPTANCE_V013十三项仍全待作者，不继承旧验证结果；main固定已验收ff8479f，主目录作者两文件及dirty状态保持。手机先导出备份，再本机fix1/code5覆盖安装，不合main或正式发布。
 
-## 0.1.3 当前：技术交付完成，待作者手机验收
+## 0.1.3 历史技术交付：当时待作者手机验收
 
 2026-10-05作者确认0.1.2校验通过；验收反馈已记录到ff8479f75cd917bc49e5ab2173ad7e9906dc480c，PR #3已MERGED，main已快进同步。当前复用既有隔离工作区，分支feat/ledger-ui-v0.1.3。旧APK、签名和真实数据保留。基线重新执行50 JVM全通过，原日志及7 XML位于ignored test-artifacts/sdd-v013/baseline-ff8479f。
 

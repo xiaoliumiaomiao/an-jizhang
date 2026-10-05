@@ -46,24 +46,24 @@
 
 **Consumes:** Task1的EntryEditorState/RecentCategories。**Produces:** 保持LedgerScreen原回调入口，保持测试tag editor-form、add-entry、nav-*、ledger-list、stats-list、settings-list、entry-*、entry-detail、amount-key-*；新增month-picker、discard-draft、note-toggle、recent-categories。
 
-- [ ] 在旧UI先添加真实行为RED用例：空分类保存拒绝、返回出现放弃确认且继续编辑保留输入/旋转保留、备注折叠与IME、月标题选择到1900-01及9999-12、深色系统切换、三个字号可达且记账按钮不覆盖列表。先仅提交测试并push当前私有draft PR分支，读取CI实际失败再改生产UI；旧19UI断言继续保留。
-- [ ] 作者2026-10-05反馈优先：成功提示自动消失已通过；页面内联金额键盘未通过。金额键盘初始隐藏，点金额后在底部独立面板弹出，能收起；Back先收金额面板，再次返回才执行dirty检查。备注/日期/分类获得焦点收起金额面板并使用系统IME；切回金额收IME、金额及备注草稿保留。面板与可滚动表单分配实际高度、不遮挡内容，窄屏/font2可到达全部键和收起入口。新真实RED用例覆盖这些弹出/收起/交接行为，原键标签保持。
-- [ ] 新记录无预选分类；保存空分类显示“请选择或填写分类”；类型切换保留自定义内容，建议网格按类型更新。最近分类按Task1合同显示，每型最多6个。备注初始折叠；编辑非空备注初始展开；点击“添加备注”/“收起备注”不会清空；旋转保留展开和全部输入。
-- [ ] 新增/编辑取消、Dialog返回、系统Back在IME关闭后进入同一放弃检查；未改动直接回到来源，改动显示“放弃未保存的修改？”、“继续编辑”与“放弃修改”。busy期间不能取消/重复提交。成功只由匹配operationId结束，无放弃提示。确认本身旋转后仍可继续编辑或放弃。
-- [ ] 对detail/edit/delete使用saveable原始小快照或稳定ID，移除UI中BackupCodec调用；已有新VM恢复、在途操作释放规则保持。不将全账本塞入Bundle。详情返回保持搜索/月份/滚动，编辑仍同ID。
-- [ ] 月标题变为至少48dp的选择按钮，选择器有年份输入及12月网格、边界校验与取消；确认才改变月份，搜索/类型保持。保留上月、下月、本月，1900–9999范围严格。
-- [ ] 跟随系统浅深主题，完整配色；保留深青主色与中文系统字体。图标有文字/语义，条目至少48dp；日期组头显示日期与当前可见条数，筛选时明确“统计为整月”。全局记一笔在编辑/详情/删除/导出恢复许可确认时隐藏。初屏真实viewport避开按钮，字体1.0/1.3/2.0均测可达。
-- [ ] 导出选择位置前告知明文、整本50000条/10MiB和可信位置；设置说明系统提供者可能云盘、建议可信第二位置。导出失败提示新文件可能不完整、保留旧备份，读取/恢复错误继续准确；不得泄露账本内容。为输出流失败添加有效RED/GREEN（若需改VM文件只改错误文案分支）。
-- [ ] 新包0.1.4/code6，设置版本从BuildConfig或共同常量显示一致；升级fixture/script期望code6，固定旧ff8479f/code3→code6。CI监听增加codex/**，保留feat/**和main。
-- [ ] 运行`& .\scripts\build.ps1 -Tasks @(':app:testDebugUnitTest', ':app:lintDebug', ':app:assembleDebug', ':app:assembleDebugAndroidTest')`；再push真实设备CI。适配旧测试中取消确认/新增分类/折叠备注路径，原行为断言、10秒等待、19用例均保留。修复按证据进行，不靠增等待时间。
-- [ ] task2-report.md记录准确提交、RED/GREEN、限制；独立规格/质量审查后方可技术交付。
+- [x] 在旧UI先添加真实行为RED用例：空分类保存拒绝、返回出现放弃确认且继续编辑保留输入/旋转保留、备注折叠与IME、月标题选择到1900-01及9999-12、深色系统切换、三个字号可达且记账按钮不覆盖列表。先仅提交测试并push当前私有draft PR分支，读取CI实际失败再改生产UI；旧19UI断言继续保留。
+- [x] 作者2026-10-05反馈优先：成功提示自动消失已通过；页面内联金额键盘未通过。金额键盘初始隐藏，点金额后在底部独立面板弹出，能收起；Back先收金额面板，再次返回才执行dirty检查。备注/日期/分类获得焦点收起金额面板并使用系统IME；切回金额收IME、金额及备注草稿保留。面板与可滚动表单分配实际高度、不遮挡内容，窄屏/font2可到达全部键和收起入口。新真实RED用例覆盖这些弹出/收起/交接行为，原键标签保持。
+- [x] 新记录无预选分类；保存空分类显示“请选择或填写分类”；类型切换保留自定义内容，建议网格按类型更新。最近分类按Task1合同显示，每型最多6个。备注初始折叠；编辑非空备注初始展开；点击“添加备注”/“收起备注”不会清空；旋转保留展开和全部输入。
+- [x] 新增/编辑取消、Dialog返回、系统Back在IME关闭后进入同一放弃检查；未改动直接回到来源，改动显示“放弃未保存的修改？”、“继续编辑”与“放弃修改”。busy期间不能取消/重复提交。成功只由匹配operationId结束，无放弃提示。确认本身旋转后仍可继续编辑或放弃。
+- [x] 对detail/edit/delete使用saveable原始小快照或稳定ID，移除UI中BackupCodec调用；已有新VM恢复、在途操作释放规则保持。不将全账本塞入Bundle。详情返回保持搜索/月份/滚动，编辑仍同ID。
+- [x] 月标题变为至少48dp的选择按钮，选择器有年份输入及12月网格、边界校验与取消；确认才改变月份，搜索/类型保持。保留上月、下月、本月，1900–9999范围严格。
+- [x] 跟随系统浅深主题，完整配色；保留深青主色与中文系统字体。图标有文字/语义，条目至少48dp；日期组头显示日期与当前可见条数，筛选时明确“统计为整月”。全局记一笔在编辑/详情/删除/导出恢复许可确认时隐藏。初屏真实viewport避开按钮，字体1.0/1.3/2.0均测可达。
+- [x] 导出选择位置前告知明文、整本50000条/10MiB和可信位置；设置说明系统提供者可能云盘、建议可信第二位置。导出失败提示新文件可能不完整、保留旧备份，读取/恢复错误继续准确；不得泄露账本内容。为输出流失败添加有效RED/GREEN（若需改VM文件只改错误文案分支）。
+- [x] 新包0.1.4/code6，设置版本从BuildConfig或共同常量显示一致；升级fixture/script期望code6，固定旧ff8479f/code3→code6。CI监听增加codex/**，保留feat/**和main。
+- [x] 运行`& .\scripts\build.ps1 -Tasks @(':app:testDebugUnitTest', ':app:lintDebug', ':app:assembleDebug', ':app:assembleDebugAndroidTest')`；再push真实设备CI。适配旧测试中取消确认/新增分类/折叠备注路径，原行为断言、10秒等待、19用例均保留。修复按证据进行，不靠增等待时间。
+- [x] task2-report.md记录准确提交、RED/GREEN、限制；独立规格/质量审查后方可技术交付。
 
 ### Task 3: 完整技术核验与交付
 
 **Files:** docs/VALIDATION_V014.md、REVIEW_V014.md、PHONE_ACCEPTANCE_V014.md、HANDOFF.md（仅隔离工作区）、README.md；忽略output与test-artifacts。
 
-- [ ] ROOT实读本轮JVM/设备XML、lint、升级seed/verify原始runner、安装/启动/签名，不以BUILD成功代替UI与升级。读取实际截图，检查浅深、三字号、放弃确认、最近分类与月选择。
-- [ ] 本机APK用原debug证书，原applicationId/min26/target35、schema1/format1、权限/备份排除/许可全部核对。APK新名an-jizhang-0.1.4-debug.apk，独立SHA256SUMS-v0.1.4.txt；复制到两output，旧文件逐项hash保持。
+- [x] ROOT实读本轮JVM/设备XML、lint、升级seed/verify原始runner、安装/启动/签名，不以BUILD成功代替UI与升级。读取实际截图，检查浅深、三字号、放弃确认、最近分类与月选择。
+- [x] 本机APK用原debug证书，原applicationId/min26/target35、schema1/format1、权限/备份排除/许可全部核对。APK新名an-jizhang-0.1.4-debug.apk，独立SHA256SUMS-v0.1.4.txt；复制到两output，旧文件逐项hash保持。
 - [ ] 整分支与最终技术交付独立审查通过，更新私有draft PR #4标题描述与本任务附件。所有手机验收框保持未勾；禁止合main。
 - [ ] 文档小步commit/push，实核local/remote/PR HEAD一致、private、draft、工作区干净；主目录main和两原文档hash与dirty状态不变。
 - [ ] 给作者APK、校验/手机表和限制。下一步先导出备份、同签名正常覆盖安装验收。不能卸载/清库/强制降级；S2等待作者S1确认。

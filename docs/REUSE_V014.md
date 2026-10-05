@@ -12,4 +12,6 @@
 
 上述三个官方页面已在本轮实际打开。使用库API与复制文档/示例是不同许可行为；本轮自行实现，没有新增复制的第三方文件，因此没有新增第三方文件哈希或许可。
 
-维护与安全决定：不升级AGP/Kotlin/BOM/Lifecycle/Coroutines，不增加依赖、联网或广泛存储权限；原账目、数据库迁移合同与外部备份格式不变。新增界面API必须在当前固定版本实际编译，并经过原搜索、草稿、操作ID、备份和升级回归。当前实施测试仍在进行，不将来源官方或既有版本当作新功能验证通过。
+维护与安全决定：不升级AGP/Kotlin/BOM/Lifecycle/Coroutines，不增加依赖、联网或广泛存储权限；原账目、数据库迁移合同与外部备份格式不变。新增界面API必须在当前固定版本实际编译，并经过原搜索、草稿、操作ID、备份和升级回归。本轮 API 均已在既有固定版本编译，并由 VALIDATION_V014 记录实际测试；来源官方不替代真实运行和作者验收。
+
+深色系统栏问题另实读 [Android 15 target35行为说明](https://developer.android.com/about/versions/15/behavior-changes-15) 和固定 [activity1.10.1官方源码](https://dl.google.com/dl/android/maven2/androidx/activity/activity/1.10.1/activity-1.10.1-sources.jar)。仅核验透明系统栏及AUTO图标策略，没有复制第三方实现或升级依赖；新增windowBackground日／夜颜色均按本项目已有配色自行定义。API26的native窗口JVM回归为Robolectric模型，实际设备仍仅API35临时模拟器。两种证据与自然手机验收分别记录。
