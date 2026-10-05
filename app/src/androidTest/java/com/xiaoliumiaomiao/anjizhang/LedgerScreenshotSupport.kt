@@ -9,6 +9,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import org.junit.Assert.*
 internal fun captureLedgerScreen(name:String) {
     val registry=InstrumentationRegistry.getInstrumentation()
@@ -28,6 +29,7 @@ internal fun captureLedgerScreen(name:String) {
     var framedRoot:android.view.View?=null
     val focusObservers=mutableListOf<Pair<ViewTreeObserver,ViewTreeObserver.OnWindowFocusChangeListener>>()
     var frameRequested=false
+    val callbackFailure=AtomicReference<Throwable?>(null)
     val callback=Runnable { committed.countDown() }
     fun requestFocusedFrame() {
         if(frameRequested) return
@@ -44,6 +46,12 @@ internal fun captureLedgerScreen(name:String) {
         observer!!.registerFrameCommitCallback(callback)
         root.invalidate()
     }
+    fun requestFrameSafely() {
+        try { requestFocusedFrame() } catch(failure:Throwable) {
+            callbackFailure.compareAndSet(null,failure)
+            committed.countDown()
+        }
+    }
     try {
         registry.runOnMainSync {
             val roots=WindowInspector.getGlobalWindowViews().filter {
@@ -52,15 +60,18 @@ internal fun captureLedgerScreen(name:String) {
             assertTrue("$name must have an attached shown window",roots.isNotEmpty())
             roots.forEach { root ->
                 val focusObserver=root.viewTreeObserver
-                val listener=ViewTreeObserver.OnWindowFocusChangeListener { focused -> if(focused) requestFocusedFrame() }
+                val listener=ViewTreeObserver.OnWindowFocusChangeListener { focused -> if(focused) requestFrameSafely() }
                 focusObserver.addOnWindowFocusChangeListener(listener)
                 focusObservers += focusObserver to listener
             }
             // Check after registration too, so an already-focused window cannot miss its frame.
-            requestFocusedFrame()
+            requestFrameSafely()
         }
         val remaining=deadline-SystemClock.elapsedRealtime()
-        assertTrue("$name focused frame must commit within one total 10000 ms budget",remaining>0 && committed.await(remaining,TimeUnit.MILLISECONDS))
+        val signalled=remaining>0 && committed.await(remaining,TimeUnit.MILLISECONDS)
+        // Platform callbacks must report failures on the test thread, not crash the app's UI thread.
+        callbackFailure.get()?.let { throw it }
+        assertTrue("$name focused frame must commit within one total 10000 ms budget",signalled)
         registry.runOnMainSync {
             val roots=WindowInspector.getGlobalWindowViews().filter { it.isAttachedToWindow && it.isShown && it.hasWindowFocus() }
             assertEquals("$name must have one current focused window",1,roots.size)

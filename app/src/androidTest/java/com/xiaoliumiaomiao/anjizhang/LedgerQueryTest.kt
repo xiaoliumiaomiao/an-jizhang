@@ -98,8 +98,12 @@ class LedgerQueryTest {
             toggle.performClick()
             compose.waitUntil(10000) { compose.onAllNodesWithText("备注（可选，最多200字）").fetchSemanticsNodes().size == 1 }
             compose.onNodeWithTag("note-toggle").assert(hasText("收起备注"))
-        } catch (failure: AssertionError) {
-            android.util.Log.e("LedgerQuery", "Note expansion failed: toggle=${compose.onAllNodesWithTag("note-toggle").fetchSemanticsNodes().map { "${it.boundsInRoot} ${it.config}" }}", failure)
+        } catch (failure: Throwable) {
+            // ComposeTimeoutException extends Throwable directly. Keep the original
+            // timeout/assertion even if collecting optional diagnostics also fails.
+            runCatching {
+                android.util.Log.e("LedgerQuery", "Note expansion failed: toggle=${compose.onAllNodesWithTag("note-toggle").fetchSemanticsNodes().map { "${it.boundsInRoot} ${it.config}" }}", failure)
+            }.exceptionOrNull()?.let(failure::addSuppressed)
             runCatching { captureLedgerScreen("query-note-expansion-failure") }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
         }
