@@ -9,6 +9,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase
@@ -16,6 +18,12 @@ import com.xiaoliumiaomiao.anjizhang.domain.*
 import com.xiaoliumiaomiao.anjizhang.ui.LedgerViewModel
 import com.xiaoliumiaomiao.anjizhang.ui.LedgerUiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import java.time.YearMonth
 import org.junit.Assert.*
 import org.junit.Rule
@@ -43,6 +51,11 @@ class LedgerS1Test {
     private fun save() { compose.onNodeWithText("保存").performScrollTo().assertIsEnabled().performClick() }
     private fun unchanged() { LedgerDatabase(ApplicationProvider.getApplicationContext<Context>()).use { assertEquals(records.toSet(), it.listEntries().toSet()) } }
     private fun back() = InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+    private fun pauseWorker(vm: LedgerViewModel): Mutex {
+        compose.waitUntil(10000) { !vm.state.value.busy }
+        return (LedgerViewModel::class.java.getDeclaredField("lock").apply { isAccessible = true }.get(vm) as Mutex)
+            .also { assertTrue("Hold the real serialization lock", it.tryLock()) }
+    }
     private fun assertPanelGeometry(): Float {
         val panel = compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
         val form = compose.onNodeWithTag("editor-form").fetchSemanticsNode().boundsInRoot
@@ -75,7 +88,95 @@ class LedgerS1Test {
         compose.onNodeWithTag("amount-keypad-close").performScrollTo().performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("amount-keypad-panel").assertDoesNotExist()
-        compose.assertAmountDraft("0.01"); compose.assertSystemImeVisible(false); unchanged()
+        compose.assertAmountDraft("0.01"); compose.assertSystemImeVisible(false)
+        compose.onNodeWithText("金额（元）").performSemanticsAction(SemanticsActions.OnClick) { click -> assertTrue(click()) }
+        compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed()
+        compose.onNodeWithTag("amount-keypad-close").performScrollTo().performClick()
+        val vm = model(); val loaded = vm.state.value
+        @Suppress("UNCHECKED_CAST")
+        val mutable = LedgerViewModel::class.java.getDeclaredField("mutable").apply { isAccessible = true }.get(vm) as MutableStateFlow<LedgerUiState>
+        try {
+            compose.runOnIdle { mutable.value = loaded.copy(busy = true) }
+            val disabled = compose.onNodeWithText("金额（元）").performScrollTo().assertIsNotEnabled().fetchSemanticsNode()
+            if (disabled.config.contains(SemanticsActions.OnClick)) {
+                val click = disabled.config[SemanticsActions.OnClick].action
+                if (click != null) compose.runOnIdle { assertFalse("Busy semantic action must not open panel", click()) }
+            }
+            compose.onNodeWithTag("amount-keypad-panel").assertDoesNotExist()
+            compose.assertAmountDraft("0.01"); compose.assertSystemImeVisible(false); unchanged()
+        } finally { compose.runOnIdle { mutable.value = loaded } }
+    }
+    @Test fun synchronousSaveCallbackTwiceQueuesOnlyOneOperationAndKeepsFields() {
+        ready(); val target = records.last()
+        compose.onNodeWithTag("ledger-list").performScrollToNode(hasTestTag("entry-${target.id}"))
+        compose.onNodeWithTag("entry-${target.id}").performClick()
+        compose.onNodeWithText("编辑").performScrollTo().performClick()
+        // Keep the existing draft unchanged: same-frame Cancel must not dismiss a queued save.
+        val action = compose.onNodeWithText("保存").performScrollTo().assertIsEnabled()
+            .fetchSemanticsNode().config[SemanticsActions.OnClick].action!!
+        val cancel = compose.onNodeWithText("取消").assertIsEnabled()
+            .fetchSemanticsNode().config[SemanticsActions.OnClick].action!!
+        val vm = model(); val completions = java.util.concurrent.CopyOnWriteArrayList<String>()
+        val observer = compose.runOnIdle { compose.activity.lifecycleScope.launch {
+            vm.state.map { it.completedOperationId }.filterNotNull().distinctUntilChanged().collect { completions.add(it) }
+        } }
+        try {
+            val lock = pauseWorker(vm)
+            val previousJobs = vm.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
+            try {
+                // Invoke the exact same callback twice before Compose can recompose.
+                compose.runOnIdle {
+                    assertTrue(action()); assertTrue(action()); assertTrue(cancel())
+                    assertEquals("Synchronous repeated save must queue exactly one worker", 1,
+                        vm.viewModelScope.coroutineContext[Job]?.children?.count { it.isActive && it !in previousJobs })
+                }
+                compose.onNodeWithTag("editor-form").assertExists()
+                compose.onNodeWithTag("discard-draft").assertDoesNotExist()
+                compose.onNodeWithText("保存中…").performScrollTo().assertIsNotEnabled()
+                compose.onNodeWithText("取消").performScrollTo().assertIsNotEnabled(); unchanged()
+            } finally { lock.unlock() }
+            compose.waitUntil(10000) { !vm.state.value.busy && completions.size == 1 &&
+                compose.onAllNodesWithTag("editor-form").fetchSemanticsNodes().isEmpty() }
+            assertNull(vm.state.value.error)
+            assertEquals(listOf(vm.state.value.completedOperationId), completions.toList())
+            assertEquals(target, vm.state.value.entries.single { it.id == target.id })
+            assertEquals(records.toSet(), vm.state.value.entries.toSet())
+            LedgerDatabase(ApplicationProvider.getApplicationContext<Context>()).use { assertEquals(vm.state.value.entries.toSet(), it.listEntries().toSet()) }
+        } finally { observer.cancel() }
+    }
+    @Test fun synchronousDeleteCallbackTwiceQueuesOnlyOneOperationAndDeletesOnlyTarget() {
+        ready(); val target = records.last()
+        compose.onNodeWithTag("ledger-list").performScrollToNode(hasTestTag("entry-${target.id}"))
+        compose.onNodeWithTag("entry-${target.id}").performClick()
+        compose.onNodeWithText("删除").performScrollTo().performClick()
+        val action = compose.onNodeWithText("确认删除").assertIsEnabled()
+            .fetchSemanticsNode().config[SemanticsActions.OnClick].action!!
+        val cancel = compose.onNodeWithText("取消").assertIsEnabled()
+            .fetchSemanticsNode().config[SemanticsActions.OnClick].action!!
+        val vm = model(); val completions = java.util.concurrent.CopyOnWriteArrayList<String>()
+        val observer = compose.runOnIdle { compose.activity.lifecycleScope.launch {
+            vm.state.map { it.completedOperationId }.filterNotNull().distinctUntilChanged().collect { completions.add(it) }
+        } }
+        try {
+            val lock = pauseWorker(vm)
+            val previousJobs = vm.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
+            try {
+                compose.runOnIdle {
+                    assertTrue(action()); assertTrue(action()); assertTrue(cancel())
+                    assertEquals("Synchronous repeated delete must queue exactly one worker", 1,
+                        vm.viewModelScope.coroutineContext[Job]?.children?.count { it.isActive && it !in previousJobs })
+                }
+                compose.onNodeWithText("删除账目？").assertIsDisplayed()
+                compose.onNodeWithText("确认删除").assertIsNotEnabled()
+                compose.onNodeWithText("取消").assertIsNotEnabled(); unchanged()
+            } finally { lock.unlock() }
+            compose.waitUntil(10000) { !vm.state.value.busy && completions.size == 1 &&
+                compose.onAllNodesWithText("删除账目？").fetchSemanticsNodes().isEmpty() }
+            assertNull(vm.state.value.error)
+            assertEquals(listOf(vm.state.value.completedOperationId), completions.toList())
+            assertEquals(records.filter { it.id != target.id }.toSet(), vm.state.value.entries.toSet())
+            LedgerDatabase(ApplicationProvider.getApplicationContext<Context>()).use { assertEquals(vm.state.value.entries.toSet(), it.listEntries().toSet()) }
+        } finally { observer.cancel() }
     }
     @Test fun amountPanelPopsOnDemandBackClosesItBeforeDiscardAndNoteUsesIme() {
         open(); compose.onNodeWithTag("amount-keypad").assertDoesNotExist()
