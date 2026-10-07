@@ -39,7 +39,7 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
         ready(); month(2025, 5); compose.onNodeWithTag("nav-stats").performClick()
         modeYear(); tag("stats-year-select").assertTextContains("2025年")
         overview("350.01", "45.42", "304.59", annual = true)
-        tag("stats-annual-chart").assertContentDescriptionContains("收入和支出")
+        tag("stats-annual-chart").assertContentDescriptionEquals("收入和支出年度双柱图，从1月到12月；各月准确金额见下方文字")
         captureLedgerScreen("s2-year-overview")
         for (month in 1..12) {
             val row = tag("stats-month-$month").assertTextContains("${month}月")

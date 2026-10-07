@@ -141,23 +141,39 @@ abstract class StatisticsDeviceScenario {
         val prefix = "stats-category-${kind.name}-"
         val observed = linkedSetOf<String>()
         val list = compose.onNodeWithTag("stats-list")
+        val matcher = SemanticsMatcher("category row") {
+            it.config.getOrElse(SemanticsProperties.TestTag) { "" }.startsWith(prefix)
+        }
+        val samples = mutableListOf<String>()
+        awaitAnalysis()
         list.performScrollToIndex(0)
-        // Read all composed category rows while traversing from the list's start.
-        // Expected names locate no rows: an inverted ranking must fail this check.
-        repeat(20) {
-            if (observed.size >= expected.size) return@repeat
-            val nodes = compose.onAllNodes(SemanticsMatcher("category row") {
-                it.config.getOrElse(SemanticsProperties.TestTag) { "" }.startsWith(prefix)
-            }).fetchSemanticsNodes()
-            val names = compose.runOnIdle {
-                nodes.filter { it.layoutInfo.isAttached && it.layoutInfo.isPlaced }
+        // Start at the first actual category, independent of expected names/order.
+        list.performScrollToNode(matcher)
+        var reachedEnd = false
+        for (step in 0 until 20) {
+            val nodes = compose.onAllNodes(matcher).fetchSemanticsNodes()
+            val viewport = list.fetchSemanticsNode()
+            val (distance, atEnd) = compose.runOnIdle {
+                assertTrue(viewport.layoutInfo.isAttached && viewport.layoutInfo.isPlaced)
+                val area = viewport.boundsInRoot
+                val axis = viewport.config[SemanticsProperties.VerticalScrollAxisRange]
+                val visible = nodes.filter { it.layoutInfo.isAttached && it.layoutInfo.isPlaced }
+                    .filter { it.boundsInRoot.bottom > area.top && it.boundsInRoot.top < area.bottom }
                     .sortedBy { it.positionInRoot.y }
                     .map { it.config[SemanticsProperties.TestTag].removePrefix(prefix) }
+                observed.addAll(visible)
+                samples.add("step=$step scroll=${axis.value()}/${axis.maxValue()} viewport=$area raw=" +
+                    nodes.joinToString { "${it.config[SemanticsProperties.TestTag]}:attached=${it.layoutInfo.isAttached},placed=${it.layoutInfo.isPlaced}" } +
+                    " visible=$visible observed=$observed")
+                area.height / 2f to (axis.value() >= axis.maxValue())
             }
-            observed.addAll(names)
-            if (observed.size < expected.size) list.performTouchInput { swipeUp() }
+            if (atEnd) { reachedEnd = true; break }
+            assertTrue("Positive statistics viewport: $samples", distance > 0f)
+            // Overlapping, non-flinging samples cannot skip an entire category section.
+            list.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, distance) }
         }
-        assertEquals("Actual category ranking", expected, observed.toList())
+        assertTrue("Category traversal reached list end: ${samples.joinToString("\n")}", reachedEnd)
+        assertEquals("Actual category ranking: ${samples.joinToString("\n")}", expected, observed.toList())
     }
     protected fun drill(name: String, kind: EntryKind = EntryKind.EXPENSE) {
         category(name, kind).performClick()
@@ -169,7 +185,14 @@ abstract class StatisticsDeviceScenario {
         compose.onNodeWithTag("add-entry").assertDoesNotExist()
     }
     protected fun drillBack() { compose.onNodeWithTag("stats-drill-back").performClick() }
-    protected fun back() = InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+    protected fun back() {
+        // Compose removal may precede the native Dialog window returning input focus.
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("editor-form").fetchSemanticsNodes().isEmpty() &&
+                compose.runOnIdle { compose.activity.window.decorView.hasWindowFocus() }
+        }
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+    }
     protected fun overview(income: String, expense: String, balance: String, annual: Boolean = false) {
         awaitAnalysis()
         sectionText("stats-overview", "收入 ¥$income"); sectionText("stats-overview", "支出 ¥$expense")
@@ -229,7 +252,24 @@ abstract class StatisticsDeviceScenario {
         }
         val results = mutableListOf<TextLayoutResult>()
         node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(results)) }
-        assertTrue("Text is not ellipsized or clipped: $value", results.isNotEmpty() && results.none { it.hasVisualOverflow })
+        if (results.isEmpty() || results.any { it.hasVisualOverflow }) {
+            val semantic = node.fetchSemanticsNode()
+            val viewport = compose.onNodeWithTag(listTag()).fetchSemanticsNode()
+            val geometry = compose.runOnIdle {
+                val config = compose.activity.resources.configuration
+                "fontScale=${config.fontScale} widthDp=${config.screenWidthDp} density=${compose.activity.resources.displayMetrics.density} " +
+                    "nodeSize=${semantic.size} position=${semantic.positionInRoot} bounds=${semantic.boundsInRoot} viewport=${viewport.boundsInRoot}"
+            }
+            val layouts = results.joinToString("\n") { result ->
+                "size=${result.size} paragraph=${result.multiParagraph.width}x${result.multiParagraph.height} " +
+                    "exceedMaxLines=${result.multiParagraph.didExceedMaxLines} widthOverflow=${result.didOverflowWidth} heightOverflow=${result.didOverflowHeight} " +
+                    "input=${result.layoutInput} lineCount=${result.lineCount} lines=" +
+                    (0 until result.lineCount).joinToString { line ->
+                        "$line:[${result.getLineLeft(line)},${result.getLineTop(line)},${result.getLineRight(line)},${result.getLineBottom(line)}] ellipsis=${result.isLineEllipsized(line)}"
+                    }
+            }
+            fail("Text is not ellipsized or clipped: $value; resultCount=${results.size}; $geometry\n$layouts")
+        }
         fullyVisible(node)
     }
     private fun fullyVisible(interaction: SemanticsNodeInteraction) {

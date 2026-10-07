@@ -34,7 +34,7 @@ class LedgerStatisticsDisplayTest : StatisticsDeviceScenario() {
             tag("stats-big-entry-${statsId(3)}").performClick(); compose.onNodeWithTag("entry-detail").assertIsDisplayed()
             touchTarget(compose.onNodeWithTag("detail-back")); compose.onNodeWithTag("detail-back").performClick()
             modeYear(); touchTarget(tag("stats-year-select")); overview("350.01", "45.42", "304.59", true)
-            tag("stats-annual-chart").assertContentDescriptionContains("收入和支出")
+            tag("stats-annual-chart").assertContentDescriptionEquals("收入和支出年度双柱图，从1月到12月；各月准确金额见下方文字")
             listOf(1, 4, 8, 12).forEach { month ->
                 tag("stats-chart-month-$month").assertTextEquals(month.toString())
                 readable(month.toString())
@@ -55,6 +55,11 @@ class LedgerStatisticsDisplayTest : StatisticsDeviceScenario() {
             compose.onNodeWithTag("stats-drill-back").performClick()
             tag("stats-mode-year").performClick(); tag("stats-month-12").performClick()
             tag("month-select").assertTextContains("2025年12月")
+        } catch (failure: Throwable) {
+            // Preserve the failing 360dp/font configuration before finally restores it.
+            runCatching { captureLedgerScreen("s2-font-${scale.toString().replace('.', '-')}-failure-before-reset") }
+                .exceptionOrNull()?.let(failure::addSuppressed)
+            throw failure
         } finally {
             shell(if (oldSize == null) "wm size reset" else "wm size $oldSize")
             shell(if (oldDensity == null) "wm density reset" else "wm density $oldDensity")
@@ -106,7 +111,7 @@ class LedgerStatisticsDisplayTest : StatisticsDeviceScenario() {
                     assertTrue("Native status background follows theme", background > native.width * statusHeight * 3 / 4)
                     assertTrue("Native clock remains readable", clock > 20)
                 } finally { native.recycle() }
-                tag("stats-annual-chart").assertContentDescriptionContains("收入和支出")
+                tag("stats-annual-chart").assertContentDescriptionEquals("收入和支出年度双柱图，从1月到12月；各月准确金额见下方文字")
                 captureLedgerScreen(if (dark) "s2-dark-chart" else "s2-light-chart")
                 replaceFixture(emptyList()); overview("0.00", "0.00", "0.00", true)
                 for (type in EntryKind.entries) {

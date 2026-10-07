@@ -157,6 +157,7 @@ class LedgerRecoveryTest {
             val draft = original.copy(amountCents = 5678L, category = "恢复后的分类", note = "恢复草稿\n第二行")
             compose.setAmountWithKeypad("56.78")
             setField("分类（可自定义）", draft.category)
+            compose.closeKeyboard()
             setField("备注（可选，最多200字）", draft.note)
             compose.closeKeyboard()
             fixture.pauseWorker(firstModel)
