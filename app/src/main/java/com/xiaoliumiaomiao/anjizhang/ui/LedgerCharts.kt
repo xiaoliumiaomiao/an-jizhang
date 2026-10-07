@@ -11,6 +11,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.xiaoliumiaomiao.anjizhang.domain.MonthTotals
 
@@ -33,6 +34,15 @@ import com.xiaoliumiaomiao.anjizhang.domain.MonthTotals
                 val expenseHeight = (month.expenseCents.toDouble() / maximum.toDouble() * size.height).toFloat()
                 drawRect(income, Offset(step * index + step * .15f, size.height - incomeHeight), Size(width, incomeHeight))
                 drawRect(expense, Offset(step * index + step * .55f, size.height - expenseHeight), Size(width, expenseHeight))
+            }
+        }
+        // Align sparse numeric ticks to the same twelve equal-width groups as the bars.
+        // Four anchors remain legible at 360dp/font2; full month names live in the text list.
+        Row(Modifier.fillMaxWidth()) {
+            (1..12).forEach { month ->
+                if (month in listOf(1, 4, 8, 12)) Text(month.toString(), style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center, modifier = Modifier.weight(1f).testTag("stats-chart-month-$month"))
+                else Spacer(Modifier.weight(1f))
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {

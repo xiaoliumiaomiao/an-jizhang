@@ -144,6 +144,10 @@ abstract class StatisticsDeviceScenario {
     }
     protected fun drill(name: String, kind: EntryKind = EntryKind.EXPENSE) {
         category(name, kind).performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("stats-loading").fetchSemanticsNodes().isEmpty() &&
+                compose.onAllNodesWithTag("stats-drill-list").fetchSemanticsNodes().size == 1
+        }
         compose.onNodeWithTag("stats-drill-list").assertExists()
         compose.onNodeWithTag("add-entry").assertDoesNotExist()
     }

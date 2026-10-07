@@ -24,7 +24,13 @@ import com.xiaoliumiaomiao.anjizhang.domain.EntryKind
             val entries = requireNotNull(result.entries)
             item(key = "count") { Text("共 ${entries.size} 条记录") }
             if (entries.isEmpty()) item(key = "empty") { Text("此分类在所选期间没有记录") }
-            items(entries, key = { it.id }) { entry -> EntryRow(entry, busy) { onDetail(entry) } }
+            items(entries, key = { it.id }) { entry ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(entry.date.toString(), style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("stats-drill-date-${entry.id}"))
+                    EntryRow(entry, busy) { onDetail(entry) }
+                }
+            }
         }
     }
 }

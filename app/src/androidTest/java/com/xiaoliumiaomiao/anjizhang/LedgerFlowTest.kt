@@ -117,6 +117,7 @@ class LedgerFlowTest {
         compose.onNodeWithTag("stats-list").assertIsDisplayed()
         compose.onNodeWithTag("nav-stats").assertIsSelected()
         compose.onNodeWithText("月统计").assertIsDisplayed()
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasText("支出分类"))
         compose.onNodeWithText("支出分类").assertIsDisplayed()
         captureLedgerScreen("statistics")
         compose.onNodeWithTag("nav-settings").performClick()

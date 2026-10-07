@@ -35,6 +35,10 @@ class LedgerStatisticsDisplayTest : StatisticsDeviceScenario() {
             touchTarget(compose.onNodeWithTag("detail-back")); compose.onNodeWithTag("detail-back").performClick()
             modeYear(); touchTarget(tag("stats-year-select")); overview("350.01", "45.42", "304.59", true)
             tag("stats-annual-chart").assertContentDescriptionContains("收入和支出")
+            listOf(1, 4, 8, 12).forEach { month ->
+                tag("stats-chart-month-$month").assertTextEquals(month.toString())
+                readable(month.toString())
+            }
             captureLedgerScreen("s2-font-${scale.toString().replace('.', '-')}-annual")
             (1..12).forEach { touchTarget(tag("stats-month-$it")); tag("stats-month-$it").assertTextContains("${it}月") }
             text("仅根据已记录账目，无记录不代表无消费")

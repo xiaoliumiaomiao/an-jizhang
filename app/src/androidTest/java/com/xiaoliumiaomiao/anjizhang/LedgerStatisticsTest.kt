@@ -78,7 +78,11 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
     @Test fun categoryDrillUsesExactTrimKindCaseAndCompletePeriod() {
         openStats(); drill("餐饮"); allDrillIds(listOf(3, 4)); captureLedgerScreen("s2-drill-precise"); drillBack()
         kind(EntryKind.INCOME); drill("餐饮", EntryKind.INCOME); allDrillIds(listOf(2)); drillBack()
-        kind(EntryKind.EXPENSE); modeYear(); drill("餐饮"); allDrillIds(listOf(13, 3, 4, 11)); drillBack()
+        kind(EntryKind.EXPENSE); modeYear(); drill("餐饮"); allDrillIds(listOf(13, 3, 4, 11))
+        listOf(13 to "2025-06-01", 3 to "2025-05-02", 4 to "2025-05-02", 11 to "2025-04-30").forEach { (id, date) ->
+            tag("stats-drill-date-${statsId(id)}").assertTextEquals(date)
+        }
+        drillBack()
         tag("stats-mode-month").performClick()
         drill("Dining"); allDrillIds(listOf(8)); drillBack(); drill("dining"); allDrillIds(listOf(9)); drillBack()
         assertEquals(statisticsFixture.toSet(), entries().toSet())

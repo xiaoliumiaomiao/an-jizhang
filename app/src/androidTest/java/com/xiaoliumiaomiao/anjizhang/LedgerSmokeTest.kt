@@ -47,6 +47,7 @@ class LedgerSmokeTest {
         revealLedgerText("这个月还没有账目")
         compose.onAllNodesWithText("记一笔")[0].assertIsDisplayed()
         compose.onNodeWithTag("nav-stats").performClick()
+        activeList().performScrollToNode(hasText("支出分类"))
         compose.onNodeWithText("支出分类").assertIsDisplayed()
         compose.onNodeWithTag("nav-settings").performClick()
         revealLedgerText("本地隐私")
@@ -65,6 +66,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("放弃修改").performClick()
         compose.onNodeWithTag("nav-stats").performClick()
         compose.activityRule.scenario.recreate()
+        activeList().performScrollToNode(hasText("支出分类"))
         compose.onNodeWithText("支出分类").assertIsDisplayed()
     }
     @Test fun invalidAmountCannotSaveThenOneCentExpenseAppears() {
