@@ -45,8 +45,8 @@ jobs:
 
   device-smoke:
     runs-on: ubuntu-24.04
-    # Includes a second clean app build for the fixed 0.1.4 upgrade baseline.
-    timeout-minutes: 35
+    # Covers 55 UI tests (three complete font scenarios), a second baseline build, and real upgrade checks.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

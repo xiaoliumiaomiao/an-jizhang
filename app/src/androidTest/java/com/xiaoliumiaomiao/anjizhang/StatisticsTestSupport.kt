@@ -11,6 +11,13 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
@@ -244,33 +251,71 @@ abstract class StatisticsDeviceScenario {
     }
     protected fun assertAnchor(tag: String, expected: Float) { assertEquals(expected, anchor(tag), 2f * compose.activity.resources.displayMetrics.density) }
     protected fun readable(value: String, categoryTag: String? = null) {
-        val node = if (categoryTag == null) text(value) else {
-            tag(categoryTag)
-            // A single-entry category and its Top3 row legitimately have identical text.
-            // Read the real Text child rather than the clickable parent's merged semantics.
-            compose.onNode(hasText(value) and hasAnyAncestor(hasTestTag(categoryTag)), useUnmergedTree = true).assertIsDisplayed()
-        }
-        val results = mutableListOf<TextLayoutResult>()
-        node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(results)) }
-        if (results.isEmpty() || results.any { it.hasVisualOverflow }) {
-            val semantic = node.fetchSemanticsNode()
-            val viewport = compose.onNodeWithTag(listTag()).fetchSemanticsNode()
-            val geometry = compose.runOnIdle {
-                val config = compose.activity.resources.configuration
-                "fontScale=${config.fontScale} widthDp=${config.screenWidthDp} density=${compose.activity.resources.displayMetrics.density} " +
-                    "nodeSize=${semantic.size} position=${semantic.positionInRoot} bounds=${semantic.boundsInRoot} viewport=${viewport.boundsInRoot}"
-            }
+        if (categoryTag == null) text(value) else tag(categoryTag)
+        val matcher = if (categoryTag == null) hasText(value) else hasText(value) and hasAnyAncestor(hasTestTag(categoryTag))
+        // Always inspect the unique actual Text, not a clickable parent's merged result.
+        val node = compose.onNode(matcher, useUnmergedTree = true).assertIsDisplayed()
+        val semantic = node.fetchSemanticsNode()
+        val viewport = compose.onNodeWithTag(listTag()).fetchSemanticsNode()
+        compose.runOnIdle {
+            listOf(semantic, viewport).forEach { assertTrue(it.layoutInfo.isAttached && it.layoutInfo.isPlaced) }
+            assertEquals(listOf(value), semantic.config[SemanticsProperties.Text].map { it.text })
+            val results = mutableListOf<TextLayoutResult>()
+            assertTrue(requireNotNull(semantic.config[SemanticsActions.GetTextLayoutResult].action)(results))
+            val config = compose.activity.resources.configuration
+            val density = compose.activity.resources.displayMetrics.density
+            val geometry = "fontScale=${config.fontScale} widthDp=${config.screenWidthDp} density=$density " +
+                "nodeSize=${semantic.size} position=${semantic.positionInRoot} bounds=${semantic.boundsInRoot} viewport=${viewport.boundsInRoot}"
+            val ordinary = results.isNotEmpty() && results.none { it.hasVisualOverflow }
+            val naturalLine = !ordinary && results.size == 1 && describesUnclippedNaturalWidthLine(
+                results.single(), semantic.size, value, density, config.fontScale)
             val layouts = results.joinToString("\n") { result ->
                 "size=${result.size} paragraph=${result.multiParagraph.width}x${result.multiParagraph.height} " +
                     "exceedMaxLines=${result.multiParagraph.didExceedMaxLines} widthOverflow=${result.didOverflowWidth} heightOverflow=${result.didOverflowHeight} " +
                     "input=${result.layoutInput} lineCount=${result.lineCount} lines=" +
                     (0 until result.lineCount).joinToString { line ->
-                        "$line:[${result.getLineLeft(line)},${result.getLineTop(line)},${result.getLineRight(line)},${result.getLineBottom(line)}] ellipsis=${result.isLineEllipsized(line)}"
+                        "$line:[${result.getLineLeft(line)},${result.getLineTop(line)},${result.getLineRight(line)},${result.getLineBottom(line)}] " +
+                            "range=${result.getLineStart(line)}..${result.getLineEnd(line)} ellipsis=${result.isLineEllipsized(line)}"
                     }
             }
-            fail("Text is not ellipsized or clipped: $value; resultCount=${results.size}; $geometry\n$layouts")
+            assertTrue("Text is not ellipsized or clipped: $value; resultCount=${results.size}; $geometry\n$layouts", ordinary || naturalLine)
+            if (naturalLine) android.util.Log.i("LedgerTextGeometry", "Verified natural-width single line: text=$value; $geometry; " +
+                "rawWidthOverflow=true rawHeightOverflow=false parentWidth=${results.single().multiParagraph.width}; " +
+                "line=${results.single().getLineRight(0)}x${results.single().getLineBottom(0)}; boundedCharacters=" +
+                value.indices.joinToString { "$it:${results.single().getBoundingBox(it)}" })
         }
         fullyVisible(node)
+    }
+    /** Compose 1.8 String semantics rebuild at parent maxWidth while keeping the natural node size. */
+    private fun describesUnclippedNaturalWidthLine(result: TextLayoutResult, size: IntSize, text: String,
+        density: Float, fontScale: Float): Boolean {
+        val input = result.layoutInput
+        val style = input.style
+        if (text.isEmpty() || result.size != size || input.text.text != text ||
+            input.density.density != density || input.density.fontScale != fontScale ||
+            !result.didOverflowWidth || result.didOverflowHeight || result.multiParagraph.didExceedMaxLines ||
+            !input.constraints.hasBoundedWidth || input.constraints.minWidth != 0 || input.constraints.minHeight != 0 ||
+            result.multiParagraph.width != input.constraints.maxWidth.toFloat() || result.multiParagraph.width <= size.width ||
+            !input.softWrap || input.overflow != TextOverflow.Clip || input.maxLines != Int.MAX_VALUE ||
+            input.layoutDirection != LayoutDirection.Ltr ||
+            style.textAlign !in listOf(TextAlign.Unspecified, TextAlign.Start, TextAlign.Left) ||
+            style.textDirection !in listOf(TextDirection.Unspecified, TextDirection.Ltr) ||
+            input.text.spanStyles.isNotEmpty() || input.text.paragraphStyles.isNotEmpty() || input.placeholders.isNotEmpty() ||
+            style.textIndent != null || style.textGeometricTransform != null || style.baselineShift != null ||
+            style.shadow != null || style.drawStyle != null || style.fontStyle !in listOf(null, FontStyle.Normal) ||
+            text.any { it.isISOControl() || it.isSurrogate() || Character.getType(it) == Character.FORMAT.toInt() } ||
+            result.lineCount != 1 || result.isLineEllipsized(0) || result.getLineStart(0) != 0 || result.getLineEnd(0) != text.length ||
+            result.getParagraphDirection(0) != ResolvedTextDirection.Ltr) return false
+        val epsilon = .01f // pixel roundoff only, never the viewport's 2dp allowance
+        fun fits(rect: Rect) = listOf(rect.left, rect.top, rect.right, rect.bottom).all { it.isFinite() } &&
+            rect.left >= -epsilon && rect.top >= -epsilon && rect.right >= rect.left && rect.bottom >= rect.top &&
+            rect.right <= size.width + epsilon && rect.bottom <= size.height + epsilon
+        val line = Rect(result.getLineLeft(0), result.getLineTop(0), result.getLineRight(0), result.getLineBottom(0))
+        val heightRounding = size.height - result.multiParagraph.height
+        val widthRounding = size.width - line.right
+        return fits(line) && kotlin.math.abs(line.left) <= epsilon && kotlin.math.abs(line.top) <= epsilon &&
+            heightRounding >= -epsilon && heightRounding < 1f && widthRounding >= -epsilon && widthRounding < 1f &&
+            text.indices.all { result.getBidiRunDirection(it) == ResolvedTextDirection.Ltr && fits(result.getBoundingBox(it)) }
     }
     private fun fullyVisible(interaction: SemanticsNodeInteraction) {
         val node = interaction.assertIsDisplayed().fetchSemanticsNode()
