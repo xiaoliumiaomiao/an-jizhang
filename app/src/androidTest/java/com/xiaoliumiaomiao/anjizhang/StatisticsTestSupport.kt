@@ -83,6 +83,8 @@ abstract class StatisticsDeviceScenario {
     protected fun listTag() = listOf("stats-drill-list", "stats-list", "ledger-list", "settings-list")
         .single { compose.onAllNodesWithTag(it).fetchSemanticsNodes().isNotEmpty() }
     protected fun reveal(matcher: SemanticsMatcher): SemanticsNodeInteraction {
+        // Async analysis has an explicit pending surface, not the previous period's list.
+        awaitAnalysis()
         compose.onNodeWithTag(listTag()).performScrollToNode(matcher)
         return compose.onNode(matcher).assertIsDisplayed()
     }
@@ -149,7 +151,8 @@ abstract class StatisticsDeviceScenario {
     protected fun back() = InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
     protected fun overview(income: String, expense: String, balance: String, annual: Boolean = false) {
         awaitAnalysis()
-        text("收入 ¥$income"); text("支出 ¥$expense"); text("${if (annual) "本年" else "本月"}结余 ¥$balance")
+        sectionText("stats-overview", "收入 ¥$income"); sectionText("stats-overview", "支出 ¥$expense")
+        sectionText("stats-overview", "${if (annual) "本年" else "本月"}结余 ¥$balance")
     }
     protected fun sectionText(section: String, value: String) = reveal(hasText(value) and hasAnyAncestor(hasTestTag(section)))
     protected fun metrics(count: Int, average: String) { tag("stats-metrics").assertTextContains("记录 $count 笔").assertTextContains("平均每笔 ¥$average") }
@@ -190,6 +193,7 @@ abstract class StatisticsDeviceScenario {
         assertEquals(expected.map(::statsId), observed.toList())
     }
     protected fun anchor(tag: String): Float {
+        awaitAnalysis()
         val node = compose.onNodeWithTag(tag).assertIsDisplayed().fetchSemanticsNode()
         val viewport = compose.onNodeWithTag(listTag()).fetchSemanticsNode()
         return compose.runOnIdle { assertTrue(node.layoutInfo.isAttached && node.layoutInfo.isPlaced); node.boundsInRoot.top - viewport.boundsInRoot.top }

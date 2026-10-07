@@ -102,6 +102,8 @@ class LedgerStatisticsDisplayTest : StatisticsDeviceScenario() {
                     assertTrue("Native status background follows theme", background > native.width * statusHeight * 3 / 4)
                     assertTrue("Native clock remains readable", clock > 20)
                 } finally { native.recycle() }
+                tag("stats-annual-chart").assertContentDescriptionContains("收入和支出")
+                captureLedgerScreen(if (dark) "s2-dark-chart" else "s2-light-chart")
                 replaceFixture(emptyList()); overview("0.00", "0.00", "0.00", true)
                 for (type in EntryKind.entries) {
                     kind(type); tag("stats-metrics").assertTextContains("记录 0 笔").assertTextContains("平均每笔 —")
@@ -110,7 +112,8 @@ class LedgerStatisticsDisplayTest : StatisticsDeviceScenario() {
                 }
                 (1..12).forEach { tag("stats-month-$it").assertTextContains("无记录").assertTextContains("收入 ¥0.00").assertTextContains("支出 ¥0.00") }
                 captureLedgerScreen(if (dark) "s2-dark-empty" else "s2-light-empty")
-                tag("stats-mode-month").performClick(); text("这个月还没有支出")
+                tag("stats-mode-month").performClick(); text("这个月还没有收入")
+                kind(EntryKind.EXPENSE); text("这个月还没有支出")
                 replaceFixture(listOf(statisticsFixture[0])); overview("100.00", "0.00", "100.00")
                 text("这个月还没有支出"); kind(EntryKind.INCOME); metrics(1, "100.00")
                 replaceFixture(listOf(statisticsFixture[2])); text("这个月还没有收入")

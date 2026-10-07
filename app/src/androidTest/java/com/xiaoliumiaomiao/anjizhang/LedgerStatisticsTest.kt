@@ -15,7 +15,7 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
         text("搜索分类或备注").performTextReplacement(" keep "); compose.closeKeyboard()
         text("仅收入").performClick(); text("显示 1 / 本月 10 条")
         compose.onNodeWithTag("nav-stats").performClick(); tag("stats-kind-income").assertExists()
-        overview("100.01", "16.42", "83.59"); metrics(8, "2.05")
+        overview("100.01", "16.42", "83.59"); captureLedgerScreen("s2-month-overview"); metrics(8, "2.05")
         categoryOrder(listOf("餐饮", "交通", "餐饮外卖", "Dining", "dining", "末项"))
         listOf(Triple("餐饮", "12.35", "75.2% · 2笔"), Triple("交通", "2.00", "12.2% · 2笔"),
             Triple("餐饮外卖", "1.00", "6.1% · 1笔"), Triple("Dining", "0.50", "3.0% · 1笔"),
@@ -160,6 +160,8 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
         openStats()
         sectionText("stats-comparison", "本期：2025-05-01 至 2025-05-31")
         sectionText("stats-comparison", "对比：2025-04-01 至 2025-04-30")
+        sectionText("stats-comparison", "本期支出 ¥16.42")
+        sectionText("stats-comparison", "对比期支出 ¥20.00")
         sectionText("stats-comparison", "差额 -¥3.58（-17.9%）")
         kind(EntryKind.INCOME); sectionText("stats-comparison", "差额 ¥50.01（100.0%）")
         modeYear(); sectionText("stats-comparison", "本期：2025-01-01 至 2025-12-31")
@@ -200,11 +202,15 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
         if (annual) { modeYear(); year(today.year) }
         overview(if (periodEnd > today) "300.00" else "100.00", "10.01", if (periodEnd > today) "289.99" else "89.99", annual)
         if (periodEnd > today) text("包含未来日期账目")
+        captureLedgerScreen(if (annual) "s2-current-year-overview" else "s2-current-month-overview")
         sectionText("stats-comparison", "按相同天数比较")
         sectionText("stats-comparison", "本期：$start 至 $end")
         sectionText("stats-comparison", "对比：$previous 至 $previousEnd")
+        sectionText("stats-comparison", "本期支出 ¥10.01")
+        sectionText("stats-comparison", "对比期支出 ¥4.01")
         sectionText("stats-comparison", "差额 ¥6.00（149.6%）")
         kind(EntryKind.INCOME); sectionText("stats-comparison", "差额 ¥50.00（100.0%）")
+        sectionText("stats-comparison", "本期收入 ¥100.00"); sectionText("stats-comparison", "对比期收入 ¥50.00")
         captureLedgerScreen(if (annual) "s2-comparison-current-year" else "s2-comparison-current-month")
         if (annual && today.monthValue < 12) tag("stats-month-12").assertTextContains("未到").assertTextContains("收入 ¥200.00")
         android.util.Log.i("LedgerS2", "today=$today timezone=${java.time.ZoneId.systemDefault()} annual=$annual windowDays=$days future=${periodEnd > today} previousAfterWindow=${previousEnd < previousPeriodEnd}")
