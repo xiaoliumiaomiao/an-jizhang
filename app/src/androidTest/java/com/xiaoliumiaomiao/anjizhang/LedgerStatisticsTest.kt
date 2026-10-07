@@ -1,7 +1,9 @@
 package com.xiaoliumiaomiao.anjizhang
 
 import androidx.compose.ui.test.*
+import androidx.lifecycle.viewModelScope
 import com.xiaoliumiaomiao.anjizhang.domain.*
+import kotlinx.coroutines.Job
 import java.time.LocalDate
 import java.time.YearMonth
 import org.junit.Assert.*
@@ -14,6 +16,7 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
         text("仅收入").performClick(); text("显示 1 / 本月 10 条")
         compose.onNodeWithTag("nav-stats").performClick(); tag("stats-kind-income").assertExists()
         overview("100.01", "16.42", "83.59"); metrics(8, "2.05")
+        categoryOrder(listOf("餐饮", "交通", "餐饮外卖", "Dining", "dining", "末项"))
         listOf(Triple("餐饮", "12.35", "75.2% · 2笔"), Triple("交通", "2.00", "12.2% · 2笔"),
             Triple("餐饮外卖", "1.00", "6.1% · 1笔"), Triple("Dining", "0.50", "3.0% · 1笔"),
             Triple("dining", "0.50", "3.0% · 1笔"), Triple("末项", "0.07", "0.4% · 1笔")).forEach { (name, amount, share) ->
@@ -22,6 +25,7 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
         listOf(3, 6, 7).forEachIndexed { index, id -> tag("stats-big-entry-${statsId(id)}").assertTextContains("${index + 1}.") }
         captureLedgerScreen("s2-month-expense")
         kind(EntryKind.INCOME); overview("100.01", "16.42", "83.59"); metrics(2, "50.01")
+        categoryOrder(listOf("工资", "餐饮"), EntryKind.INCOME)
         category("工资", EntryKind.INCOME).assertTextContains("工资  ¥100.00").assertTextContains("100.0% · 1笔")
         category("餐饮", EntryKind.INCOME).assertTextContains("餐饮  ¥0.01").assertTextContains("0.0% · 1笔")
         tag("stats-big-entry-${statsId(1)}").assertTextContains("1."); tag("stats-big-entry-${statsId(2)}").assertTextContains("2.")
@@ -213,6 +217,15 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
         openStats(); overview("100.01", "16.42", "83.59")
         repeat(3) { modeYear(); tag("stats-year-prev").performClick(); tag("stats-year-next").performClick(); tag("stats-mode-month").performClick() }
         modeYear(); kind(EntryKind.INCOME); overview("350.01", "45.42", "304.59", true)
+        val vm = model()
+        val reloadJobs = compose.runOnIdle {
+            val previousJobs = vm.viewModelScope.coroutineContext[Job]?.children?.toSet().orEmpty()
+            vm.load()
+            vm.viewModelScope.coroutineContext[Job]?.children?.filter { it !in previousJobs }?.toList().orEmpty()
+        }
+        compose.waitUntil(10000) { reloadJobs.all { it.isCompleted } && !vm.state.value.busy }
+        assertNull(vm.state.value.error)
+        overview("350.01", "45.42", "304.59", true); metrics(4, "87.50")
         val replacement = listOf(Entry(statsId(301), EntryKind.INCOME, 77777, "全新快照", LocalDate.of(2025, 5, 1), "合成"))
         replaceFixture(replacement)
         tag("stats-year-prev").performClick(); overview("0.00", "0.00", "0.00", true)

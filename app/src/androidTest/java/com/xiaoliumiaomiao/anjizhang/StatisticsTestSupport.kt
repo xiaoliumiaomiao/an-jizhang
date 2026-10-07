@@ -3,6 +3,8 @@ package com.xiaoliumiaomiao.anjizhang
 import android.content.Context
 import android.os.ParcelFileDescriptor
 import android.view.KeyEvent
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
@@ -17,6 +19,7 @@ import com.xiaoliumiaomiao.anjizhang.ui.LedgerUiState
 import com.xiaoliumiaomiao.anjizhang.ui.LedgerViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.LocalDate
+import java.util.Locale
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.rules.ExternalResource
@@ -65,7 +68,9 @@ abstract class StatisticsDeviceScenario {
     }
     private val failureImage = object : TestWatcher() {
         override fun failed(error: Throwable, description: Description) {
-            runCatching { captureLedgerScreen("s2-failed-${description.methodName}") }.exceptionOrNull()?.let(error::addSuppressed)
+            val name = "s2-failed-${description.testClass.simpleName}-${description.methodName}"
+                .lowercase(Locale.ROOT).replace(Regex("[^a-z0-9-]+"), "-")
+            runCatching { captureLedgerScreen(name) }.exceptionOrNull()?.let(error::addSuppressed)
         }
     }
     @get:Rule val rules: RuleChain = RuleChain.outerRule(seed).around(compose).around(failureImage)
@@ -113,6 +118,28 @@ abstract class StatisticsDeviceScenario {
     }
     protected fun kind(kind: EntryKind) { tag("stats-kind-${kind.name.lowercase()}").performClick() }
     protected fun category(name: String, kind: EntryKind = EntryKind.EXPENSE) = tag("stats-category-${kind.name}-$name")
+    protected fun categoryOrder(expected: List<String>, kind: EntryKind = EntryKind.EXPENSE) {
+        val prefix = "stats-category-${kind.name}-"
+        val observed = linkedSetOf<String>()
+        val list = compose.onNodeWithTag("stats-list")
+        list.performScrollToIndex(0)
+        // Read all composed category rows while traversing from the list's start.
+        // Expected names locate no rows: an inverted ranking must fail this check.
+        repeat(20) {
+            if (observed.size >= expected.size) return@repeat
+            val nodes = compose.onAllNodes(SemanticsMatcher("category row") {
+                it.config.getOrElse(SemanticsProperties.TestTag) { "" }.startsWith(prefix)
+            }).fetchSemanticsNodes()
+            val names = compose.runOnIdle {
+                nodes.filter { it.layoutInfo.isAttached && it.layoutInfo.isPlaced }
+                    .sortedBy { it.positionInRoot.y }
+                    .map { it.config[SemanticsProperties.TestTag].removePrefix(prefix) }
+            }
+            observed.addAll(names)
+            if (observed.size < expected.size) list.performTouchInput { swipeUp() }
+        }
+        assertEquals("Actual category ranking", expected, observed.toList())
+    }
     protected fun drill(name: String, kind: EntryKind = EntryKind.EXPENSE) {
         category(name, kind).performClick()
         compose.onNodeWithTag("stats-drill-list").assertExists()
@@ -173,10 +200,28 @@ abstract class StatisticsDeviceScenario {
         val results = mutableListOf<TextLayoutResult>()
         node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(results)) }
         assertTrue("Text is not ellipsized or clipped: $value", results.isNotEmpty() && results.none { it.hasVisualOverflow })
+        fullyVisible(node)
+    }
+    private fun fullyVisible(interaction: SemanticsNodeInteraction) {
+        val node = interaction.assertIsDisplayed().fetchSemanticsNode()
+        val activeLists = listOf("stats-list", "stats-drill-list", "ledger-list").flatMap { compose.onAllNodesWithTag(it).fetchSemanticsNodes() }
+        val enclosingList = activeLists.firstOrNull { list ->
+            generateSequence(node.parent) { it.parent }.any { it.id == list.id }
+        }
+        val viewport = enclosingList ?: compose.onRoot().fetchSemanticsNode()
+        val (unclipped, visibleArea) = compose.runOnIdle {
+            listOf(node, viewport).forEach { assertTrue(it.layoutInfo.isAttached && it.layoutInfo.isPlaced) }
+            Rect(node.positionInRoot, Size(node.size.width.toFloat(), node.size.height.toFloat())) to viewport.boundsInRoot
+        }
+        val tolerance = 2f * compose.activity.resources.displayMetrics.density
+        assertTrue("Full text/touch bounds must fit current viewport: $unclipped / $visibleArea",
+            unclipped.left >= visibleArea.left - tolerance && unclipped.right <= visibleArea.right + tolerance &&
+                unclipped.top >= visibleArea.top - tolerance && unclipped.bottom <= visibleArea.bottom + tolerance)
     }
     protected fun touchTarget(node: SemanticsNodeInteraction) {
         val bounds = node.assertIsDisplayed().fetchSemanticsNode().boundsInRoot
         val min = 48f * compose.activity.resources.displayMetrics.density
         assertTrue("48dp touch target: $bounds", bounds.width >= min - 1 && bounds.height >= min - 1)
+        fullyVisible(node)
     }
 }
