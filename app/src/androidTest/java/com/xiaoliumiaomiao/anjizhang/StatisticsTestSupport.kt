@@ -214,8 +214,13 @@ abstract class StatisticsDeviceScenario {
         return compose.runOnIdle { assertTrue(node.layoutInfo.isAttached && node.layoutInfo.isPlaced); node.boundsInRoot.top - viewport.boundsInRoot.top }
     }
     protected fun assertAnchor(tag: String, expected: Float) { assertEquals(expected, anchor(tag), 2f * compose.activity.resources.displayMetrics.density) }
-    protected fun readable(value: String) {
-        val node = text(value)
+    protected fun readable(value: String, categoryTag: String? = null) {
+        val node = if (categoryTag == null) text(value) else {
+            tag(categoryTag)
+            // A single-entry category and its Top3 row legitimately have identical text.
+            // Read the real Text child rather than the clickable parent's merged semantics.
+            compose.onNode(hasText(value) and hasAnyAncestor(hasTestTag(categoryTag)), useUnmergedTree = true).assertIsDisplayed()
+        }
         val results = mutableListOf<TextLayoutResult>()
         node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { assertTrue(it(results)) }
         assertTrue("Text is not ellipsized or clipped: $value", results.isNotEmpty() && results.none { it.hasVisualOverflow })

@@ -48,7 +48,7 @@ class LedgerStatisticsDisplayTest : StatisticsDeviceScenario() {
             tag("stats-mode-month").performClick()
             readable("支出 ¥999999999.99")
             category(longName).assertTextContains("$longName  ¥999999999.99")
-            readable("$longName  ¥999999999.99")
+            readable("$longName  ¥999999999.99", categoryTag = "stats-category-EXPENSE-$longName")
             drill(longName); touchTarget(compose.onNodeWithTag("stats-drill-back")); allDrillIds(listOf(401))
             tag("entry-${statsId(401)}").assertTextContains("-¥999999999.99")
             captureLedgerScreen("s2-font-${scale.toString().replace('.', '-')}-drill")

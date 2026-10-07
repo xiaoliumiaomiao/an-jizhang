@@ -123,8 +123,12 @@ class LedgerQueryTest {
         row(seeds[0].id)
         summary("50.00", "13.34", "36.66")
         compose.onNodeWithTag("nav-stats").performClick()
-        text("午餐  ¥12.34")
-        text("交通  ¥1.00")
+        compose.awaitStatisticsReady()
+        listOf("午餐" to "午餐  ¥12.34", "交通" to "交通  ¥1.00").forEach { (category, value) ->
+            val categoryTag = "stats-category-EXPENSE-$category"
+            activeList().performScrollToNode(hasTestTag(categoryTag))
+            compose.onNode(hasTestTag(categoryTag) and hasText(value)).assertIsDisplayed()
+        }
         compose.onNodeWithTag("nav-ledger").performClick()
         text("清除筛选").performClick()
         assertQuery("", "全部类型")
