@@ -1,0 +1,43 @@
+# 0.1.3 独立审查记录
+
+状态：分任务/最终源码、最新CI运行与九图视觉、实际副本、最终完整技术交付独立审查均Approved，Critical0、Important0；作者手机十三项待验收。
+
+实现者与审查者分开，原始报告保存在 ignored `test-artifacts/sdd-v013/`。下列 Approved 仅表示所列范围获得批准，不将静态检查冒充设备或作者验收。
+
+| 范围 | 独立结论与记录 |
+|---|---|
+| 正式需求/计划 | 初审发现 Important：IO 排队尚未设置 busy 时可能重复提交；设计改为同步 pending ID 锁与明确 failedOperationId，增量规格审查 Approved |
+| Task1 日期分组/主题 | Spec / Quality Approved，Critical 0、Important 0；4 个新增 JVM 用例实际 RED/GREEN，原 50 保留 |
+| Task2A 新 UI 测试及截图路径 | Spec / Quality Approved，Critical 0、Important 0；旧 UI 的 3 个新增入口用例后续实际 CI RED，原 10 通过 |
+| Task2B 根状态、三个页面、详情/全屏 Editor、提交保护 | Spec / Quality Approved，Critical 0、Important 0；55 JVM 通过与 AndroidTest 编译，实际设备验证待 CI |
+| Task3/4 窄屏测试、固定基线、版本/升级脚本及截图取回 | 静态 Spec / Quality Approved，Critical 0、Important 0；保留 CI-only guard、唯一设备、证书与原始 runner 门禁；实际设备证据待 CI |
+| 最终全源码 d375cdc | Needs revision，Critical 0、Important 1：F1，新 VM 恢复已保存 pending ID 时缺少执行者，可能永久锁定 |
+| Recovery 两个测试的准备 | Spec / Quality Approved，Critical 0、Important 0；真实 queued Job、新 VM 和保存的 Compose UI 状态、同 ID / sentinel DB 断言。只完成编译，不是真实进程 kill 或仪器 GREEN |
+| F1 owner 最小修复增量 | Source Spec / Quality Approved，Critical 0、Important 0；两文件7行、39保护文件未变，实读55 JVM及新候选APK。F1静态闭合，实际恢复与交付仍待 |
+| 截图工具与恢复选择器修正 | Spec / Quality Approved，Critical 0、Important 0；两 AndroidTest 文件限定改动、39保护文件未变、11秒编译成功。保留CI-only guard、真实字节后置检查和全部业务断言，等待CI实际GREEN |
+| 第二次搜索输入的真实点击 | Spec / Quality Approved，Critical 0、Important 0；一行测试动作修正，40保护文件与生产APK未变，10秒编译通过。独立实读IME show→用户Back→hide→无新show的原日志；保留helper/等待/全部业务断言，待真实GREEN |
+| 候选七张图片部分视觉检查 | 详情图缺失，完整视觉未批准；发现明细初屏最后一条金额被FAB覆盖，需实际滚动可见性证据。正常/窄屏Editor操作可见，不替代作者自然验收 |
+| 末行滚动与完整文字几何补证测试 | Spec / Quality Approved，Critical 0、Important 0；19行限定补证、pinned API统一Dp、完整文字在可视视口且与FAB不相交；40保护文件和生产APK不变，编译10秒成功，真实几何和第9图仍待CI |
+| 最终可见性候选 e30c02d 源码增量 | Source Spec / Quality Approved，Critical 0、Important 0；最能力审查者独立比较冻结diff、40保护文件、完整原断言与APK哈希；真实运行、视觉、升级及Delivery仍待 |
+| CI37231650011九张原生图 | 视觉范围Approved；末行正常字号滚动后金额/分类/备注完整且与FAB分离，详情字段/编辑删除可读。初屏FAB遮挡历史观测仍保留，不外推大字列表或手机验收；整体16项2失败、升级未执行，FullDelivery未批准 |
+| 取消Dialog与保存点击的原生事件同步 | 两测试限定增量Spec / Quality Approved，Critical0、Important0；pinned API、主窗口焦点/页面条件等待、真实IME收起/按钮可见可用及失败诊断。39保护文件和生产APK不变，23秒编译成功；原全部业务/10秒断言保留，实际GREEN仍待 |
+| 原数据库失败保存用例的键盘与可见性准备 | 单方法限定增量Spec / Quality Approved，Critical0、Important0；真实点击与既有收键盘，Save显示/可用后原点击。40源码和生产APK未变、10秒编译成功；Mutex、故障表、真实提交、重建、失败输入及原10秒断言保留，真实GREEN仍待 |
+| 最终候选086caba源码增量 | 最能力审查者独立Source Spec / Quality Approved，Critical0、Important0；只读实算40保护哈希、APK和原始编译日志，目标方法撤销三处后全文恢复；运行和FullDelivery待新CI |
+| CI37234298023实际运行与视觉 | 55JVM/16UI/seed1/verify1实际全部通过，九PNG取回；ROOT与独立视觉审查发现statistics.png是设置旧帧，视觉Needs revision，Critical0、Important1。其余八图与升级首页已查看，当时不批准九场景或FullDelivery，须补截图绘制同步后真实取证 |
+| 统一九次原生截图帧提交同步 | 最能力独立Source Spec / Quality Approved，Critical0、Important0；公开API、真实当前焦点硬件窗、主线程注册/清理、测试线程10秒屏障及单次原生全屏图。39保护源码和生产APK未变；两次12秒编译如实区分窄版与最终版，统计图I1运行关闭仍待新原图 |
+
+以下段落为历史检查点，当时的“待”不代表文首当前状态。F1 的最小处理为 VM 实例身份与 root 保存的 pendingOwner；恢复到不同 VM 时仅清旧提交锁，保存草稿和浏览上下文，同 VM 旋转继续保护在途操作。完整本机构建和源码增量已独立批准。检查点CI37228768041实际原10 UI通过，删除恢复在disabled处取得真实F1 RED；保存恢复在文字选择器歧义处提前失败，4个Flow/窄屏用例在截图工具处提前失败。两个测试工具修正的独立复审与真实GREEN、最终UI/升级/原生截图、最终APK/私有PR及同步证据仍待，当时不批准交付或合main。
+
+候选CI37229801074实际16/1失败，原10、Recovery2、LargeText1、Flow2均通过；唯一Flow第二次搜索输入键盘准备失败，详情缺图、升级未执行。上述真实点击已通过独立审查，下一次CI加最后行滚动及金额不被FAB遮挡的断言/第9图；当时不批准完整交付或合main。
+
+历史CI37231650011完整几何断言通过且九图齐全，独立视觉范围批准；Flow在Dialog取消后原生Back发向旧窗口导致列表未出现，Smoke非法错误节点未出现需检验IME触摸准备假设。当时原生事件同步修正正在编译与复审，不修改生产校验，不因图片通过而批准完整交付。
+
+实际验证及边界见 [VALIDATION_V013](VALIDATION_V013.md)，作者手机表 [PHONE_ACCEPTANCE_V013](PHONE_ACCEPTANCE_V013.md) 保持未勾。
+
+## 当前最终运行与交付审查
+
+- 受测fb9ffd / CI37236054231：独立Visual / Runtime Approved，Critical0、Important0；实读55 JVM、16 UI、原50/10名称、lint0E9W、seed/verify与本次三证书、覆盖安装/启动。逐张9UI+升级原图正确，旧统计帧I1仅对本次关闭。报告ignored `final-frame-nine-screens-runtime-review.md`。
+- 正常字号末行完整几何和滚动图实际通过；初屏FAB可遮挡观察保留，不外推所有字体或手机。font2旧零值提示在合法重试前仍可见，后续保存/详情用例通过。Recovery2是UI状态/新VM模拟，不称真实进程kill；手机十三项保持未勾。
+- 经独立批准的脚本实际完成双APK/18PNG复制与来源hash检查，5旧APK及校验前缀字节保留。实际副本与最终完整技术交付已另获独立Approved（见下段），包括正式docs、私有draft PR4与三方HEAD同步；保持作者手机待验收，不合main。
+
+最终完整技术交付审查实际返回Source Spec / Quality / Final technical Delivery Approved，Critical0、Important0，报告ignored `final-full-delivery-review.md`。审查覆盖需求、固定受测fb9ffd、本次CI372360、原始协议/图片、有效owner APK审计、实际副本、正式文档、私有PR4及b8b7ce8三方同步。`final-delivery-copies-review.md`独立实际副本审查同为C0/I0；旧候选和初屏FAB等限制不改写。本次技术结论不能代勾作者手机十三项。

@@ -2,7 +2,7 @@ name: Android verification
 
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [main, 'feat/**', 'codex/**']
   workflow_dispatch:
 
 permissions:
@@ -45,17 +45,17 @@ jobs:
 
   device-smoke:
     runs-on: ubuntu-24.04
-    # Includes a second clean app build for the fixed 0.1.1 upgrade baseline.
+    # Includes a second clean app build for the fixed 0.1.2 upgrade baseline.
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - name: Checkout fixed 0.1.1 baseline
+      - name: Checkout fixed 0.1.2 baseline
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: 976817290302e712519297cc5b810ce019d2d383
-          path: baseline-v011
+          ref: ff8479f75cd917bc49e5ab2173ad7e9906dc480c
+          path: baseline-v012
           persist-credentials: false
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
@@ -110,9 +110,9 @@ jobs:
           timeout 10s adb -s "$serial" shell settings put global window_animation_scale 0
           timeout 10s adb -s "$serial" shell settings put global transition_animation_scale 0
           timeout 10s adb -s "$serial" shell settings put global animator_duration_scale 0
-      - name: Build fixed 0.1.1 baseline with this job's debug certificate
+      - name: Build fixed 0.1.2 baseline with this job's debug certificate
         timeout-minutes: 12
-        working-directory: baseline-v011
+        working-directory: baseline-v012
         run: |
           echo 'c5a643cf80162e665cc228f7b16f343fef868e47d3a4836f62e18b7e17ac018a  gradle/wrapper/gradle-wrapper.jar' | sha256sum --check
           chmod +x gradlew
@@ -126,6 +126,8 @@ jobs:
             timeout 30s adb -s "$serial" logcat -d > device-logcat.txt 2>&1 || true
             timeout 15s adb -s "$serial" exec-out screencap -p > device-screen.png || true
             find app/build -type f \( -path '*/androidTest-results/*' -o -path '*/reports/androidTests/*' \) -print > device-result-files.txt || true
+            mkdir -p device-ui-screens
+            timeout 30s adb -s "$serial" pull /data/local/tmp/ledger-v013-screens/. device-ui-screens/ > device-ui-screens/pull.log 2>&1 || true
             trap - EXIT
             exit "$result"
           }
@@ -133,11 +135,12 @@ jobs:
           echo 'c5a643cf80162e665cc228f7b16f343fef868e47d3a4836f62e18b7e17ac018a  gradle/wrapper/gradle-wrapper.jar' | sha256sum --check
           chmod +x gradlew
           ./gradlew :app:connectedDebugAndroidTest \
+            -Pandroid.testInstrumentationRunnerArguments.ledgerCi=true \
             -Pandroid.testInstrumentationRunnerArguments.notClass=com.xiaoliumiaomiao.anjizhang.LedgerUpgradeTest --no-daemon
           # Connected teardown happens before the upgrade chain. No connected task
           # may run between seeding the old app and verifying the replaced app.
           bash .github/scripts/verify-upgrade.sh \
-            baseline-v011/app/build/outputs/apk/debug/app-debug.apk \
+            baseline-v012/app/build/outputs/apk/debug/app-debug.apk \
             app/build/outputs/apk/debug/app-debug.apk \
             app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
           sleep 3
@@ -154,4 +157,5 @@ jobs:
             device-logcat.txt
             device-result-files.txt
             device-screen.png
+            device-ui-screens/
             upgrade-artifacts/

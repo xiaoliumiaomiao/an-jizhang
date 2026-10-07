@@ -39,6 +39,55 @@ class LedgerViewModelTest {
         assertTrue("等待后台操作超时：${model.state.value}", predicate())
     }
     private fun entry(cents: Long = 1) = Entry(UUID.randomUUID().toString(), EntryKind.EXPENSE, cents, "餐饮", LocalDate.now())
+    @Test fun repeatedSuccessHasOwnExpiryAndStaleDismissDoesNotClearNewMessage() {
+        val first = entry(); val second = entry(2)
+        val saved = model.save(first)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        val savedSecond = model.save(second)
+        await { model.state.value.completedOperationId == savedSecond && !model.state.value.busy }
+        val deletedFirst = model.delete(first)
+        await { model.state.value.completedOperationId == deletedFirst && !model.state.value.busy }
+        assertNotNull("成功提示应有自己的身份", model.state.value.messageId)
+        val firstMessage = model.state.value.messageId!!
+        assertNotNull(model.state.value.messageExpiresAt)
+        assertTrue(model.state.value.messageExpiresAt!! > android.os.SystemClock.elapsedRealtime())
+        val deletedSecond = model.delete(second)
+        await { model.state.value.completedOperationId == deletedSecond && !model.state.value.busy }
+        assertEquals("已删除", model.state.value.message)
+        val secondMessage = model.state.value.messageId!!
+        assertNotEquals(firstMessage, secondMessage)
+        model.clearMessage(firstMessage)
+        assertEquals("已删除", model.state.value.message)
+        assertEquals(secondMessage, model.state.value.messageId)
+        model.clearMessage(secondMessage)
+        assertNull(model.state.value.message)
+        assertNull(model.state.value.messageId)
+        assertNull(model.state.value.messageExpiresAt)
+        assertEquals(deletedSecond, model.state.value.completedOperationId)
+        assertTrue(model.state.value.entries.isEmpty())
+    }
+    @Test fun exportWithoutOperationIdGetsFreshMessageAndDismissKeepsFailedState() {
+        val valid = entry(); val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        model.export { ByteArrayOutputStream() }
+        await { model.state.value.message?.startsWith("备份已导出") == true && !model.state.value.busy }
+        assertNotNull(model.state.value.messageId)
+        val exported = model.state.value.messageId!!
+        model.export { ByteArrayOutputStream() }
+        await { model.state.value.messageId != exported && !model.state.value.busy }
+        assertNotNull(model.state.value.messageId)
+        val latest = model.state.value.messageId!!
+        model.clearMessage(exported)
+        assertEquals(latest, model.state.value.messageId)
+        val failed = model.save(valid.copy(amountCents = 0))
+        await { model.state.value.failedOperationId == failed && !model.state.value.busy }
+        val before = model.state.value
+        model.clearMessage(latest)
+        assertEquals(before, model.state.value)
+        assertEquals(listOf(valid), model.state.value.entries)
+        assertNotNull(model.state.value.error)
+        assertEquals(saved, model.state.value.completedOperationId)
+    }
     @Test fun databaseReadFailureShowsErrorAndRetryRecovers() {
         val outside = com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase(application)
         try {
@@ -78,12 +127,17 @@ class LedgerViewModelTest {
         assertTrue(model.state.value.entries.isEmpty())
     }
     @Test fun failedOutputReportsErrorWithoutChangingLedger() {
-        val valid = entry()
+        val valid = entry().copy(note = "不能回显的合成备注")
         val saved = model.save(valid)
         await { model.state.value.completedOperationId == saved && !model.state.value.busy }
-        model.export { object : java.io.OutputStream() { override fun write(value: Int) { throw java.io.IOException("输出失败") } } }
+        model.export { object : java.io.OutputStream() { override fun write(value: Int) { throw java.io.IOException("输出失败：${valid.id}/${valid.category}/${valid.note}") } } }
         await { model.state.value.error?.contains("输出失败") == true && !model.state.value.busy }
         assertEquals(listOf(valid), model.state.value.entries)
+        assertTrue(model.state.value.error!!.contains("新文件可能不完整"))
+        assertTrue(model.state.value.error!!.contains("保留旧备份"))
+        assertFalse(model.state.value.error!!.contains(valid.id))
+        assertFalse(model.state.value.error!!.contains(valid.category))
+        assertFalse(model.state.value.error!!.contains(valid.note))
     }
     @Test fun startsEmptyWithoutDemoData() { assertTrue(model.state.value.entries.isEmpty()); assertNull(model.state.value.error) }
     @Test fun failedSaveKeepsDataAndAllowsRetry() {
@@ -116,15 +170,35 @@ class LedgerViewModelTest {
         model.restore { ByteArrayInputStream(conflict.toByteArray()) }
         await { model.state.value.error?.contains("冲突") == true && !model.state.value.busy }
         assertEquals(listOf(valid), model.state.value.entries)
+        assertFalse(model.state.value.error!!.contains(valid.id))
     }
     @Test fun failedReadDoesNotMergeAndCanRecover() {
-        model.restore { throw java.io.IOException("读取失败") }
+        val secret = "不能回显的合成provider账本片段"
+        model.restore { throw java.io.IOException("读取失败：$secret") }
         await { model.state.value.error != null && !model.state.value.busy }
         assertTrue(model.state.value.entries.isEmpty())
+        assertTrue(model.state.value.error!!.contains("读取失败"))
+        assertFalse(model.state.value.error!!.contains(secret))
         val valid = entry()
         model.restore { ByteArrayInputStream(BackupCodec.encode(listOf(valid)).toByteArray()) }
         await { model.state.value.entries.size == 1 && !model.state.value.busy }
         assertEquals("恢复完成：新增 1 条，跳过 0 条", model.state.value.message)
+    }
+    private fun invalidBackupErrorMustBePrivate(mutate: (String) -> String, secret: String) {
+        val valid = entry().copy(date = LocalDate.of(2026, 1, 1))
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        model.restore { ByteArrayInputStream(mutate(BackupCodec.encode(listOf(valid))).toByteArray()) }
+        await { model.state.value.error != null && !model.state.value.busy }
+        assertTrue(model.state.value.error!!.contains("备份无效"))
+        assertFalse(model.state.value.error!!.contains(secret))
+        assertEquals(listOf(valid), model.state.value.entries)
+    }
+    @Test fun invalidBackupDateDoesNotEchoRawValue() {
+        invalidBackupErrorMustBePrivate({ it.replace("2026-01-01", "2026-02-30") }, "2026-02-30")
+    }
+    @Test fun invalidBackupKindDoesNotEchoRawValue() {
+        invalidBackupErrorMustBePrivate({ it.replace("EXPENSE", "敏感错误类型") }, "敏感错误类型")
     }
     @Test fun oversizedStreamReadsOnlyLimitPlusOneBytes() {
         var read = 0
@@ -135,5 +209,24 @@ class LedgerViewModelTest {
         model.restore { stream }
         await { model.state.value.error?.contains("10 MiB") == true && !model.state.value.busy }
         assertEquals(BackupCodec.MAX_BYTES + 1, read); assertTrue(model.state.value.entries.isEmpty())
+    }
+    @Test fun repeatedFailuresPublishOwnIdsWithoutReplacingOldSuccessAndRetryWorks() {
+        val valid=entry();val success=model.save(valid)
+        await { model.state.value.completedOperationId==success && !model.state.value.busy }
+        val firstFailure=model.save(valid.copy(amountCents=0))
+        await { model.state.value.error!=null && !model.state.value.busy }
+        val firstMessage=model.state.value.error
+        assertEquals(firstFailure,model.state.value.failedOperationId)
+        assertEquals(success,model.state.value.completedOperationId)
+        val secondFailure=model.save(valid.copy(amountCents=0))
+        await { model.state.value.failedOperationId==secondFailure && !model.state.value.busy }
+        assertNotEquals(firstFailure,secondFailure)
+        assertEquals(firstMessage,model.state.value.error)
+        assertEquals(success,model.state.value.completedOperationId)
+        assertEquals(listOf(valid),model.state.value.entries)
+        val retry=model.save(valid.copy(amountCents=2))
+        await { model.state.value.completedOperationId==retry && !model.state.value.busy }
+        assertEquals(listOf(valid.copy(amountCents=2)),model.state.value.entries)
+        assertNull(model.state.value.error)
     }
 }

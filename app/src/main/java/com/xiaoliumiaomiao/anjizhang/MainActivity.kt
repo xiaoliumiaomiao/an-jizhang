@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -15,10 +16,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CancellationException
 import com.xiaoliumiaomiao.anjizhang.ui.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
@@ -37,25 +37,40 @@ class MainActivity : ComponentActivity() {
             LedgerTheme {
                 var exportWarning by rememberSaveable { mutableStateOf(false) }
                 var restoreWarning by rememberSaveable { mutableStateOf(false) }
-                var licenses by rememberSaveable { mutableStateOf<String?>(null) }
-                LedgerScreen(ledger, onExport = { exportWarning = true }, onImport = { restoreWarning = true }, onLicenses = {
-                    lifecycleScope.launch {
+                var licensesOpen by rememberSaveable { mutableStateOf(false) }
+                var licenses by remember { mutableStateOf<String?>(null) }
+                LaunchedEffect(licensesOpen) {
+                    licenses = null
+                    if (licensesOpen) {
                         licenses = withContext(Dispatchers.IO) {
                             try {
                                 assets.list("licenses").orEmpty().sorted().joinToString("\n\n") { name ->
                                     "$name\n" + assets.open("licenses/$name").bufferedReader().use { it.readText() }
                                 }
+                            } catch (cancelled: CancellationException) { throw cancelled
                             } catch (failure: Exception) { "许可读取失败：${failure.message}" }
                         }
                     }
-                })
-                if (exportWarning) AlertDialog(onDismissRequest = { exportWarning = false }, title = { Text("导出明文备份") }, text = { Text("备份文件包含明文账目，请保存在可信位置。") }, confirmButton = {
+                }
+                LedgerScreen(ledger, onExport = { exportWarning = true }, onImport = { restoreWarning = true },
+                    onLicenses = { licensesOpen = true }, modalVisible = exportWarning || restoreWarning || licensesOpen)
+                if (exportWarning) AlertDialog(onDismissRequest = { exportWarning = false }, title = { Text("导出明文备份") }, text = {
+                    Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                        Text("备份文件包含明文账目，请保存在可信位置。整本最多50000条且不超过10 MiB，目前不支持分批导出。系统提供者可能包含云盘，请自行选择可信位置，建议另存一份备份。")
+                    }
+                }, confirmButton = {
                     TextButton(onClick = { exportWarning = false; export.launch("安记账-${LocalDate.now()}.json") }) { Text("选择保存位置") }
                 }, dismissButton = { TextButton(onClick = { exportWarning = false }) { Text("取消") } })
-                if (restoreWarning) AlertDialog(onDismissRequest = { restoreWarning = false }, title = { Text("合并恢复账目") }, text = { Text("恢复会新增账目，相同记录跳过；内容冲突时整批拒绝，现有账目不被替换。请选择可信的安记账备份。") }, confirmButton = {
+                if (restoreWarning) AlertDialog(onDismissRequest = { restoreWarning = false }, title = { Text("合并恢复账目") }, text = {
+                    Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                        Text("恢复会新增账目，相同记录跳过；内容冲突时整批拒绝，现有账目不被替换。请选择可信的安记账备份。")
+                    }
+                }, confirmButton = {
                     TextButton(onClick = { restoreWarning = false; restore.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text("选择备份文件") }
                 }, dismissButton = { TextButton(onClick = { restoreWarning = false }) { Text("取消") } })
-                licenses?.let { text -> AlertDialog(onDismissRequest = { licenses = null }, title = { Text("第三方许可") }, text = { Column(Modifier.verticalScroll(rememberScrollState()).padding(4.dp)) { Text(text) } }, confirmButton = { TextButton(onClick = { licenses = null }) { Text("关闭") } }) }
+                if (licensesOpen) AlertDialog(onDismissRequest = { licensesOpen = false }, title = { Text("第三方许可") },
+                    text = { Column(Modifier.verticalScroll(rememberScrollState()).padding(4.dp)) { Text(licenses ?: "正在读取许可…") } },
+                    confirmButton = { TextButton(onClick = { licensesOpen = false }) { Text("关闭") } })
             }
         }
     }

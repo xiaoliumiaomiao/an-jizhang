@@ -1,143 +1,164 @@
 package com.xiaoliumiaomiao.anjizhang.ui
 
-import androidx.compose.foundation.clickable
+import android.os.SystemClock
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.xiaoliumiaomiao.anjizhang.data.BackupCodec
 import com.xiaoliumiaomiao.anjizhang.domain.*
+import kotlinx.coroutines.delay
 import java.time.YearMonth
+import java.util.UUID
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable fun LedgerScreen(viewModel: LedgerViewModel, onExport: () -> Unit, onImport: () -> Unit, onLicenses: () -> Unit) {
+@Composable fun LedgerScreen(viewModel: LedgerViewModel, onExport: () -> Unit, onImport: () -> Unit,
+    onLicenses: () -> Unit, modalVisible: Boolean = false) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var page by rememberSaveable { mutableStateOf("账目") }
+    var page by rememberSaveable { mutableStateOf("ledger") }
     var monthText by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     val month = YearMonth.parse(monthText)
     var query by rememberSaveable { mutableStateOf("") }
     var kindName by rememberSaveable { mutableStateOf("") }
     val kind = EntryKind.entries.firstOrNull { it.name == kindName }
     val monthEntries = remember(state.entries, month) { EntryFilter.apply(state.entries, month) }
-    val visibleEntries = remember(state.entries, month, query, kindName) {
-        EntryFilter.apply(state.entries, month, query, kind)
-    }
+    val visible = remember(state.entries, month, query, kindName) { EntryFilter.apply(state.entries, month, query, kind) }
+    val summary = remember(state.entries, month) { MonthlySummary.calculate(state.entries, month) }
+    var detailId by rememberSaveable { mutableStateOf<String?>(null) }
     var editing by rememberSaveable { mutableStateOf(false) }
-    var editingJson by rememberSaveable { mutableStateOf<String?>(null) }
-    var deletingJson by rememberSaveable { mutableStateOf<String?>(null) }
+    var editingFields by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
+    var editorSession by rememberSaveable { mutableStateOf("") }
+    var editorReturnToDetail by rememberSaveable { mutableStateOf(false) }
+    var deletingId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingSaveId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingDeleteId by rememberSaveable { mutableStateOf<String?>(null) }
-    // A restored Composition consumes the matching result itself; ViewModel holds no UI closure.
-    LaunchedEffect(state.completedOperationId, pendingSaveId, pendingDeleteId) {
-        state.completedOperationId?.let { completed ->
-            if (completed == pendingSaveId) { editing = false; pendingSaveId = null }
-            if (completed == pendingDeleteId) { deletingJson = null; pendingDeleteId = null }
+    var pendingOwner by rememberSaveable { mutableStateOf(viewModel.instanceId) }
+    val editorStates = rememberSaveableStateHolder()
+    val effectiveBusy = state.busy || pendingSaveId != null || pendingDeleteId != null
+    val detail = state.entries.firstOrNull { it.id == detailId }
+    val editingEntry = remember(editingFields) { entryFromSnapshot(editingFields) }
+    val deletingEntry = state.entries.firstOrNull { it.id == deletingId }
+    val unavailableEdit = editing && editingEntry != null && !state.busy && state.entries.none { it.id == editingEntry.id }
+    val ledgerScroll = rememberLazyListState()
+    val statsScroll = rememberLazyListState()
+    val settingsScroll = rememberLazyListState()
+    // Callbacks can be invoked again before recomposition updates effectiveBusy.
+    fun operationBlocked() = viewModel.state.value.busy || pendingSaveId != null || pendingDeleteId != null
+    fun closeEditor() { editing = false; editorStates.removeState(editorSession) }
+    fun openEditor(entry: Entry?, fromDetail: Boolean) {
+        if (operationBlocked()) return
+        editorStates.removeState(editorSession)
+        pendingSaveId = null; editingFields = entrySnapshot(entry)
+        editorSession = UUID.randomUUID().toString(); editorReturnToDetail = fromDetail; editing = true
+    }
+    LaunchedEffect(viewModel.instanceId) {
+        if (pendingOwner != viewModel.instanceId) {
+            pendingSaveId = null; pendingDeleteId = null; pendingOwner = viewModel.instanceId
         }
     }
-    val editingEntry = remember(editingJson) { editingJson?.let { BackupCodec.decode(it).single() } }
-    val deletingEntry = remember(deletingJson) { deletingJson?.let { BackupCodec.decode(it).single() } }
-    val summary = remember(state.entries, month) { MonthlySummary.calculate(state.entries, month) }
+    LaunchedEffect(viewModel.instanceId, state.messageId) {
+        val messageId = state.messageId ?: return@LaunchedEffect
+        val remaining = (state.messageExpiresAt ?: 0L) - SystemClock.elapsedRealtime()
+        if (remaining > 0) delay(remaining)
+        viewModel.clearMessage(messageId)
+    }
+    LaunchedEffect(state.completedOperationId, state.failedOperationId, pendingSaveId, pendingDeleteId) {
+        state.completedOperationId?.let { completed ->
+            if (completed == pendingSaveId) {
+                closeEditor(); pendingSaveId = null
+                if (editorReturnToDetail) { detailId = null; page = "ledger" }
+            }
+            if (completed == pendingDeleteId) { deletingId = null; pendingDeleteId = null; detailId = null; page = "ledger" }
+        }
+        state.failedOperationId?.let { failed ->
+            if (failed == pendingSaveId) pendingSaveId = null
+            if (failed == pendingDeleteId) pendingDeleteId = null
+        }
+    }
+    BackHandler(enabled = detailId != null && !editing && deletingId == null) { if (!operationBlocked()) detailId = null }
     Scaffold(topBar = {
-        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("安记账", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 8.dp))
-            Button(onClick = { pendingSaveId = null; editingJson = null; editing = true }, enabled = !state.busy) { Text("记一笔") }
+        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (detailId != null) TextButton(onClick = { if (!operationBlocked()) detailId = null }, enabled = !effectiveBusy,
+                modifier = Modifier.testTag("detail-back")) { Text("返回") }
+            Text(if (detailId != null) "账目详情" else when (page) { "stats" -> "月统计"; "settings" -> "设置"; else -> "安记账" },
+                style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(vertical = 8.dp))
         }
     }, bottomBar = {
-        NavigationBar {
-            listOf("账目", "统计", "设置").forEach { destination ->
-                NavigationBarItem(selected = page == destination, onClick = { page = destination }, icon = { Text(when(destination) { "账目" -> "账"; "统计" -> "计"; else -> "设" }) }, label = { Text(destination) })
+        if (detailId == null) Column {
+            // The action's measured height is part of Scaffold's content padding, even on the first frame.
+            if (!editing && deletingId == null && !modalVisible) Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
+                ExtendedFloatingActionButton(onClick = { openEditor(null, false) },
+                    modifier = Modifier.testTag("add-entry").semantics { if (effectiveBusy) disabled() }) { Text("记一笔") }
+            }
+            NavigationBar {
+                listOf("ledger" to "明细", "stats" to "统计", "settings" to "设置").forEach { (key, label) ->
+                    NavigationBarItem(selected = page == key, onClick = { page = key }, icon = { DestinationIcon(key) },
+                        label = { Text(label) }, modifier = Modifier.testTag("nav-$key"))
+                }
             }
         }
     }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).imePadding().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
-            if (state.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            state.error?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error); TextButton(onClick = viewModel::load, enabled = !state.busy) { Text("重试读取") } } }
-            state.message?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.primary) } }
-            if (page != "设置") {
-                item {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        TextButton(onClick = { if (month.year > 1900 || month.monthValue > 1) monthText = month.minusMonths(1).toString() }) { Text("上月") }
-                        Text("${month.year}年${month.monthValue}月", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 12.dp))
-                        TextButton(onClick = { if (month.year < 9999 || month.monthValue < 12) monthText = month.plusMonths(1).toString() }) { Text("下月") }
-                        TextButton(onClick = { monthText = YearMonth.now().toString() }) { Text("本月") }
-                    }
-                }
-                item {
-                    Surface(shape = MaterialTheme.shapes.medium) {
-                        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("收入 ${Money.format(summary.incomeCents)}", color = MaterialTheme.colorScheme.primary)
-                            Text("支出 ${Money.format(summary.expenseCents)}", color = MaterialTheme.colorScheme.error)
-                            Text("本月结余 ${Money.format(summary.balanceCents)}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        }
-                    }
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
+            if (effectiveBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
+            state.error?.let { error ->
+                Column(Modifier.fillMaxWidth().heightIn(max = 160.dp).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+                    Text(error, color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = viewModel::load, enabled = !effectiveBusy) { Text("重试读取") }
                 }
             }
-            when (page) {
-                "账目" -> {
-                    item {
-                        EntryFilters(query, kind, onQueryChange = { query = it },
-                            onKindChange = { kindName = it?.name.orEmpty() },
-                            onClear = { query = ""; kindName = "" })
-                    }
-                    item { Text("显示 ${visibleEntries.size} / 本月 ${monthEntries.size} 条") }
-                    if (monthEntries.isEmpty()) item {
-                        Column(Modifier.fillMaxWidth().padding(vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text("这个月还没有账目", style = MaterialTheme.typography.titleMedium)
-                            Button(onClick = { pendingSaveId = null; editingJson = null; editing = true }, enabled = !state.busy) { Text("记一笔") }
-                        }
-                    } else if (visibleEntries.isEmpty()) item {
-                        Text("没有符合条件的账目", style = MaterialTheme.typography.titleMedium)
-                    }
-                    items(visibleEntries, key = { it.id }) { entry ->
-                        Column(Modifier.fillMaxWidth().testTag("entry-${entry.id}").clickable(enabled = !state.busy) { pendingSaveId = null; editingJson = BackupCodec.encode(listOf(entry)); editing = true }.padding(vertical = 8.dp)) {
-                            Text(entry.date.toString(), style = MaterialTheme.typography.labelLarge)
-                            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text(entry.category, style = MaterialTheme.typography.titleMedium)
-                                Text((if (entry.kind == EntryKind.EXPENSE) "-" else "+") + Money.format(entry.amountCents), modifier = Modifier.weight(1f), textAlign = TextAlign.End, style = MaterialTheme.typography.titleLarge, color = if (entry.kind == EntryKind.EXPENSE) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-                            }
-                            Text(if (entry.kind == EntryKind.EXPENSE) "支出" else "收入", style = MaterialTheme.typography.labelLarge)
-                            if (entry.note.isNotEmpty()) Text(entry.note)
-                            Row {
-                                TextButton(onClick = { pendingSaveId = null; editingJson = BackupCodec.encode(listOf(entry)); editing = true }, enabled = !state.busy) { Text("编辑") }
-                                TextButton(onClick = { pendingDeleteId = null; deletingJson = BackupCodec.encode(listOf(entry)) }, enabled = !state.busy) { Text("删除") }
-                            }
-                            HorizontalDivider()
-                        }
-                    }
+            state.message?.let { Text(it, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp)) }
+            if (detailId != null) {
+                if (detail != null) EntryDetail(detail, effectiveBusy,
+                    onEdit = { openEditor(detail, true) }, onDelete = { if (!operationBlocked()) deletingId = detail.id })
+                else Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(when { state.busy -> "正在读取账目…"; state.error != null -> "无法读取账目，请重试"; else -> "这笔账目已不存在" })
+                    TextButton(onClick = { if (!operationBlocked()) detailId = null }, enabled = !effectiveBusy) { Text("返回明细") }
                 }
-                "统计" -> {
-                    item { Text("支出分类", style = MaterialTheme.typography.titleLarge) }
-                    if (summary.expensesByCategory.isEmpty()) item { Text("这个月还没有支出") }
-                    items(summary.expensesByCategory.toList().sortedByDescending { it.second }) { (category, cents) ->
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("$category  ${Money.format(cents)}")
-                            LinearProgressIndicator(progress = { cents.toFloat() / summary.expenseCents.toFloat() }, modifier = Modifier.fillMaxWidth())
-                        }
-                    }
-                }
-                "设置" -> {
-                    item { Text("备份与恢复", style = MaterialTheme.typography.titleLarge)
-                        Button(onClick = onExport, enabled = !state.busy) { Text("导出备份") }
-                        OutlinedButton(onClick = onImport, enabled = !state.busy) { Text("恢复备份") }
-                        Text("备份文件包含明文账目，请保存在可信位置。恢复会合并账目，相同记录跳过；内容冲突时整批拒绝。")
-                        Text("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。") }
-                    item { HorizontalDivider(); Text("本地隐私", style = MaterialTheme.typography.titleLarge); Text("账目仅保存在此设备，无需登录，不联网，无广告或分析服务。") }
-                    item { Text("卸载提醒", style = MaterialTheme.typography.titleLarge); Text("卸载应用会删除本地账目；更换设备或卸载前，请先导出备份。系统云备份已关闭。") }
-                    item { Text("版本 0.1.2"); TextButton(onClick = onLicenses) { Text("第三方许可") } }
-                }
+            } else when (page) {
+                "stats" -> StatisticsPage(month, summary, statsScroll) { monthText = it.toString() }
+                "settings" -> SettingsPage(effectiveBusy, settingsScroll, onExport, onImport, onLicenses)
+                else -> LedgerPage(month, summary, visible, monthEntries.size, query, kind, effectiveBusy, ledgerScroll,
+                    { monthText = it.toString() }, { query = it }, { kindName = it?.name.orEmpty() }, { query = ""; kindName = "" },
+                    { openEditor(null, false) }, { if (!operationBlocked()) detailId = it.id })
             }
         }
     }
-    if (editing) EntryEditor(editingEntry, state.busy, state.error, onDismiss = { editing = false }, onSave = { entry -> pendingSaveId = viewModel.save(entry) })
-    deletingEntry?.let { entry ->
-        AlertDialog(onDismissRequest = { if (!state.busy) deletingJson = null }, title = { Text("删除账目？") }, text = { Column { Text("${entry.date} ${entry.category} ${Money.format(entry.amountCents)}，删除后无法撤销。") ; state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) } } }, confirmButton = { TextButton(enabled = !state.busy, onClick = { pendingDeleteId = viewModel.delete(entry) }) { Text("确认删除") } }, dismissButton = { TextButton(enabled = !state.busy, onClick = { deletingJson = null }) { Text("取消") } })
+    if (editing && !unavailableEdit) editorStates.SaveableStateProvider(editorSession) {
+        key(editorSession) {
+            EntryEditor(editingEntry, effectiveBusy, state.error,
+                onDismiss = { if (!operationBlocked()) closeEditor() },
+                onSave = { candidate ->
+                    if (!operationBlocked() && (editingEntry == null || viewModel.state.value.entries.any { it.id == editingEntry.id }))
+                        pendingSaveId = viewModel.save(candidate)
+                }, recentEntries = state.entries, isOperationBlocked = ::operationBlocked)
+        }
     }
+    if (unavailableEdit) AlertDialog(onDismissRequest = { if (!operationBlocked()) closeEditor() },
+        title = { Text(if (state.error == null) "这笔账目已不存在" else "无法读取账目，请重试") },
+        text = { Text("请返回并重新读取账目。") },
+        confirmButton = { TextButton(onClick = { if (!operationBlocked()) closeEditor() }) { Text("返回") } },
+        dismissButton = { if (state.error != null) TextButton(onClick = viewModel::load) { Text("重试读取") } })
+    if (deletingId != null) AlertDialog(onDismissRequest = { if (!operationBlocked()) deletingId = null },
+        title = { Text("删除账目？") }, text = {
+            Column {
+                if (deletingEntry != null) Text("${deletingEntry.date} ${deletingEntry.category} ${Money.format(deletingEntry.amountCents)}，删除后无法撤销。")
+                else Text(if (state.busy) "正在读取账目…" else if (state.error != null) "无法读取账目，请重试" else "这笔账目已不存在")
+                state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        }, confirmButton = {
+            if (deletingEntry != null) TextButton(enabled = !effectiveBusy, onClick = {
+                if (!operationBlocked()) pendingDeleteId = viewModel.delete(deletingEntry)
+            }) { Text("确认删除") }
+        }, dismissButton = { TextButton(enabled = !effectiveBusy, onClick = { if (!operationBlocked()) deletingId = null }) { Text("取消") } })
 }
