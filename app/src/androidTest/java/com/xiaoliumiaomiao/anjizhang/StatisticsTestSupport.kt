@@ -103,8 +103,14 @@ abstract class StatisticsDeviceScenario {
     protected fun text(value: String) = reveal(hasText(value))
     protected fun awaitAnalysis() {
         compose.waitForIdle()
-        compose.waitUntil(10000) { compose.onAllNodesWithTag("stats-loading").fetchSemanticsNodes().isEmpty() }
-        compose.onNodeWithTag("stats-error").assertDoesNotExist()
+        compose.waitUntil(10000) {
+            compose.onNodeWithTag("stats-error").assertDoesNotExist()
+            compose.onAllNodesWithTag("stats-loading").fetchSemanticsNodes().isEmpty() &&
+                compose.onAllNodesWithTag("stats-reading").fetchSemanticsNodes().isEmpty() &&
+                listOf("stats-drill-list", "stats-list", "ledger-list", "settings-list").sumOf {
+                    compose.onAllNodesWithTag(it).fetchSemanticsNodes().size
+                } == 1
+        }
     }
     protected fun month(year: Int, month: Int) {
         tag("month-select").performClick()
