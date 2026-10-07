@@ -83,13 +83,13 @@ import java.time.YearMonth
         }
     }
 }
-@Composable private fun EntryRow(entry:Entry,busy:Boolean,onClick:()->Unit) {
+@Composable internal fun EntryRow(entry:Entry,busy:Boolean,verticalLayout:Boolean=false,onClick:()->Unit) {
     Column(Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("entry-${entry.id}").clickable(enabled=!busy,onClick=onClick).padding(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val availableWidth=maxWidth
             val amount=(if(entry.kind==EntryKind.EXPENSE)"-" else "+")+Money.format(entry.amountCents)
             val amountColor=if(entry.kind==EntryKind.EXPENSE)MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
-            if(LocalDensity.current.fontScale<1.5f && maxWidth>=320.dp) {
+            if(!verticalLayout && LocalDensity.current.fontScale<1.5f && maxWidth>=320.dp) {
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                     Text(entry.category,style=MaterialTheme.typography.titleMedium,modifier=Modifier.weight(1f),maxLines=2,overflow=TextOverflow.Ellipsis)
                     Text(amount,style=MaterialTheme.typography.headlineMedium,textAlign=TextAlign.End,modifier=Modifier.widthIn(max=availableWidth*.6f),color=amountColor)
@@ -102,19 +102,6 @@ import java.time.YearMonth
         Text(if(entry.kind==EntryKind.EXPENSE)"支出" else "收入",style=MaterialTheme.typography.bodySmall)
         if(entry.note.isNotEmpty()) Text(entry.note,maxLines=2,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.bodyMedium)
         HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
-    }
-}
-@Composable internal fun StatisticsPage(month:YearMonth,summary:MonthlySummary,listState:LazyListState,onMonth:(YearMonth)->Unit) {
-    LazyColumn(Modifier.fillMaxSize().testTag("stats-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,bottom=16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        item { MonthNavigator(month,onMonth) }; item { MonthlyOverview(summary) }
-        item { Text("支出分类",style=MaterialTheme.typography.titleLarge) }
-        if(summary.expensesByCategory.isEmpty()) item { Text("这个月还没有支出") }
-        items(summary.expensesByCategory.toList().sortedByDescending{it.second},key={it.first}) { (category,cents)->
-            Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("$category  ${Money.format(cents)}")
-                LinearProgressIndicator(progress={cents.toFloat()/summary.expenseCents.toFloat()},modifier=Modifier.fillMaxWidth())
-            }
-        }
     }
 }
 @Composable internal fun SettingsPage(busy:Boolean,listState:LazyListState,onExport:()->Unit,onImport:()->Unit,onLicenses:()->Unit) {
