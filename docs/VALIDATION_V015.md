@@ -1,6 +1,6 @@
 # 0.1.5／V1.0 S2 验证记录
 
-日期：2026-10-07（Asia/Shanghai）。7be候选运行、升级、视觉和本机原生材料已有实际批准；FullDelivery及最终Git同步仍待独审。作者0.1.4验收与S2技术验证／手机验收分别记录。
+日期：2026-10-07（Asia/Shanghai）。7be候选运行、升级、视觉和本机原生材料已有实际批准；文档提交cfa0594已完成Git同步并获最终技术FullDelivery Approved C0/I0/M1（仅既有工具提示）。作者0.1.4验收与S2技术验证／手机验收分别记录。
 
 ## 冻结候选身份与当前门禁
 
@@ -17,7 +17,7 @@
 | 本机APK审计 | 9,834,364 bytes，SHA256 `072afe980ecdbeaae398c4630d49ecc7a6374ef465e013b05d31b998aeb43c46`；0.1.5/code7/min26/target35；旧本机公开debug证书同为`209fe650f40d48d32167be84b0d59576ecc3fc90c3af4169fc811a13e700109d` |
 | 两output新APK／PNG | `delivery.json`：各1 APK＋1独立SHA256SUMS＋59业务原PNG；120个新副本hash逐项与来源一致 |
 | 107原件／16合同 | `delivery.json`复制后核验：107原件及16数据／安全合同hash不变 |
-| 文档后同步／FullDelivery | 文档应用后的整体diff-check、local／remote／PR HEAD与clean／private／draft复核及独立FullDelivery结论待完成；不预填Approved |
+| 文档后同步／FullDelivery | cfa0594已实核整分支diff-check exit0、本地／远端／PR HEAD一致、clean／private／OPEN／draft；`s2-final-delivery-review.md`实际技术FullDelivery Approved C0/I0/M1，Task3文档C0/I0/M0 |
 | 作者手机验收 | 20项未勾，设备型号／Android版本未提供 |
 
 ## 范围与分析口径
@@ -115,7 +115,7 @@ font1／1.3／2的720×1280／320dpi／360dp真实配置、字形／viewport及�
 
 新文件an-jizhang-0.1.5-debug.apk、SHA256SUMS-v0.1.5.txt和v0.1.5-screenshots已各复制至隔离与主目录output。`delivery.json`记录两处各1 APK／1校验／59原业务PNG、120新目标全部逐项hash一致；107原件（105旧output＋作者HANDOFF／未跟踪V1.0方案）及16既有数据安全合同复制后hash保持。不覆盖旧校验，不改作者主目录两文档与归档方案checkbox。
 
-仅8份允许交付文档在最终受测SHA之后修改；REUSE_V015和新S2计划已去掉额外EOF空行，本地整分支`git diff c476eac..HEAD --check`实测exit0，该格式Minor已修。private draft PR5描述与local／remote／PR HEAD、clean／private／OPEN／draft同步仍待ROOT最终读回。技术FullDelivery实际独审返回前保持Pending，由ROOT最终写回。
+仅8份允许交付文档在最终受测SHA之后修改；REUSE_V015和新S2计划已去掉额外EOF空行，本地整分支`git diff c476eac..HEAD --check`实测exit0，该格式Minor已修。2026-10-07T13:58:17Z实际同步见`delivery-sync-before-final-review.json`：本地／远端／PR5均`cfa0594e1e1feccff037a07875ad72fa34062c38`，clean／private／OPEN／draft；远端main仍294479f，主目录main仍ff8479f且原两份作者文档状态保持。最高独审又独立查询GitHub与本地、重算120副本及107＋16保护hash，给Task3文档Spec／Quality Approved C0/I0/M0、技术FullDelivery Approved C0/I0/M1（仅既有工具提示），见`s2-final-delivery-review.md`。本次只写回已发生的批准并勾技术收尾项；后续docs-only提交的最终身份另由`delivery-sync-final.json`记录，不把文档提交冒称新的111／55设备受测SHA。
 
 只具API35临时合成模拟器证据；API26完整S2实机、作者自然手机、真实进程kill、完整TalkBack和确定性Default乱序调度未执行。20项 [PHONE_ACCEPTANCE_V015](PHONE_ACCEPTANCE_V015.md)未勾。作者先导出0.1.4备份，再正常覆盖安装本机同签名包，安装异常保留应用／账本，不卸载、清库或强降级。S2作者验收前不合S2；S3与正式发布另行确认。
 
@@ -180,4 +180,4 @@ ROOT在**相同SHA**仅重跑失败device-smoke job，attempt2于2026-10-07T12:2
 
 `max-drill-layout-review.md`对ff1→7be四文件+23/-3增量给Source Spec／Quality Approved C0/I0/M0，接续全分支C0/I0/M2。统计分类钻取是唯一显式纵排EntryRow调用，金额沿用原Money.format／正负号与28sp样式，普通明细保持原布局；稳定ID、点击48dp、来源返回和滚动容器不变。三字号既有Display方法在MAX字面检查后增加`drillAmountSingleLine`，直接绑定指定UUID的真实unmerged金额Text，要求唯一LayoutResult、全文lineStart/end、恰一行、无ellipsis／超max／raw overflow，原readable／viewport断言与后续年度流程仍在。**此新断言从未在旧横排生产布局上自动执行RED**；ff1原图是人工发现RV-M1的证据，静态批准不等于新设备GREEN。
 
-7be候选原生审计与当前冻结APK值见上表。本轮本机四任务build和新CI37626498602 attempt1新build分别111 JVM全0／lint0E9W；新device55 UI全0，旧35保留，code6→7 raw升级seed／verify各1全0。新三字号MAX单行断言在成功用例中无条件必经，59业务原PNG＋升级首页的独立逐张审阅给Runtime／Upgrade／Visual Approved C0/I0/M0，RV-M1关闭。新断言未在旧横排实现上实际自动跑RED；ff1旧图只作为人工视觉缺陷证据。两output新包／校验／原图已复制读回；FullDelivery独审、最终Git同步与作者手机验收仍Pending。
+7be候选原生审计与当前冻结APK值见上表。本轮本机四任务build和新CI37626498602 attempt1新build分别111 JVM全0／lint0E9W；新device55 UI全0，旧35保留，code6→7 raw升级seed／verify各1全0。新三字号MAX单行断言在成功用例中无条件必经，59业务原PNG＋升级首页的独立逐张审阅给Runtime／Upgrade／Visual Approved C0/I0/M0，RV-M1关闭。新断言未在旧横排实现上实际自动跑RED；ff1旧图只作为人工视觉缺陷证据。两output新包／校验／原图已复制读回；文档cfa0594完成实际Git同步并获技术FullDelivery Approved C0/I0/M1。作者手机20项继续Pending。

@@ -12,7 +12,7 @@
 | 新CI build | CI37626498602 attempt1已完成111 JVM／0F0E0S，原81 missing0；lint0E9W，ROOT已实读 |
 | 7be Runtime／Upgrade | Approved C0/I0/M0；CI37626498602 attempt1新device55 UI全0、seed／verify各1全0，原安装／签名／完整字段保持，`s2-final-7be-runtime-visual-review.md` |
 | 7be Visual | Approved C0/I0/M0；59业务＋1升级原PNG逐件审阅，三字号MAX钻取金额完整单行，RV-M1关闭；同独审报告 |
-| 最终FullDelivery | Pending；`delivery.json`已核120新副本hash、107旧物及16合同不变；文档后同步与独立FullDelivery审查仍待完成 |
+| 最终FullDelivery | Approved C0/I0/M1（仅既有工具提示）；`s2-final-delivery-review.md`在文档提交cfa0594冻结核准Task3文档、120副本、107旧物、16合同及实际Git同步，文档Spec／Quality C0/I0/M0 |
 
 ## 源码合同与历史问题关闭
 
@@ -26,6 +26,6 @@ RV-M1是ff1的360dp font1.0／1.3 MAX分类钻取金额小数尾部折行，负�
 
 7be本机APK已由独立原生审查读回：9,834,364 bytes，SHA256 `072afe980ecdbeaae398c4630d49ecc7a6374ef465e013b05d31b998aeb43c46`，源码tree `5008b8fd219621f4cad7f2a95c598eb8a92eb3df`。原生identity为0.1.5/code7/min26/target35；只有既有signature receiver权限，无INTERNET；allowBackup=false及legacy/cloud/transfer全域排除；三完整许可在APK、assets、third_party逐字节一致。新旧本机公开debug证书SHA256均`209fe650f40d48d32167be84b0d59576ecc3fc90c3af4169fc811a13e700109d`。冻结assemble实际7秒／37 UP-TO-DATE，不能写作clean重编译；此前37秒构建实际执行19项任务、111 JVM与lint。candidateNative结论另由新CI同临时证书code6→7真实升级及两output复制报告补齐，证据归属分别见`ci-s2-37626498602-attempt1`与`delivery.json`。
 
-新设备55 UI与seed／verify原件、三字号单行金额和60张新原PNG已由`s2-final-7be-runtime-visual-review.md`独立核准；普通明细、钻取滚动／返回／编辑来源也有对应通过用例与原图，不以单张截图替代行为测试。`delivery.json`记录两处output各1 APK／1校验／59 PNG逐项hash相同、107旧物／16合同及主目录两作者文档原字节保持。REUSE与S2计划EOF空行已在本轮文档应用中修正，本地整分支diff-check exit0；private draft PR5、本机／远端／PR HEAD一致、clean及FullDelivery独立报告仍待ROOT完成。
+新设备55 UI与seed／verify原件、三字号单行金额和60张新原PNG已由`s2-final-7be-runtime-visual-review.md`独立核准；普通明细、钻取滚动／返回／编辑来源也有对应通过用例与原图，不以单张截图替代行为测试。`delivery.json`记录两处output各1 APK／1校验／59 PNG逐项hash相同、107旧物／16合同及主目录两作者文档原字节保持。REUSE与S2计划EOF空行已在本轮文档应用中修正，本地整分支diff-check exit0；文档提交`cfa0594e1e1feccff037a07875ad72fa34062c38`已由ROOT及最高独审分别实核private／OPEN／draft PR5、本机／远端／PR HEAD一致和clean，技术FullDelivery Approved C0/I0/M1。此前Source EOF Minor实际关闭；批准写回仅改文档，最终提交身份与保护复核保存在ignored `delivery-sync-final.json`。
 
 API35合成模拟器不代替API26实机、作者自然手机、真实进程kill、完整TalkBack或font2-dark受控交叉。20项 [PHONE_ACCEPTANCE_V015](PHONE_ACCEPTANCE_V015.md)保持未勾。作者先导出0.1.4有效备份，再同签名正常覆盖安装；S2手机验收前不合并，S3和正式发布另行确认。

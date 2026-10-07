@@ -4,7 +4,7 @@
 
 本机交付APK已审计9,834,364 bytes／SHA256 `072afe980ecdbeaae398c4630d49ecc7a6374ef465e013b05d31b998aeb43c46`；交付链接：[an-jizhang-0.1.5-debug.apk](../output/an-jizhang-0.1.5-debug.apk)、[SHA256SUMS-v0.1.5.txt](../output/SHA256SUMS-v0.1.5.txt)。两处output各有同hash APK、校验和59张原业务PNG，120新副本hash读回均匹配来源；见`../test-artifacts/sdd-v1-s2/delivery.json`。技术证据见 [VALIDATION_V015](VALIDATION_V015.md)，独立审查见 [REVIEW_V015](REVIEW_V015.md)。
 
-7be候选Source、原生材料及新CI运行／升级／视觉独审已通过：111 JVM、55 UI、seed／verify各1全0，60张新原PNG逐件审阅且RV-M1关闭；两处output复制hash已读回。FullDelivery独审和最终Git同步仍待完成。以下20项仅待作者真实手机操作，不代表已通过手机验收。
+7be候选Source、原生材料及新CI运行／升级／视觉独审已通过：111 JVM、55 UI、seed／verify各1全0，60张新原PNG逐件审阅且RV-M1关闭；两处output复制hash已读回。技术FullDelivery独审已通过，文档提交cfa0594的Git身份及原件保护已同步核验；批准写回后的提交另保留最终同步记录。以下20项仅待作者真实手机操作，不代表已通过手机验收。
 
 先在现有0.1.4导出备份，再正常覆盖安装本机同签名0.1.5；不卸载旧应用。安装异常先保留原应用、账本和备份，不清库或强制降级。统计只分析已记录账目，无记录不代表没有消费，结余不等同账户余额。
 

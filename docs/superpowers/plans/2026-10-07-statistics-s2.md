@@ -140,7 +140,7 @@ PhaseA真实设备RED为20个新用例各自第一个新控件缺失，旧35全�
 - [x] 从clean精确受测HEAD构建并原生审计applicationId、0.1.5/code7/min26/target35、公开旧本机debug证书、原权限/自动备份排除和完整三许可证；APK bytes/hash绑定源码和构建日志。不暴露/读取私钥。
 - [x] 新文件an-jizhang-0.1.5-debug.apk、SHA256SUMS-v0.1.5.txt及v0.1.5-screenshots复制两output，每份hash读回；107原件及16既有安全/数据合同保持。不覆盖旧校验。
 - [x] 准备新19项左右手机清单且未勾，明确先导出备份再同签名正常覆盖安装；至少两个有记录月核对总额/分类/同期范围/年12月/钻取修改返回/字体主题，真实手机结果另记。
-- [ ] 更新新private draft PR描述/附到任务，文档commit/push后核HEAD/localremotePR一致、clean、private/draft、主目录原件保持。S2作者验收前不合S2；S3另行确认。新技术FullDelivery实际审查后再写回结论。
+- [x] 更新新private draft PR描述/附到任务，文档commit/push后核HEAD/localremotePR一致、clean、private/draft、主目录原件保持。S2作者验收前不合S2；S3另行确认。新技术FullDelivery实际审查后再写回结论。
 
 ## 审查准备与完成定义
 

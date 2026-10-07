@@ -1,6 +1,6 @@
 # 安记账
 
-中文安卓本地记账软件。**0.1.5（versionCode 7）／V1.0 S2 统计深化**实现月度、年度与逐笔来源回看；源码、运行、升级、视觉和本机APK候选审查已通过；两处output新交付物已逐项hash读回，最终FullDelivery独审及Git同步仍待完成。方案版本与应用版本分别记录。0.1.0、0.1.1、0.1.2、0.1.4已由作者确认通过；0.1.4的19项手机验收于2026-10-07据“全部予以通过”确认。0.1.5的20项手机验收仍待作者操作。
+中文安卓本地记账软件。**0.1.5（versionCode 7）／V1.0 S2 统计深化**实现月度、年度与逐笔来源回看；源码、运行、升级、视觉和本机APK候选审查已通过；两处output新交付物已逐项hash读回，最终技术FullDelivery独审已通过，文档提交cfa0594已完成Git同步核验。方案版本与应用版本分别记录。0.1.0、0.1.1、0.1.2、0.1.4已由作者确认通过；0.1.4的19项手机验收于2026-10-07据“全部予以通过”确认。0.1.5的20项手机验收仍待作者操作。
 
 - 明细／统计／设置导航、日期分组、账目详情、全屏新增与编辑；金额使用按需弹出的应用数字键盘，备注使用系统输入法。
 - 月度／年度完整收入、支出和结余；年度12个月收入／支出双柱与同源文字金额，点某月回看月统计。
@@ -15,7 +15,7 @@
 
 ## 当前 S2 技术证据
 
-冻结候选`7be948c40c96e7fe0d75448e284ff52ee8e45c03`已获Source增量与本机候选原生材料独审Approved。[CI37626498602 attempt1](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37626498602) 两job success：111 JVM、55 UI、升级seed／verify各1，均0失败／错误／跳过；旧81／35逐名保留，lint0E9W。独立审查新60张原PNG后给Runtime／Upgrade／Visual Approved C0/I0/M0，三字号MAX钻取金额完整单行，RV-M1关闭。完整证据见 [VALIDATION_V015](docs/VALIDATION_V015.md) 和 [REVIEW_V015](docs/REVIEW_V015.md)；FullDelivery独审及最终Git同步仍待完成。
+冻结候选`7be948c40c96e7fe0d75448e284ff52ee8e45c03`已获Source增量与本机候选原生材料独审Approved。[CI37626498602 attempt1](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37626498602) 两job success：111 JVM、55 UI、升级seed／verify各1，均0失败／错误／跳过；旧81／35逐名保留，lint0E9W。独立审查新60张原PNG后给Runtime／Upgrade／Visual Approved C0/I0/M0，三字号MAX钻取金额完整单行，RV-M1关闭。完整证据见 [VALIDATION_V015](docs/VALIDATION_V015.md) 和 [REVIEW_V015](docs/REVIEW_V015.md)；技术FullDelivery Approved C0/I0/M1（仅既有工具提示），cfa0594已实核本地／远端／PR一致且工作树干净；批准写回后的身份见最终同步记录。
 
 ## 安装与手机验收
 

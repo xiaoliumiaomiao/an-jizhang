@@ -44,4 +44,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -JavaHom
 
 升级基线固定已验收`c476eac220ba3f062200365671a674e5decfd06d`的0.1.4/code6。常规connected成功后，同job临时debug证书依次安装旧版、seed、`install -r`新版0.1.5/code7、verify并启动；seed至verify之间不清库、卸载或重seed。每次`am instrument -w -r`须唯一`OK (1 test)`、completion=-1和exit0。原81 JVM／35 UI名称与业务断言保留，旧测试有等待真实读取／滚动与输入焦点的最小兼容适配，未声称旧测试逐字节不变。
 
-同源码本机APK与独立校验、59张成功原生业务PNG已复制到两处output，`delivery.json`记录120个新副本hash均与来源一致，107旧物、16合同与作者主目录文档原字节保持。八份文档整体diff-check及local／remote／PR最终同步、独立FullDelivery审查仍待完成。作者先导出0.1.4备份，再正常覆盖安装本机同签名0.1.5；CI临时证书不代表本机或用户手机签名。手机20项待作者，S2验收前不合并，S3及正式发布另行确认。
+同源码本机APK与独立校验、59张成功原生业务PNG已复制到两处output，`delivery.json`记录120个新副本hash均与来源一致，107旧物、16合同与作者主目录文档原字节保持。文档提交cfa0594已实核整分支diff-check exit0与local／remote／PR一致、clean／private／draft；独立技术FullDelivery Approved C0/I0/M1（仅既有工具提示）。批准写回后的docs-only提交身份见ignored delivery-sync-final.json。作者先导出0.1.4备份，再正常覆盖安装本机同签名0.1.5；CI临时证书不代表本机或用户手机签名。手机20项待作者，S2验收前不合并，S3及正式发布另行确认。

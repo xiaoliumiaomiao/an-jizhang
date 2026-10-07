@@ -4,9 +4,9 @@
 
 ## 0.1.5／S2 当前状态
 
-冻结候选`7be948c40c96e7fe0d75448e284ff52ee8e45c03`实现分类钻取金额纵排与三字号单行断言。增量Source Spec／Quality独审Approved C0/I0/M0，接续Whole Source C0/I0/M2；candidateNative独审Approved C0/I0/M0。本机APK 9,834,364 bytes／SHA256 `072afe980ecdbeaae398c4630d49ecc7a6374ef465e013b05d31b998aeb43c46`，与旧本机包公开debug证书一致。新 [CI37626498602 attempt1](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37626498602) 两job success：111 JVM、55 UI及升级seed／verify各1均全0，旧81／35逐名missing0，lint0E9W。独立审查60张新原PNG给Runtime／Upgrade／Visual Approved C0/I0/M0；三字号MAX钻取金额完整单行，ff1历史RV-M1关闭。详见 [VALIDATION_V015](VALIDATION_V015.md)、[REVIEW_V015](REVIEW_V015.md)。
+冻结候选`7be948c40c96e7fe0d75448e284ff52ee8e45c03`实现分类钻取金额纵排与三字号单行断言。增量Source Spec／Quality独审Approved C0/I0/M0，接续Whole Source审查时C0/I0/M2；本轮已关闭EOF格式项，仅保留既有工具提示；candidateNative独审Approved C0/I0/M0。本机APK 9,834,364 bytes／SHA256 `072afe980ecdbeaae398c4630d49ecc7a6374ef465e013b05d31b998aeb43c46`，与旧本机包公开debug证书一致。新 [CI37626498602 attempt1](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37626498602) 两job success：111 JVM、55 UI及升级seed／verify各1均全0，旧81／35逐名missing0，lint0E9W。独立审查60张新原PNG给Runtime／Upgrade／Visual Approved C0/I0/M0；三字号MAX钻取金额完整单行，ff1历史RV-M1关闭。详见 [VALIDATION_V015](VALIDATION_V015.md)、[REVIEW_V015](REVIEW_V015.md)。
 
-两处output各有同hash本机APK、独立SHA256SUMS和59张原业务PNG；`test-artifacts/sdd-v1-s2/delivery.json`记录120个新副本hash全部匹配、107旧物及16合同原字节保持。正式文档应用后仍须完成整体diff-check、local／remote／PR HEAD一致、clean／private／OPEN／draft核验和独立FullDelivery审查；当前不把Task3称为最终关闭。20项作者手机验收未勾。
+两处output各有同hash本机APK、独立SHA256SUMS和59张原业务PNG；`test-artifacts/sdd-v1-s2/delivery.json`记录120个新副本hash全部匹配、107旧物及16合同原字节保持。文档提交cfa0594已实核整体diff-check exit0、local／remote／PR HEAD一致、clean／private／OPEN／draft；独立Task3文档Spec／Quality Approved C0/I0/M0，技术FullDelivery Approved C0/I0/M1（仅既有工具提示）。本次据实际审查写回技术收尾，后续仅文档提交的最终身份保存在ignored delivery-sync-final.json。20项作者手机验收未勾。
 
 作者于2026-10-07确认0.1.4“全部予以通过”，PR #4已合并；远端main为`294479fb0ff4c039e82e89842ab616fc025894c7`，主目录旧main和两份作者未提交文档保持。S2在隔离分支`codex/ledger-statistics-v0.1.5`及私有 [draft PR #5](https://github.com/xiaoliumiaomiao/an-jizhang/pull/5)。技术包就绪后，先在手机0.1.4导出有效备份，再同签名正常覆盖安装0.1.5，执行 [20项手机清单](PHONE_ACCEPTANCE_V015.md)；S2作者验收前不合并，S3另行确认。
 
