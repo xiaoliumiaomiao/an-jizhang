@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.lifecycle.ViewModelProvider
@@ -26,6 +27,16 @@ import org.junit.rules.ExternalResource
 import org.junit.rules.RuleChain
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+
+/** Wait for the actual data list, not just its temporary loading shell. */
+internal fun ComposeTestRule.awaitStatisticsReady() {
+    waitUntil(10000) {
+        onNodeWithTag("stats-error").assertDoesNotExist()
+        onAllNodesWithTag("stats-list").fetchSemanticsNodes().size == 1 &&
+            onAllNodesWithTag("stats-loading").fetchSemanticsNodes().isEmpty() &&
+            onAllNodesWithTag("stats-reading").fetchSemanticsNodes().isEmpty()
+    }
+}
 
 /** Only synthetic ci-ledger data. Expected amounts are literals in the tests. */
 internal fun statsId(number: Int) = "02500000-0000-0000-0000-${number.toString().padStart(12, '0')}"

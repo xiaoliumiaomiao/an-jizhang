@@ -47,6 +47,7 @@ class LedgerSmokeTest {
         revealLedgerText("这个月还没有账目")
         compose.onAllNodesWithText("记一笔")[0].assertIsDisplayed()
         compose.onNodeWithTag("nav-stats").performClick()
+        compose.awaitStatisticsReady()
         activeList().performScrollToNode(hasText("支出分类"))
         compose.onNodeWithText("支出分类").assertIsDisplayed()
         compose.onNodeWithTag("nav-settings").performClick()
@@ -66,6 +67,7 @@ class LedgerSmokeTest {
         compose.onNodeWithText("放弃修改").performClick()
         compose.onNodeWithTag("nav-stats").performClick()
         compose.activityRule.scenario.recreate()
+        compose.awaitStatisticsReady()
         activeList().performScrollToNode(hasText("支出分类"))
         compose.onNodeWithText("支出分类").assertIsDisplayed()
     }
