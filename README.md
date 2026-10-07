@@ -1,40 +1,28 @@
 # 安记账
 
-中文安卓本地记账软件，当前测试候选为 **0.1.4（versionCode 6）**，按最新 [V1.0方案](docs/superpowers/plans/2026-10-05-project-plan-v1.0.md) 完成 S1。方案版本与应用版本分别记录。0.1.0、0.1.1、0.1.2、0.1.4已由作者确认通过；0.1.4的19项手机验收于2026-10-07据“全部予以通过”确认。
+中文安卓本地记账软件。**0.1.5（versionCode 7）／V1.0 S2 统计深化**实现月度、年度与逐笔来源回看；源码、运行、升级、视觉和本机APK候选审查已通过；两处output新交付物已逐项hash读回，最终FullDelivery独审及Git同步仍待完成。方案版本与应用版本分别记录。0.1.0、0.1.1、0.1.2、0.1.4已由作者确认通过；0.1.4的19项手机验收于2026-10-07据“全部予以通过”确认。0.1.5的20项手机验收仍待作者操作。
 
-- 明细／统计／设置导航、日期分组、账目详情、全屏新增与编辑。
-- 点金额后从底部弹出应用数字键盘，可收起；返回先收键盘，备注使用系统输入法。
-- 新记录不预选分类，最近分类按收入／支出分别显示；备注可折叠，修改后退出须确认放弃。
-- 点月份标题选择年月，跟随系统浅深主题，明细内容区域避开“记一笔”按钮。
-- 分类／备注字面搜索与类型筛选只影响明细，月统计和备份仍使用完整数据。
-- 私有SQLite本地保存，整数分计算；明文JSON备份先完整验证，再事务合并，同ID冲突整批拒绝。
+- 明细／统计／设置导航、日期分组、账目详情、全屏新增与编辑；金额使用按需弹出的应用数字键盘，备注使用系统输入法。
+- 月度／年度完整收入、支出和结余；年度12个月收入／支出双柱与同源文字金额，点某月回看月统计。
+- 收入和支出各自的分类排行、占比、笔数和平均每笔；点分类按期间、类型与精确分类查看账目。
+- 历史期间比较上一完整期间；当前期间按相同天数比较，展示两段具体日期、金额和差额；没有基期记录时解释原因。
+- 较大单笔前三项可进入详情。统计／分类来源的编辑和删除回到原来源，返回及旋转保留期间、类型与滚动位置。
+- 分类／备注字面搜索与类型筛选只影响明细，统计和备份仍使用完整数据；私有SQLite保存，整数分计算，JSON备份先完整验证再事务合并，同ID冲突整批拒绝。
 
-schema1、备份format1、稳定记录ID、依赖和权限合同保持。无广告、遥测、云同步，不申请联网或广泛存储权限。整本备份最多50000条／10MiB，单笔金额0.01至999999999.99元，首版人民币。支持Android8.0及以上；本轮实际设备验证环境为API35。
+统计仅分析已记录账目，无记录不代表没有消费；结余是记录收入减记录支出，不等同账户余额。完整总览会计入所选期间的未来日期记录并提示，同期比较只取其明示窗口，不混用口径。
 
-## 当前 S1 技术交付
+保持schema1、备份format1、稳定UUID、依赖和权限合同。无广告、遥测、云同步，不申请联网或广泛存储权限。整本备份最多50000条／10MiB，单笔金额0.01至999999999.99元，人民币、单账本，支持Android8.0及以上。API35合成模拟器技术验证与作者真实手机验收分开记录。
 
-受测提交 `3bf514249f6a920d2c3d8f89299830f72520eb82` 的 [CI 37301576955](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37301576955)：81项单元测试、35项安卓界面测试，以及同签名0.1.2/code3→0.1.4/code6覆盖升级seed／verify各1项，全部0失败、0错误、0跳过；lint0错误、9项已有提示。原77单元／19界面测试逐名保留，新增16个S1界面场景及两项备份错误隐私回归、两项原生窗口浅深色回归已核对。实际失败、修复、原始记录及限制见 [VALIDATION_V014](docs/VALIDATION_V014.md)，独立审查见 [REVIEW_V014](docs/REVIEW_V014.md)。
+## 当前 S2 技术证据
 
-金额面板初始隐藏，触摸和直接语义点击均可打开；三字号1.0／1.3／2.0逐个金额键及输入值通过。font2最后一行键需在面板内部滚动，不代表全部键同时出现在屏幕上。恢复场景模拟保存UI状态及新ViewModel，没有真实杀死Android进程。自动语义测试不代替作者完整TalkBack验收。
+冻结候选`7be948c40c96e7fe0d75448e284ff52ee8e45c03`已获Source增量与本机候选原生材料独审Approved。[CI37626498602 attempt1](https://github.com/xiaoliumiaomiao/an-jizhang/actions/runs/37626498602) 两job success：111 JVM、55 UI、升级seed／verify各1，均0失败／错误／跳过；旧81／35逐名保留，lint0E9W。独立审查新60张原PNG后给Runtime／Upgrade／Visual Approved C0/I0/M0，三字号MAX钻取金额完整单行，RV-M1关闭。完整证据见 [VALIDATION_V015](docs/VALIDATION_V015.md) 和 [REVIEW_V015](docs/REVIEW_V015.md)；FullDelivery独审及最终Git同步仍待完成。
 
-原生截图保存于 `output/v0.1.4-screenshots/`，本轮全部23张及升级首页已逐张核对。源码、运行／视觉、APK与最终技术交付独立审查均Approved C0/I0/M0。私有草稿 [PR #4](https://github.com/xiaoliumiaomiao/an-jizhang/pull/4) 保持OPEN/draft，main仍为已验收0.1.2；本轮没有合并或正式发布。
+## 安装与手机验收
 
-## 安装
+本机7be候选APK已原生审计：9,834,364 bytes，SHA256 `072afe980ecdbeaae398c4630d49ecc7a6374ef465e013b05d31b998aeb43c46`，与旧本机包公开debug证书相同。两个output已复制并读回；可从 [an-jizhang-0.1.5-debug.apk](output/an-jizhang-0.1.5-debug.apk) 和 [SHA256SUMS-v0.1.5.txt](output/SHA256SUMS-v0.1.5.txt) 获取。两处output各有同hash APK、独立校验文件及59张原业务PNG，120个新副本hash均与来源一致。
 
-本机同旧签名测试包：`output/an-jizhang-0.1.4-debug.apk`，校验文件：`output/SHA256SUMS-v0.1.4.txt`。隔离工作区output与 `D:/AIproject/an-jizhang/output` 各有一份，大小9918020 bytes，SHA-256：
+先在手机现有0.1.4导出有效备份，保存到可信位置，再正常覆盖安装本机同签名0.1.5，按 [20项手机验收表](docs/PHONE_ACCEPTANCE_V015.md) 操作。安装异常保留原应用、账本和备份，不卸载、清库或强制降级。复制后107原件／16合同hash保持。GitHub CI临时debug证书与本机交付包证书不同，不能把CI包当作者手机覆盖安装包。
 
-```text
-5f71a8bf1a9c1e617b6a87dd6852ee45c2e6cdf18b084dbf070381c34c656af6
-```
+## 开发文档
 
-先在手机当前应用导出有效备份，保存到可信位置，再正常覆盖安装此本机包，按 [19项手机验收表](docs/PHONE_ACCEPTANCE_V014.md) 操作。安装异常保留原应用和账本，不卸载、清库或强制降级。旧APK、截图、校验文件及主目录作者文档原字节保留。
-
-GitHub CI包仅用于独立技术验证，本机与CI签名可能不同。这个包仍使用debug签名；正式签名和商店发布另行决定。S1手机验收已通过，下一轮进入S2月度／年度统计与账目复盘；分类库、预算和format2另行确认。
-
-## 开发与历史
-
-项目规则见 [agent.md](agent.md)，最新进度见 [HANDOFF](docs/HANDOFF.md)，当前构建路径见 [DEVELOPMENT](docs/DEVELOPMENT.md)。本轮仅复用既有固定AndroidX／Material3 API及原始图形，没有新增依赖或下载字体／图标；来源与取舍见 [REUSE_V014](docs/REUSE_V014.md)。完整既有许可证随APK提供，见 [NOTICE](third_party/NOTICE.txt)。
-
-0.1.3/code5手机反馈为部分通过：成功提示自动消失已通过，页面式金额键盘不通过，本轮改为按需弹出。旧版技术交付和失败记录保留在 [输入修复验证](docs/VALIDATION_INPUT_FEEDBACK.md)、[原0.1.3验证](docs/VALIDATION_V013.md)；原手机表保持其实际状态，旧版技术通过不继承为0.1.4手机验收。
-
-已验收0.1.2的搜索／筛选和覆盖升级见 [VALIDATION_V012](docs/VALIDATION_V012.md)；0.1.1容量／边界及升级见 [VALIDATION_V011](docs/VALIDATION_V011.md)，首版见 [VALIDATION](docs/VALIDATION.md)。多agent实现任务均有独立规格和质量审查，作者自然手机验收与技术验证分别记录。
+项目规则见 [agent.md](agent.md)，当前交接见 [HANDOFF](docs/HANDOFF.md)，构建路径见 [DEVELOPMENT](docs/DEVELOPMENT.md)，S2计划见 [实施计划](docs/superpowers/plans/2026-10-07-statistics-s2.md)。本轮未新增应用依赖、第三方源码或字体／图标；来源与许可见 [REUSE_V015](docs/REUSE_V015.md) 和 [NOTICE](third_party/NOTICE.txt)。S1及更早版本的技术记录保留在 [VALIDATION_V014](docs/VALIDATION_V014.md) 与 [历史交接](docs/HANDOFF.md)，S2历次失败和修复详见 [VALIDATION_V015](docs/VALIDATION_V015.md)。正式签名、商店发布和S3另行确认。
