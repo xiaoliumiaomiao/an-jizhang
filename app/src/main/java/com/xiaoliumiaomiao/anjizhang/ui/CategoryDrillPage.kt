@@ -28,7 +28,7 @@ import com.xiaoliumiaomiao.anjizhang.domain.EntryKind
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(entry.date.toString(), style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("stats-drill-date-${entry.id}"))
-                    EntryRow(entry, busy) { onDetail(entry) }
+                    EntryRow(entry, busy, verticalLayout = true) { onDetail(entry) }
                 }
             }
         }

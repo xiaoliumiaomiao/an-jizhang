@@ -286,6 +286,25 @@ abstract class StatisticsDeviceScenario {
         }
         fullyVisible(node)
     }
+    /** Require the actual drill Text to render every amount character on one visible line. */
+    protected fun drillAmountSingleLine(entryId: String, value: String) {
+        readable(value) // Retain its exact text, clipping, and viewport checks.
+        val amount = compose.onNode(hasText(value) and hasAnyAncestor(hasTestTag("entry-$entryId")),
+            useUnmergedTree = true).assertIsDisplayed().fetchSemanticsNode()
+        compose.runOnIdle {
+            assertEquals(listOf(value), amount.config[SemanticsProperties.Text].map { it.text })
+            val layouts = mutableListOf<TextLayoutResult>()
+            assertTrue(requireNotNull(amount.config[SemanticsActions.GetTextLayoutResult].action)(layouts))
+            assertEquals("One Text layout for drill amount", 1, layouts.size)
+            val layout = layouts.single()
+            assertEquals("Drill amount must be one line: $value", 1, layout.lineCount)
+            assertEquals(0, layout.getLineStart(0))
+            assertEquals(value.length, layout.getLineEnd(0))
+            assertFalse(layout.isLineEllipsized(0))
+            assertFalse(layout.multiParagraph.didExceedMaxLines)
+            assertFalse(layout.hasVisualOverflow)
+        }
+    }
     /** Compose 1.8 String semantics rebuild at parent maxWidth while keeping the natural node size. */
     private fun describesUnclippedNaturalWidthLine(result: TextLayoutResult, size: IntSize, text: String,
         density: Float, fontScale: Float): Boolean {

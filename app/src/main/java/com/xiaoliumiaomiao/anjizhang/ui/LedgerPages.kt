@@ -83,13 +83,13 @@ import java.time.YearMonth
         }
     }
 }
-@Composable internal fun EntryRow(entry:Entry,busy:Boolean,onClick:()->Unit) {
+@Composable internal fun EntryRow(entry:Entry,busy:Boolean,verticalLayout:Boolean=false,onClick:()->Unit) {
     Column(Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("entry-${entry.id}").clickable(enabled=!busy,onClick=onClick).padding(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val availableWidth=maxWidth
             val amount=(if(entry.kind==EntryKind.EXPENSE)"-" else "+")+Money.format(entry.amountCents)
             val amountColor=if(entry.kind==EntryKind.EXPENSE)MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
-            if(LocalDensity.current.fontScale<1.5f && maxWidth>=320.dp) {
+            if(!verticalLayout && LocalDensity.current.fontScale<1.5f && maxWidth>=320.dp) {
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                     Text(entry.category,style=MaterialTheme.typography.titleMedium,modifier=Modifier.weight(1f),maxLines=2,overflow=TextOverflow.Ellipsis)
                     Text(amount,style=MaterialTheme.typography.headlineMedium,textAlign=TextAlign.End,modifier=Modifier.widthIn(max=availableWidth*.6f),color=amountColor)
