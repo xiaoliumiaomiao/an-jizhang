@@ -17,20 +17,20 @@ import org.junit.rules.RuleChain
 
 class LedgerSmokeTest {
     private fun activeList():SemanticsNodeInteraction {
-        val tag=listOf("ledger-list","stats-list","settings-list").single{compose.onAllNodesWithTag(it).fetchSemanticsNodes().isNotEmpty()}
+        val tag=compose.displayedOrdinaryListTag()
         return compose.onNodeWithTag(tag)
     }
     val compose = createAndroidComposeRule<MainActivity>()
     private val cleanDatabase = object : ExternalResource() {
         override fun before() { ApplicationProvider.getApplicationContext<Context>().deleteDatabase("ledger.db") }
     }
-    @get:Rule val rules: RuleChain = RuleChain.outerRule(cleanDatabase).around(compose)
+    @get:Rule val rules: RuleChain = RuleChain.outerRule(UiPreferencesIsolation()).around(cleanDatabase).around(compose)
     // Compose idling does not wait for the ViewModel's initial Dispatchers.IO load.
     // Wait for the user-visible action to be enabled rather than clicking a disabled button.
     private fun readyEntryAction(): SemanticsNodeInteraction {
-        val ready = hasText("记一笔") and hasClickAction() and isEnabled()
+        val ready = hasTestTag("add-entry") and hasClickAction() and isEnabled()
         compose.waitUntil(10000) { compose.onAllNodes(ready).fetchSemanticsNodes().isNotEmpty() }
-        return compose.onAllNodes(ready)[0].assertIsDisplayed().assertIsEnabled()
+        return compose.onNode(ready).assertIsDisplayed().assertIsEnabled()
     }
     private fun openEditor() {
         readyEntryAction().performClick()
@@ -45,15 +45,24 @@ class LedgerSmokeTest {
         readyEntryAction()
         compose.onNodeWithText("安记账").assertIsDisplayed()
         revealLedgerText("这个月还没有账目")
-        compose.onAllNodesWithText("记一笔")[0].assertIsDisplayed()
+        compose.onNodeWithTag("add-entry").assertIsDisplayed()
         compose.onNodeWithTag("nav-stats").performClick()
+        compose.awaitStatisticsReady()
+        activeList().performScrollToNode(hasText("支出分类"))
         compose.onNodeWithText("支出分类").assertIsDisplayed()
         compose.onNodeWithTag("nav-settings").performClick()
         revealLedgerText("本地隐私")
-        compose.onNodeWithText("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。")
-            .performScrollTo().assertIsDisplayed()
-        revealLedgerText("版本 0.1.4")
-        compose.onNodeWithText("版本 0.1.4").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("settings-open-privacy").performClick()
+        revealLedgerText("账目仅保存在此设备，无需登录，不联网，无广告或分析服务。系统云备份已关闭。")
+        compose.onNodeWithTag("settings-child-back").performScrollTo().performClick()
+        compose.onNodeWithTag("settings-open-backup").performScrollTo().performClick()
+        activeList().performScrollToNode(hasText("格式2", substring = true))
+        compose.onNode(hasText("格式2", substring = true) and hasText("32 MiB", substring = true)).assertIsDisplayed()
+        activeList().performScrollToNode(hasText("格式1", substring = true))
+        compose.onNode(hasText("格式1", substring = true) and hasText("10 MiB", substring = true)).assertIsDisplayed()
+        compose.onNodeWithTag("settings-child-back").performScrollTo().performClick()
+        compose.onNodeWithTag("settings-open-about").performScrollTo().performClick()
+        revealLedgerText("版本 0.1.8")
     }
     @Test fun editorInputSurvivesActivityRecreation() {
         openEditor()
@@ -65,6 +74,8 @@ class LedgerSmokeTest {
         compose.onNodeWithText("放弃修改").performClick()
         compose.onNodeWithTag("nav-stats").performClick()
         compose.activityRule.scenario.recreate()
+        compose.awaitStatisticsReady()
+        activeList().performScrollToNode(hasText("支出分类"))
         compose.onNodeWithText("支出分类").assertIsDisplayed()
     }
     @Test fun invalidAmountCannotSaveThenOneCentExpenseAppears() {
@@ -197,8 +208,8 @@ class LedgerSmokeTest {
     }
     @Test fun reselectingExpenseKeepsCustomCategory() {
         openEditor()
-        compose.onNodeWithText("分类（可自定义）").performTextReplacement("自定义分类")
+        compose.addAndSelectCategory("自定义分类")
         compose.onNodeWithText("支出").performScrollTo().performClick()
-        compose.onNodeWithText("分类（可自定义）").assertTextContains("自定义分类")
+        compose.assertSelectedCategory("自定义分类")
     }
 }

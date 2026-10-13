@@ -22,7 +22,7 @@ class LedgerLargeTextTest {
         assertEquals("ci-ledger",name)
         ApplicationProvider.getApplicationContext<Context>().deleteDatabase("ledger.db")
     }}
-    @get:Rule val rules:RuleChain=RuleChain.outerRule(clean).around(compose)
+    @get:Rule val rules:RuleChain=RuleChain.outerRule(UiPreferencesIsolation()).around(clean).around(compose)
     private fun setting(kind:String)=shell("wm $kind").lineSequence().firstOrNull{it.startsWith("Override ") }?.substringAfter(": ")
     @Test fun largeTextCanReachNavigationFiltersDetailAndEditorActions(){
         val oldSize=setting("size");val oldDensity=setting("density");val oldFont=shell("settings get system font_scale")
@@ -33,7 +33,7 @@ class LedgerLargeTextTest {
             assertTrue(compose.activity.resources.configuration.screenWidthDp in 320..360)
             val ready=hasTestTag("add-entry") and isEnabled()
             compose.waitUntil(10000){compose.onAllNodes(ready).fetchSemanticsNodes().isNotEmpty()}
-            listOf("nav-stats","nav-settings","nav-ledger").forEach{compose.onNodeWithTag(it).assertIsDisplayed().performClick().assertIsSelected()}
+            listOf("nav-stats","nav-accounts","nav-settings","nav-ledger").forEach{compose.onNodeWithTag(it).assertIsDisplayed().performClick().assertIsSelected()}
             fun show(text:String){compose.onNodeWithTag("ledger-list").performScrollToNode(hasText(text));compose.onNodeWithText(text).assertIsDisplayed()}
             show("下月");compose.onNodeWithText("下月").performClick();show("本月");compose.onNodeWithText("本月").performClick()
             show("仅支出");compose.onNodeWithText("仅支出").performClick();show("清除筛选");compose.onNodeWithText("清除筛选").performClick()
@@ -42,8 +42,12 @@ class LedgerLargeTextTest {
             compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed().performClick()
             compose.onNodeWithText("金额请输入0.01至999999999.99，最多两位小数").performScrollTo().assertIsDisplayed()
             compose.setAmountWithKeypad("999999999.99")
-            compose.onNodeWithText("分类（可自定义）").performScrollTo().performTextReplacement("长".repeat(20))
-            compose.onNodeWithTag("note-toggle").performScrollTo().performClick()
+            compose.addAndSelectCategory("长".repeat(20))
+            compose.waitForIdle()
+            compose.onNodeWithTag("note-toggle").performScrollTo()
+                .assertIsDisplayed().assertIsEnabled().assert(hasText("添加备注")).performClick()
+            compose.waitUntil(10000){compose.onAllNodesWithText("备注（可选，最多200字）").fetchSemanticsNodes().size==1}
+            compose.onNodeWithTag("note-toggle").assert(hasText("收起备注"))
             compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().performTextReplacement("记".repeat(200))
             compose.closeKeyboard()
             compose.onNodeWithText("金额（元）").performScrollTo().assertIsDisplayed();captureLedgerScreen("narrow-large-editor")

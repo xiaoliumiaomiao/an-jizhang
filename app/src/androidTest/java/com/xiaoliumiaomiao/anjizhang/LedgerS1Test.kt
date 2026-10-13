@@ -45,14 +45,14 @@ class LedgerS1Test {
         override fun before() {
             val context = ApplicationProvider.getApplicationContext<Context>()
             context.deleteDatabase("ledger.db")
-            LedgerDatabase(context).use { db -> records.forEach(db::save) }
+            LedgerDatabase(context).use { db -> db.seedLegacyFixture(records) }
         }
     }
-    @get:Rule val rules: RuleChain = RuleChain.outerRule(seed).around(compose)
+    @get:Rule val rules: RuleChain = RuleChain.outerRule(UiPreferencesIsolation()).around(seed).around(compose)
     private fun model() = compose.runOnIdle { ViewModelProvider(compose.activity)[LedgerViewModel::class.java] }
     private fun ready() { val vm = model(); compose.waitUntil(10000) { !vm.state.value.busy && vm.state.value.entries.size == records.size }; assertNull(vm.state.value.error) }
     private fun open() { ready(); compose.onNodeWithTag("add-entry").assertIsDisplayed().performClick(); compose.onNodeWithTag("editor-form").assertIsDisplayed() }
-    private fun field(label: String, text: String) { compose.onNodeWithText(label).performScrollTo().performTextReplacement(text) }
+    private fun field(label: String, text: String) { when(label) { "editor-category-current" -> compose.setCategoryThroughDirectory(text); "editor-date-select" -> compose.selectEditorDate(text, compose.activity); else -> compose.onNodeWithText(label).performScrollTo().performTextReplacement(text) } }
     private fun save() { compose.onNodeWithText("保存").performScrollTo().assertIsEnabled().performClick() }
     private fun unchanged() { LedgerDatabase(ApplicationProvider.getApplicationContext<Context>()).use { assertEquals(records.toSet(), it.listEntries().toSet()) } }
     private fun back() = InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
@@ -78,7 +78,7 @@ class LedgerS1Test {
 
     @Test fun emptyCategoryIsRejectedWithoutCreatingRecord() {
         open(); compose.setAmountWithKeypad("0.01"); save()
-        compose.onNodeWithText("请选择或填写分类").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("请选择类别").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("editor-form").assertExists(); unchanged()
     }
     @Test fun semanticAmountClickOpensPanelAndKeysEnterOneCentWithoutIme() {
@@ -203,14 +203,11 @@ class LedgerS1Test {
         compose.assertSystemImeVisible(false)
         compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed()
         assertPanelGeometry(); compose.assertAmountDraft("12.34")
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().performTouchInput { click() }
-        compose.assertSystemImeVisible(true); compose.onNodeWithTag("amount-keypad-panel").assertDoesNotExist()
-        field("分类（可自定义）", "面板交接分类")
+        compose.addAndSelectCategory("面板交接分类")
         compose.onNodeWithText("金额（元）").performScrollTo().performTouchInput { click() }
         compose.assertSystemImeVisible(false); compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed()
-        compose.onNodeWithText("日期（yyyy-MM-dd）").performScrollTo().performTouchInput { click() }
-        compose.assertSystemImeVisible(true); compose.onNodeWithTag("amount-keypad-panel").assertDoesNotExist()
-        field("日期（yyyy-MM-dd）", "2020-02-29")
+        compose.selectEditorDate("2020-02-29", compose.activity)
+        compose.assertSystemImeVisible(false); compose.onNodeWithTag("amount-keypad-panel").assertDoesNotExist()
         compose.onNodeWithText("金额（元）").performScrollTo().performTouchInput { click() }
         compose.assertSystemImeVisible(false); compose.onNodeWithTag("amount-keypad-panel").assertIsDisplayed()
         compose.pressAmountKey("backspace"); compose.assertAmountDraft("12.3")
@@ -220,21 +217,21 @@ class LedgerS1Test {
         compose.onNodeWithTag("amount-keypad-close").performScrollTo().performClick()
         compose.onNodeWithTag("amount-keypad").assertDoesNotExist()
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().assertTextContains("面板交接备注")
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("面板交接分类")
-        compose.onNodeWithText("日期（yyyy-MM-dd）").performScrollTo().assertTextContains("2020-02-29")
+        compose.assertSelectedCategory("面板交接分类")
+        compose.assertEditorDate("2020-02-29")
         back(); compose.onNodeWithTag("discard-draft").assertIsDisplayed()
         captureLedgerScreen("s1-discard-draft")
         compose.onNodeWithText("放弃修改").performClick(); unchanged()
     }
     @Test fun dirtyBackConfirmationAndBaselineSurviveRotation() {
         open(); compose.setAmountWithKeypad("12.34")
-        field("分类（可自定义）", "自定义草稿"); compose.closeKeyboard()
+        field("editor-category-current", "自定义草稿")
         back(); compose.onNodeWithTag("discard-draft").assertIsDisplayed()
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("放弃未保存的修改？").assertIsDisplayed()
         compose.onNodeWithText("继续编辑").performClick()
         compose.assertAmountDraft("12.34")
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("自定义草稿")
+        compose.assertSelectedCategory("自定义草稿")
         compose.onNodeWithText("取消").performScrollTo().performClick()
         compose.onNodeWithText("放弃修改").performClick()
         compose.onNodeWithTag("editor-form").assertDoesNotExist(); unchanged()
@@ -250,26 +247,38 @@ class LedgerS1Test {
         compose.closeKeyboard(); compose.onNodeWithTag("discard-draft").assertDoesNotExist()
         compose.onNodeWithTag("note-toggle").performScrollTo().performClick()
         compose.onNodeWithText("备注（可选，最多200字）").assertDoesNotExist()
-        field("分类（可自定义）", "自定义内容"); compose.closeKeyboard()
+        field("editor-category-current", "自定义内容")
         compose.onNode(hasText("收入") and isSelectable()).performScrollTo().performClick()
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("自定义内容")
+        compose.assertSelectedCategory("自定义内容")
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("备注（可选，最多200字）").assertDoesNotExist()
         compose.onNodeWithTag("note-toggle").performScrollTo().performClick()
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().assertTextContains("保留备注")
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("自定义内容"); unchanged()
+        compose.assertSelectedCategory("自定义内容"); unchanged()
     }
-    @Test fun recentCategoriesUseSixNewestDistinctForCurrentKind() {
-        open(); compose.onNodeWithTag("recent-categories").performScrollTo().assertIsDisplayed()
-        captureLedgerScreen("s1-recent-categories")
-        val recentSuggestion = hasAnyAncestor(hasTestTag("recent-categories"))
-        compose.onNode(hasText("最近分类12") and recentSuggestion).performScrollTo().performClick()
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("最近分类12")
-        compose.onNode(hasText("最近分类7") and recentSuggestion).assertExists()
-        compose.onNode(hasText("最近分类6") and recentSuggestion).assertDoesNotExist()
+    @Test fun categoryCatalogUsesKindAndSettingsOrderWithoutRecentSection() {
+        open()
+        val catalog = model().state.value.categories.filter { it.kind == EntryKind.EXPENSE && !it.archived }
+            .sortedWith(compareBy({ it.sortOrder }, { it.id }))
+        assertTrue(catalog.size > 12)
+        val prefix = "editor-category-"
+        val chip = SemanticsMatcher("actual directory chip") {
+            it.config.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.TestTag) { "" }.removePrefix(prefix) in catalog.map { c -> c.id }
+        }
+        assertEquals(catalog.take(12).map { prefix + it.id }, compose.onAllNodes(chip).fetchSemanticsNodes().map {
+            it.config[androidx.compose.ui.semantics.SemanticsProperties.TestTag]
+        })
+        compose.onNodeWithTag("recent-categories").assertDoesNotExist()
+        compose.onNodeWithText("最近使用").assertDoesNotExist()
+        compose.onNodeWithText("快捷分类").assertDoesNotExist()
+        val selected = catalog.last().name
+        compose.selectCategory(selected)
         compose.onNode(hasText("收入") and isSelectable()).performScrollTo().performClick()
-        compose.onNode(hasText("最近分类12") and recentSuggestion).assertDoesNotExist()
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("最近分类12"); unchanged()
+        compose.assertSelectedCategory(selected)
+        catalog.take(12).forEach { compose.onNodeWithTag(prefix + it.id).assertDoesNotExist() }
+        compose.activityRule.scenario.recreate()
+        compose.assertSelectedCategory(selected)
+        compose.onNodeWithTag("recent-categories").assertDoesNotExist(); unchanged()
     }
     @Test fun monthPickerConfirmsBoundariesKeepsQueryAndCancelKeepsMonth() {
         ready(); compose.onNodeWithTag("ledger-list").performScrollToNode(hasText("搜索分类或备注"))
@@ -340,10 +349,10 @@ class LedgerS1Test {
     }
     @Test fun exportWarningShowsCapacityAndHidesGlobalEntryAction() {
         ready(); compose.onNodeWithTag("nav-settings").performClick()
-        compose.onNodeWithTag("settings-list").performScrollToNode(hasText("导出备份"))
+        compose.onNodeWithTag("settings-open-backup").performScrollTo().performClick()
         compose.onNodeWithText("导出备份").performClick()
         compose.onNodeWithText("导出明文备份").assertIsDisplayed()
-        compose.onNode(hasText("50000", substring = true) and hasText("10 MiB", substring = true) and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        compose.onNode(hasText("50,000", substring = true) and hasText("10 MiB", substring = true) and hasAnyAncestor(isDialog())).assertIsDisplayed()
         captureLedgerScreen("s1-export-warning")
         compose.onNodeWithTag("add-entry").assertDoesNotExist()
         compose.onNodeWithText("取消").performClick()
@@ -364,7 +373,7 @@ class LedgerS1Test {
                 shell("cmd uimode night ${if (dark) "yes" else "no"}"); compose.activityRule.scenario.recreate()
                 compose.waitUntil(10000) { (compose.activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) == dark }
                 compose.waitForIdle()
-                val expected = if (dark) 0xFF101820.toInt() else 0xFFF5F7FB.toInt()
+                val expected = if (dark) 0xFF101A17.toInt() else 0xFFF4F5F2.toInt()
                 val pixels = compose.onRoot().captureToImage().toPixelMap(); var matches = 0
                 for (y in 0 until pixels.height step 8) for (x in 0 until pixels.width step 8) {
                     if (android.graphics.Color.rgb((pixels[x,y].red*255).toInt(), (pixels[x,y].green*255).toInt(), (pixels[x,y].blue*255).toInt()) == expected) matches++
@@ -409,36 +418,26 @@ class LedgerS1Test {
             compose.waitUntil(10000) { kotlin.math.abs(compose.activity.resources.configuration.fontScale - scale) < .01f && compose.activity.resources.configuration.screenWidthDp == 360 }
             assertEquals("720x1280", override("size")); assertEquals("320", override("density"))
             assertEquals(360, compose.activity.resources.configuration.screenWidthDp); ready()
-            listOf("nav-stats", "nav-settings", "nav-ledger").forEach { compose.onNodeWithTag(it).assertIsDisplayed().performClick().assertIsSelected() }
+            listOf("nav-stats", "nav-accounts", "nav-settings", "nav-ledger").forEach { compose.onNodeWithTag(it).assertIsDisplayed().performClick().assertIsSelected() }
             compose.onNodeWithTag("ledger-list").performScrollToIndex(0)
-            val initialButtonNode = compose.onNodeWithTag("add-entry").assertIsDisplayed().fetchSemanticsNode()
-            val initialViewportNode = compose.onNodeWithTag("ledger-list").fetchSemanticsNode()
-            val (button, viewport) = compose.runOnIdle {
-                assertTrue(initialButtonNode.layoutInfo.isAttached && initialButtonNode.layoutInfo.isPlaced)
-                assertTrue(initialViewportNode.layoutInfo.isAttached && initialViewportNode.layoutInfo.isPlaced)
-                initialButtonNode.boundsInRoot to initialViewportNode.boundsInRoot
-            }
-            android.util.Log.i("LedgerS1", "font=$scale wm=${override("size")} density=${override("density")} configurationWidthDp=${compose.activity.resources.configuration.screenWidthDp} viewportPx=$viewport")
-            assertTrue("List viewport must end above add button at font $scale: $viewport / $button", viewport.bottom <= button.top)
-            compose.onNodeWithTag("ledger-list").performScrollToNode(hasTestTag("entry-${records.first().id}"))
-            val rowNode = compose.onNodeWithTag("entry-${records.first().id}").assertIsDisplayed().fetchSemanticsNode()
-            val currentButtonNode = compose.onNodeWithTag("add-entry").fetchSemanticsNode()
-            val currentViewportNode = compose.onNodeWithTag("ledger-list").fetchSemanticsNode()
-            // boundsInRoot reads live layout coordinates. Read all three on the same
-            // UI turn; a pre-scroll button rectangle can belong to an older inset layout.
-            val (row, currentButton, currentViewport) = compose.runOnIdle {
-                listOf(rowNode, currentButtonNode, currentViewportNode).forEach {
-                    assertTrue(it.layoutInfo.isAttached && it.layoutInfo.isPlaced)
+            val list = compose.onNodeWithTag("ledger-list")
+            val lastRow = hasTestTag("entry-${records.first().id}")
+            list.performScrollToNode(lastRow)
+            list.performTouchInput { swipeUp() }
+            val viewportNode = list.fetchSemanticsNode()
+            val fabNode = compose.onNodeWithTag("add-entry").assertIsDisplayed().fetchSemanticsNode()
+            listOf("-" + Money.format(records.first().amountCents), records.first().category, records.first().note).forEach { value ->
+                val textNode = compose.onNode(hasText(value) and hasAnyAncestor(lastRow), useUnmergedTree = true).assertIsDisplayed().fetchSemanticsNode()
+                compose.runOnIdle {
+                    val viewport = viewportNode.boundsInRoot
+                    val fab = fabNode.boundsInRoot
+                    val text = androidx.compose.ui.geometry.Rect(textNode.positionInRoot, androidx.compose.ui.geometry.Size(textNode.size.width.toFloat(), textNode.size.height.toFloat()))
+                    assertTrue("The last actual text is fully visible at font $scale: $text / $viewport", text.left >= viewport.left && text.top >= viewport.top && text.right <= viewport.right && text.bottom <= viewport.bottom)
+                    assertFalse("The last text overlaps the measured FAB at font $scale: $text / $fab", text.left < fab.right && text.right > fab.left && text.top < fab.bottom && text.bottom > fab.top)
                 }
-                Triple(rowNode.boundsInRoot, currentButtonNode.boundsInRoot, currentViewportNode.boundsInRoot)
             }
-            android.util.Log.i("LedgerS1", "font=$scale afterScroll rowPx=$row originalButtonPx=$button currentButtonPx=$currentButton originalViewportPx=$viewport currentViewportPx=$currentViewport")
-            if (row.bottom > currentButton.top || currentViewport.bottom > currentButton.top)
-                captureLedgerScreen("s1-viewport-failure-${scale.toString().replace('.', '-')}")
-            assertTrue("Current list viewport must end above current add button at font $scale: $currentViewport / $currentButton", currentViewport.bottom <= currentButton.top)
-            assertTrue("Visible row must end above current add button at font $scale: row=$row initialButton=$button currentButton=$currentButton viewport=$currentViewport", row.bottom <= currentButton.top)
             compose.onNodeWithTag("entry-${records.first().id}").performClick()
-            compose.onNodeWithTag("add-entry").assertDoesNotExist()
+            compose.onNodeWithTag("add-entry").assertIsDisplayed().assertIsEnabled()
             compose.onNodeWithText("编辑").performScrollTo().performClick()
             compose.onNodeWithTag("add-entry").assertDoesNotExist()
             compose.onNodeWithText("保存").performScrollTo().assertIsDisplayed()

@@ -14,7 +14,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Invoked one method at a time across a real package-manager replacement. */
+/** Historical schema1/.7 contract. Excluded from current CI; schema2 uses the separate raw seed and verifier. */
 class LedgerUpgradeTest {
     private val expected = listOf(
         Entry("01100000-0000-0000-0000-000000000001", EntryKind.INCOME, 10000L, "工资", LocalDate.of(2026, 10, 1), "升级验证收入"),
@@ -23,7 +23,12 @@ class LedgerUpgradeTest {
     )
 
     @Test fun seedOldVersionLedger() {
-        val context = installedVersion("0.1.2", 3)
+        val baseline = InstrumentationRegistry.getArguments().getString("ledgerUpgradeBaseline") ?: "0.1.4"
+        val context = when (baseline) {
+            "0.1.4" -> installedVersion("0.1.4", 6)
+            "0.1.6" -> installedVersion("0.1.6", 8)
+            else -> error("ledgerUpgradeBaseline must be 0.1.4 or 0.1.6")
+        }
         val database = LedgerDatabase(context)
         try {
             assertTrue("Seed requires an empty ledger; existing data must not be overwritten", database.listEntries().isEmpty())
@@ -35,7 +40,7 @@ class LedgerUpgradeTest {
     }
 
     @Test fun verifyUpgradedLedger() {
-        val context = installedVersion("0.1.4", 6)
+        val context = installedVersion("0.1.7", 9)
         // No save, merge, delete, or reseed: a missing database must fail.
         assertLedgerOnDisk(context, "upgrade-opened")
         assertLedgerOnDisk(context, "upgrade-reopened")

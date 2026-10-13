@@ -28,10 +28,10 @@ class LedgerInputFeedbackTest {
         override fun before() {
             val context = ApplicationProvider.getApplicationContext<Context>()
             context.deleteDatabase("ledger.db")
-            LedgerDatabase(context).use { db -> db.save(first); db.save(second) }
+            LedgerDatabase(context).use { db -> db.seedLegacyFixture(listOf(first, second)) }
         }
     }
-    @get:Rule val rules: RuleChain = RuleChain.outerRule(seed).around(compose)
+    @get:Rule val rules: RuleChain = RuleChain.outerRule(UiPreferencesIsolation()).around(seed).around(compose)
 
     private fun model(): LedgerViewModel = compose.runOnIdle {
         ViewModelProvider(compose.activity)[LedgerViewModel::class.java]
@@ -86,24 +86,42 @@ class LedgerInputFeedbackTest {
         assertNotNull("成功反馈必须有原始截止时间", feedback.messageExpiresAt)
         val messageId = feedback.messageId!!
         val expiresAt = feedback.messageExpiresAt!!
-        compose.activityRule.scenario.recreate()
-        assertSame("反馈重建必须保留同一 VM", vm, model())
-        val restoredFeedback = vm.state.value
-        if (restoredFeedback.message != null) {
-            assertEquals("已删除", restoredFeedback.message)
-            assertEquals("重建不能换成功反馈身份", messageId, restoredFeedback.messageId)
-            assertEquals("重建不能延长原截止时间", expiresAt, restoredFeedback.messageExpiresAt)
-        } else {
-            assertTrue("反馈只能在原截止时间之后被清除", SystemClock.elapsedRealtime() >= expiresAt)
-            assertNull(restoredFeedback.messageId)
-            assertNull(restoredFeedback.messageExpiresAt)
+        val previousAutoAdvance = compose.mainClock.autoAdvance
+        val realtimeBase = SystemClock.elapsedRealtime()
+        val virtualBase = compose.mainClock.currentTime
+        fun advanceClockWithRealtime() {
+            val target = virtualBase + (SystemClock.elapsedRealtime() - realtimeBase)
+            val elapsed = target - compose.mainClock.currentTime
+            if (elapsed > 0L) compose.mainClock.advanceTimeBy(elapsed, ignoreFrameDuration = true)
         }
-        compose.waitUntil(10000) {
-            compose.onAllNodesWithText("已删除").fetchSemanticsNodes().isEmpty()
+        compose.mainClock.autoAdvance = false
+        try {
+            compose.activityRule.scenario.recreate()
+            // Prime the recreated composition before runOnIdle, using only elapsed real time.
+            advanceClockWithRealtime()
+            assertSame("反馈重建必须保留同一 VM", vm, model())
+            val restoredFeedback = vm.state.value
+            if (restoredFeedback.message != null) {
+                assertEquals("已删除", restoredFeedback.message)
+                assertEquals("重建不能换成功反馈身份", messageId, restoredFeedback.messageId)
+                assertEquals("重建不能延长原截止时间", expiresAt, restoredFeedback.messageExpiresAt)
+            } else {
+                assertTrue("反馈只能在原截止时间之后被清除", SystemClock.elapsedRealtime() >= expiresAt)
+                assertNull(restoredFeedback.messageId)
+                assertNull(restoredFeedback.messageExpiresAt)
+            }
+            compose.waitUntil(10000) {
+                advanceClockWithRealtime()
+                val disappeared = compose.onAllNodesWithText("已删除").fetchSemanticsNodes().isEmpty()
+                if (disappeared) assertTrue("反馈不能在原截止时间之前消失", SystemClock.elapsedRealtime() >= expiresAt)
+                disappeared
+            }
+            // The product expires at 3 seconds; allow native scheduling/observation overhead.
+            assertTrue("Deletion feedback must expire, not remain indefinitely",
+                SystemClock.elapsedRealtime() - observedAt <= 5000L)
+        } finally {
+            compose.mainClock.autoAdvance = previousAutoAdvance
         }
-        // The product expires at 3 seconds; allow native scheduling/observation overhead.
-        assertTrue("Deletion feedback must expire, not remain indefinitely",
-            SystemClock.elapsedRealtime() - observedAt <= 5000L)
         compose.onNodeWithText("已删除").assertDoesNotExist()
         compose.onNodeWithTag("entry-detail").assertDoesNotExist()
         compose.onNodeWithText("删除账目？").assertDoesNotExist()
@@ -172,19 +190,15 @@ class LedgerInputFeedbackTest {
         compose.pressAmountKey("4"); compose.assertAmountDraft("12.34")
         compose.onNodeWithText("备注（可选，最多200字）").assertIsNotFocused().assertTextContains(note)
         compose.onNode(hasText("收入") and isSelectable()).performScrollTo().performClick()
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().performTouchInput { click() }
-        compose.onNodeWithText("分类（可自定义）").performTextReplacement("输入回归分类")
-        compose.closeKeyboard()
-        compose.onNodeWithText("日期（yyyy-MM-dd）").performScrollTo().performTouchInput { click() }
-        compose.onNodeWithText("日期（yyyy-MM-dd）").performTextReplacement("2020-02-29")
-        compose.closeKeyboard()
+        compose.addAndSelectCategory("输入回归分类")
+        compose.selectEditorDate("2020-02-29", compose.activity)
         val vm = model()
         compose.activityRule.scenario.recreate()
         assertSame(vm, model())
         compose.onNode(hasText("收入") and isSelectable()).performScrollTo().assertIsSelected()
         compose.assertAmountDraft("12.34")
-        compose.onNodeWithText("日期（yyyy-MM-dd）").performScrollTo().assertTextContains("2020-02-29")
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("输入回归分类")
+        compose.assertEditorDate("2020-02-29")
+        compose.assertSelectedCategory("输入回归分类")
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().assertTextContains(note)
         compose.pressAmountKey("backspace"); compose.assertAmountDraft("12.3")
         compose.pressAmountKey("4"); compose.assertAmountDraft("12.34")
