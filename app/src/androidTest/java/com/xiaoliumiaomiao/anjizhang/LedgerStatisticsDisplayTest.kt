@@ -82,7 +82,7 @@ class LedgerStatisticsDisplayTest : StatisticsDeviceScenario() {
                 shell("cmd uimode night ${if (dark) "yes" else "no"}"); compose.activityRule.scenario.recreate()
                 compose.waitUntil(10000) { (compose.activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) == dark }
                 modeYear(); year(2025); overview("350.01", "45.42", "304.59", true)
-                val expected = if (dark) 0xFF101820.toInt() else 0xFFF5F7FB.toInt()
+                val expected = if (dark) 0xFF101A17.toInt() else 0xFFF4F5F2.toInt()
                 val pixels = compose.onRoot().captureToImage().toPixelMap()
                 var matches = 0
                 for (y in 0 until pixels.height step 8) for (x in 0 until pixels.width step 8) {

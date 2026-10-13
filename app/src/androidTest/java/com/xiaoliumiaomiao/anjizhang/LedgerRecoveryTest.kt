@@ -1,6 +1,10 @@
 package com.xiaoliumiaomiao.anjizhang
 
 import android.app.Application
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -10,11 +14,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase
+import com.xiaoliumiaomiao.anjizhang.data.BackupCodec
 import com.xiaoliumiaomiao.anjizhang.domain.Entry
 import com.xiaoliumiaomiao.anjizhang.domain.EntryKind
 import com.xiaoliumiaomiao.anjizhang.ui.LedgerScreen
 import com.xiaoliumiaomiao.anjizhang.ui.LedgerTheme
 import com.xiaoliumiaomiao.anjizhang.ui.LedgerViewModel
+import com.xiaoliumiaomiao.anjizhang.ui.LedgerDocumentResult
+import com.xiaoliumiaomiao.anjizhang.ui.UiOperationSession
 import java.time.YearMonth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.sync.Mutex
@@ -44,6 +51,10 @@ class LedgerRecoveryTest {
         lateinit var activeModel: LedgerViewModel
             private set
         private var heldLock: Mutex? = null
+        var restoreOwner = ""
+            private set
+        private var documentResult by mutableStateOf<LedgerDocumentResult?>(null)
+        fun deliverRestore(uri: Uri) = compose.runOnIdle { documentResult = LedgerDocumentResult(restoreOwner, uri.toString(), false) }
 
         private fun createModel(store: ViewModelStore): LedgerViewModel = ViewModelProvider(
             store, ViewModelProvider.AndroidViewModelFactory.getInstance(application)
@@ -51,13 +62,15 @@ class LedgerRecoveryTest {
 
         fun mount(entries: List<Entry>): LedgerViewModel {
             application.deleteDatabase("ledger.db")
-            LedgerDatabase(application).use { database -> entries.forEach(database::save) }
+            LedgerDatabase(application).use { database -> database.seedLegacyFixture(entries) }
             firstStore = ViewModelStore().also(stores::add)
             InstrumentationRegistry.getInstrumentation().runOnMainSync {
                 activeModel = createModel(firstStore)
             }
             // activeModel is an ordinary variable. Changing it must not recompose before saving.
-            tester.setContent { LedgerTheme { LedgerScreen(activeModel, {}, {}, {}) } }
+            tester.setContent { LedgerTheme { LedgerScreen(activeModel, {}, {}, {},
+                onSelectImport = { restoreOwner = it }, documentResult = documentResult,
+                onDocumentConsumed = { documentResult = null }) } }
             awaitReady(activeModel, entries)
             return activeModel
         }
@@ -112,11 +125,19 @@ class LedgerRecoveryTest {
     }
 
     private fun setField(label: String, value: String) {
-        compose.onNodeWithText(label).performScrollTo().assertIsDisplayed().performTextReplacement(value)
+        when(label) {
+            "editor-category-current" -> compose.setCategoryThroughDirectory(value)
+            "editor-date-select" -> compose.selectEditorDate(value)
+            else -> {
+                val field = compose.onNodeWithText(label).performScrollTo()
+                compose.awaitNativeDialogFocus(field)
+                field.performClick().performTextReplacement(value)
+            }
+        }
     }
 
     private fun assertField(label: String, value: String) {
-        compose.onNodeWithText(label).performScrollTo().assertIsDisplayed().assertTextContains(value)
+        when(label) { "editor-date-select" -> compose.assertEditorDate(value); "editor-category-current" -> compose.assertSelectedCategory(value); else -> compose.onNodeWithText(label).performScrollTo().assertIsDisplayed().assertTextContains(value) }
     }
 
     private fun saveAction(): SemanticsNodeInteraction =
@@ -148,7 +169,7 @@ class LedgerRecoveryTest {
         }
     }
 
-    @Test fun queuedSaveRestoredWithNewViewModelKeepsDraftAndCanRetrySameId() {
+    @Test fun queuedSaveFreshSnapshotResolvesUncommittedPayloadAndRetriesSameId() {
         val fixture = RecoveryFixture()
         try {
             val firstModel = fixture.mount(listOf(original))
@@ -156,8 +177,7 @@ class LedgerRecoveryTest {
             compose.onNodeWithText("编辑").performScrollTo().assertIsDisplayed().performClick()
             val draft = original.copy(amountCents = 5678L, category = "恢复后的分类", note = "恢复草稿\n第二行")
             compose.setAmountWithKeypad("56.78")
-            setField("分类（可自定义）", draft.category)
-            compose.closeKeyboard()
+            setField("editor-category-current", draft.category)
             setField("备注（可选，最多200字）", draft.note)
             compose.closeKeyboard()
             fixture.pauseWorker(firstModel)
@@ -172,10 +192,10 @@ class LedgerRecoveryTest {
             compose.onNodeWithTag("editor-form").assertIsDisplayed()
             compose.onNode(hasText("支出") and isSelectable()).performScrollTo().assertIsDisplayed().assertIsSelected()
             assertField("金额（元）", "56.78")
-            assertField("日期（yyyy-MM-dd）", draft.date.toString())
-            assertField("分类（可自定义）", draft.category)
+            assertField("editor-date-select", draft.date.toString())
+            assertField("editor-category-current", draft.category)
             assertField("备注（可选，最多200字）", draft.note)
-            // A fresh VM cannot finish the old pending ID. The restored actions must unlock.
+            // The new VM has actually read every entity; the unchanged complete baseline proves this queued write did not commit.
             saveAction().performScrollTo().assertIsDisplayed().assertIsEnabled()
             compose.onNodeWithText("取消").performScrollTo().assertIsDisplayed().assertIsEnabled()
             saveAction().performScrollTo().assertIsDisplayed().performClick()
@@ -191,7 +211,7 @@ class LedgerRecoveryTest {
         } finally { fixture.close() }
     }
 
-    @Test fun queuedDeleteRestoredWithNewViewModelCanCancelThenDeleteOnlyTarget() {
+    @Test fun queuedDeleteFreshSnapshotResolvesUncommittedPayloadThenDeletesOnlyTarget() {
         val fixture = RecoveryFixture()
         try {
             val entries = listOf(original, untouched)
@@ -229,5 +249,43 @@ class LedgerRecoveryTest {
             compose.onNodeWithTag("ledger-list").performScrollToNode(hasTestTag("entry-${untouched.id}"))
             compose.onNodeWithTag("entry-${untouched.id}").assertIsDisplayed()
         } finally { fixture.close() }
+    }
+
+    @Test fun unknownRestoreNeedsItsOwnExplicitFreshReadBeforeReturningToBackupPage() {
+        val fixture = RecoveryFixture()
+        val backup = java.io.File(application.cacheDir, "synthetic-unknown-restore.json")
+        try {
+            val old = fixture.mount(listOf(original))
+            backup.writeText(BackupCodec.encode(listOf(untouched)), Charsets.UTF_8)
+            compose.onNodeWithTag("nav-settings").performClick()
+            compose.onNodeWithTag("settings-open-backup").performScrollTo().performClick()
+            compose.onNodeWithTag("backup-import").performClick()
+            compose.onNodeWithTag("document-select").assertIsEnabled().performClick()
+            assertTrue(fixture.restoreOwner.isNotEmpty())
+            fixture.pauseWorker(old)
+            val jobs = old.viewModelScope.coroutineContext[Job]!!.children.toSet()
+            fixture.deliverRestore(Uri.fromFile(backup))
+            awaitSubmitted("restore", old, jobs)
+            val pending = compose.runOnIdle { UiOperationSession.forViewModel(old, old.instanceId).value }
+            assertEquals("RESTORE", pending.operation)
+            assertEquals(listOf(Uri.fromFile(backup).toString()), pending.payload)
+            assertTrue(pending.attempt.isNotEmpty())
+            val fresh = fixture.restoreWithFreshModel(listOf(original))
+            compose.onNodeWithTag("restore-acknowledge-unknown").assertDoesNotExist()
+            compose.onNodeWithTag("operation-retry-read").assertIsDisplayed().assertIsEnabled().performClick()
+            compose.waitUntil(10000) { !fresh.state.value.busy && !fresh.state.value.readError &&
+                compose.onAllNodesWithTag("restore-acknowledge-unknown").fetchSemanticsNodes().size == 1 }
+            compose.onNodeWithText("上次恢复结果无法确认。账本已重新读取；重新选择相同备份时，相同记录会跳过，冲突会拒绝。").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithTag("restore-acknowledge-unknown").assertIsEnabled().performClick()
+            compose.onNodeWithTag("settings-backup-list").assertIsDisplayed()
+            compose.onNodeWithTag("restore-result-unconfirmed").assertIsDisplayed()
+            assertDatabase(listOf(original))
+            assertEquals(listOf(original), fresh.state.value.entries)
+            assertTrue(fresh.state.value.committedResults.isEmpty())
+            assertNull(fresh.state.value.completedOperationId)
+            compose.onNodeWithTag("backup-import").assertIsEnabled().performClick()
+            compose.onNodeWithText("合并恢复账目").assertIsDisplayed()
+            compose.onNodeWithText("取消").performClick()
+        } finally { fixture.close(); assertTrue(!backup.exists() || backup.delete()) }
     }
 }

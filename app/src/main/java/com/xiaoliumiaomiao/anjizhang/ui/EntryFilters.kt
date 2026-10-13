@@ -16,9 +16,10 @@ import com.xiaoliumiaomiao.anjizhang.domain.EntryKind
 fun EntryFilters(query: String, kind: EntryKind?, onQueryChange: (String) -> Unit,
                  onKindChange: (EntryKind?) -> Unit, onClear: () -> Unit) {
     val focus = LocalFocusManager.current
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LedgerPanel {
         OutlinedTextField(value = query, onValueChange = onQueryChange,
             label = { Text("搜索分类或备注") }, singleLine = true,
+            leadingIcon = { LedgerGlyph("search") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
             modifier = Modifier.fillMaxWidth())
@@ -31,6 +32,7 @@ fun EntryFilters(query: String, kind: EntryKind?, onQueryChange: (String) -> Uni
                 Text("清除筛选")
             }
         }
-        Text("筛选仅影响列表，统计仍为全月", style = MaterialTheme.typography.bodySmall)
+        Text("筛选仅影响列表，统计仍为全月", style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

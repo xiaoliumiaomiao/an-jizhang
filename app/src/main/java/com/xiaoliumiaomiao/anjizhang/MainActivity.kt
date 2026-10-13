@@ -3,75 +3,59 @@ package com.xiaoliumiaomiao.anjizhang
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
-import kotlinx.coroutines.CancellationException
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.xiaoliumiaomiao.anjizhang.data.UiPreferencesStore
 import com.xiaoliumiaomiao.anjizhang.ui.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
     private val ledger by lazy { ViewModelProvider(this)[LedgerViewModel::class.java] }
+    // Delivery correlation only. The root's one saveable holder owns every modal and operation gate.
+    private var exportOwner = ""
+    private var restoreOwner = ""
+    private var documentResult by mutableStateOf<LedgerDocumentResult?>(null)
     private val export = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        uri?.let { ledger.export { contentResolver.openOutputStream(it, "wt") } }
+        documentResult = LedgerDocumentResult(exportOwner, uri?.toString(), true)
+        exportOwner = ""
     }
     private val restore = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let { ledger.restore { contentResolver.openInputStream(it) } }
+        documentResult = LedgerDocumentResult(restoreOwner, uri?.toString(), false)
+        restoreOwner = ""
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        exportOwner = savedInstanceState?.getString("ledger-export-owner").orEmpty()
+        restoreOwner = savedInstanceState?.getString("ledger-restore-owner").orEmpty()
+        savedInstanceState?.getString("ledger-document-owner")?.let { owner ->
+            documentResult = LedgerDocumentResult(owner, savedInstanceState.getString("ledger-document-uri"), savedInstanceState.getBoolean("ledger-document-export"))
+        }
+        val preferencesStore = UiPreferencesStore.getInstance(applicationContext)
         setContent {
-            LedgerTheme {
-                var exportWarning by rememberSaveable { mutableStateOf(false) }
-                var restoreWarning by rememberSaveable { mutableStateOf(false) }
-                var licensesOpen by rememberSaveable { mutableStateOf(false) }
-                var licenses by remember { mutableStateOf<String?>(null) }
-                LaunchedEffect(licensesOpen) {
-                    licenses = null
-                    if (licensesOpen) {
-                        licenses = withContext(Dispatchers.IO) {
-                            try {
-                                assets.list("licenses").orEmpty().sorted().joinToString("\n\n") { name ->
-                                    "$name\n" + assets.open("licenses/$name").bufferedReader().use { it.readText() }
-                                }
-                            } catch (cancelled: CancellationException) { throw cancelled
-                            } catch (failure: Exception) { "许可读取失败：${failure.message}" }
-                        }
-                    }
-                }
-                LedgerScreen(ledger, onExport = { exportWarning = true }, onImport = { restoreWarning = true },
-                    onLicenses = { licensesOpen = true }, modalVisible = exportWarning || restoreWarning || licensesOpen)
-                if (exportWarning) AlertDialog(onDismissRequest = { exportWarning = false }, title = { Text("导出明文备份") }, text = {
-                    Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
-                        Text("备份文件包含明文账目，请保存在可信位置。整本最多50000条且不超过10 MiB，目前不支持分批导出。系统提供者可能包含云盘，请自行选择可信位置，建议另存一份备份。")
-                    }
-                }, confirmButton = {
-                    TextButton(onClick = { exportWarning = false; export.launch("安记账-${LocalDate.now()}.json") }) { Text("选择保存位置") }
-                }, dismissButton = { TextButton(onClick = { exportWarning = false }) { Text("取消") } })
-                if (restoreWarning) AlertDialog(onDismissRequest = { restoreWarning = false }, title = { Text("合并恢复账目") }, text = {
-                    Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
-                        Text("恢复会新增账目，相同记录跳过；内容冲突时整批拒绝，现有账目不被替换。请选择可信的安记账备份。")
-                    }
-                }, confirmButton = {
-                    TextButton(onClick = { restoreWarning = false; restore.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text("选择备份文件") }
-                }, dismissButton = { TextButton(onClick = { restoreWarning = false }) { Text("取消") } })
-                if (licensesOpen) AlertDialog(onDismissRequest = { licensesOpen = false }, title = { Text("第三方许可") },
-                    text = { Column(Modifier.verticalScroll(rememberScrollState()).padding(4.dp)) { Text(licenses ?: "正在读取许可…") } },
-                    confirmButton = { TextButton(onClick = { licensesOpen = false }) { Text("关闭") } })
+            val preferences by preferencesStore.state.collectAsStateWithLifecycle()
+            LedgerTheme(preferences) {
+                SyncActivityWindowAppearance(this@MainActivity)
+                LedgerScreen(ledger, {}, {}, {}, preferences = preferences, preferenceStore = preferencesStore,
+                    onSelectExport = { owner ->
+                        exportOwner = owner
+                        export.launch("安记账-${LocalDate.now()}.json")
+                    }, onSelectImport = { owner ->
+                        restoreOwner = owner
+                        restore.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+                    }, documentResult = documentResult, onDocumentConsumed = { documentResult = null })
             }
         }
+    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("ledger-export-owner", exportOwner)
+        outState.putString("ledger-restore-owner", restoreOwner)
+        documentResult?.let {
+            outState.putString("ledger-document-owner", it.owner)
+            outState.putString("ledger-document-uri", it.uri)
+            outState.putBoolean("ledger-document-export", it.export)
+        }
+        super.onSaveInstanceState(outState)
     }
 }

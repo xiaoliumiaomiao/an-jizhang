@@ -1,129 +1,213 @@
 package com.xiaoliumiaomiao.anjizhang.ui
-import androidx.compose.foundation.Canvas
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.xiaoliumiaomiao.anjizhang.domain.*
 import com.xiaoliumiaomiao.anjizhang.BuildConfig
+import com.xiaoliumiaomiao.anjizhang.domain.*
 import java.time.YearMonth
 
-@Composable internal fun DestinationIcon(key:String) {
-    val color=MaterialTheme.colorScheme.onSurfaceVariant
-    Canvas(Modifier.size(24.dp)) {
-        val w=size.width; val h=size.height; val stroke=2.dp.toPx()
-        when(key) {
-            "ledger" -> listOf(.25f,.5f,.75f).forEach { y->
-                drawCircle(color,stroke/2,Offset(w*.15f,h*y))
-                drawLine(color,Offset(w*.35f,h*y),Offset(w*.9f,h*y),stroke)
-            }
-            "stats" -> listOf(.3f,.65f,.9f).forEachIndexed { i,height->
-                val x=w*(.2f+i*.3f);drawLine(color,Offset(x,h*.9f),Offset(x,h*(1-height)),stroke*2)
-            }
-            else -> {
-                drawCircle(color,w*.3f,center,style=Stroke(stroke))
-                drawCircle(color,w*.08f,center)
-                listOf(Offset(w*.5f,0f) to Offset(w*.5f,h*.2f),Offset(w*.5f,h*.8f) to Offset(w*.5f,h),Offset(0f,h*.5f) to Offset(w*.2f,h*.5f),Offset(w*.8f,h*.5f) to Offset(w,h*.5f)).forEach{(a,b)->drawLine(color,a,b,stroke)}
-            }
-        }
-    }
+@Composable
+internal fun DestinationIcon(key: String) {
+    LedgerGlyph(key)
 }
-@OptIn(ExperimentalLayoutApi::class)
-@Composable internal fun MonthNavigator(month:YearMonth,onChange:(YearMonth)->Unit) {
-    var choosing by rememberSaveable { mutableStateOf(false) }
-    FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(4.dp)) {
-        TextButton(enabled=month>YearMonth.of(1900,1),onClick={onChange(month.minusMonths(1))}){Text("上月")}
-        TextButton(onClick={choosing=true},modifier=Modifier.heightIn(min=48.dp).testTag("month-select")) {
-            Text("${month.year}年${month.monthValue}月",style=MaterialTheme.typography.titleLarge)
-        }
-        TextButton(enabled=month<YearMonth.of(9999,12),onClick={onChange(month.plusMonths(1))}){Text("下月")}
-        TextButton(onClick={onChange(YearMonth.now())}){Text("本月")}
-    }
-    if(choosing) MonthPicker(month,onDismiss={choosing=false},onConfirm={onChange(it);choosing=false})
+
+@Composable
+internal fun MonthNavigator(month: YearMonth, onChange: (YearMonth) -> Unit, onPick: () -> Unit) {
+    PeriodNavigator(month, { onChange(month.minusMonths(1)) }, { onChange(month.plusMonths(1)) }, onPick, { onChange(YearMonth.now()) })
 }
-@OptIn(ExperimentalLayoutApi::class)
-@Composable internal fun MonthlyOverview(summary:MonthlySummary) {
-    Column(Modifier.fillMaxWidth().padding(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-        Text("整月概览",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
-        FlowRow(horizontalArrangement=Arrangement.spacedBy(20.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Text("收入 ${Money.format(summary.incomeCents)}",color=MaterialTheme.colorScheme.secondary)
-            Text("支出 ${Money.format(summary.expenseCents)}",color=MaterialTheme.colorScheme.error)
+@Composable
+internal fun MonthlyOverview(summary: MonthlySummary) {
+    LedgerPanel {
+        Text("整月概览", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val balanceLabelStyle = MaterialTheme.typography.bodySmall
+        val balanceLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+        val balance = buildAnnotatedString {
+            withStyle(SpanStyle(
+                fontSize = balanceLabelStyle.fontSize,
+                fontWeight = balanceLabelStyle.fontWeight,
+                color = balanceLabelColor
+            )) { append("本月结余 ") }
+            append(Money.format(summary.balanceCents))
         }
-        Text("本月结余 ${Money.format(summary.balanceCents)}",style=MaterialTheme.typography.headlineMedium,fontWeight=FontWeight.Bold)
-    }
-}
-@Composable internal fun LedgerPage(month:YearMonth,summary:MonthlySummary,visible:List<Entry>,total:Int,query:String,kind:EntryKind?,busy:Boolean,listState:LazyListState,onMonth:(YearMonth)->Unit,onQuery:(String)->Unit,onKind:(EntryKind?)->Unit,onClear:()->Unit,onAdd:()->Unit,onDetail:(Entry)->Unit) {
-    LazyColumn(Modifier.fillMaxSize().testTag("ledger-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,bottom=16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-        item { MonthNavigator(month,onMonth) }
-        item { MonthlyOverview(summary) }
-        item { EntryFilters(query,kind,onQuery,onKind,onClear) }
-        item { Text("显示 ${visible.size} / 本月 $total 条",style=MaterialTheme.typography.bodySmall) }
-        if(total==0) item {
-            Column(Modifier.fillMaxWidth().padding(vertical=24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                Text("这个月还没有账目",style=MaterialTheme.typography.titleMedium)
-                Button(onClick=onAdd,enabled=!busy){Text("记一笔")}
-            }
-        } else if(visible.isEmpty()) item { Text("没有符合条件的账目",style=MaterialTheme.typography.titleMedium) }
-        EntryGroups.forDisplay(visible).forEach { day->
-            item(key="day-${day.date}") { Text("${day.date} · ${day.entries.size}条",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(top=8.dp)) }
-            items(day.entries,key={it.id}) { entry-> EntryRow(entry,busy){onDetail(entry)} }
-        }
-    }
-}
-@Composable internal fun EntryRow(entry:Entry,busy:Boolean,verticalLayout:Boolean=false,onClick:()->Unit) {
-    Column(Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("entry-${entry.id}").clickable(enabled=!busy,onClick=onClick).padding(vertical=8.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+        Text(balance, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.fillMaxWidth())
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val availableWidth=maxWidth
-            val amount=(if(entry.kind==EntryKind.EXPENSE)"-" else "+")+Money.format(entry.amountCents)
-            val amountColor=if(entry.kind==EntryKind.EXPENSE)MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
-            if(!verticalLayout && LocalDensity.current.fontScale<1.5f && maxWidth>=320.dp) {
-                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                    Text(entry.category,style=MaterialTheme.typography.titleMedium,modifier=Modifier.weight(1f),maxLines=2,overflow=TextOverflow.Ellipsis)
-                    Text(amount,style=MaterialTheme.typography.headlineMedium,textAlign=TextAlign.End,modifier=Modifier.widthIn(max=availableWidth*.6f),color=amountColor)
+            if (LocalDensity.current.fontScale >= 1.5f || maxWidth < 280.dp) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("收入 ${Money.format(summary.incomeCents)}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text("支出 ${Money.format(summary.expenseCents)}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.tertiary)
                 }
-            } else Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                Text(entry.category,style=MaterialTheme.typography.titleMedium)
-                Text(amount,style=MaterialTheme.typography.headlineMedium,textAlign=TextAlign.End,modifier=Modifier.fillMaxWidth(),color=amountColor)
+            } else {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("收入 ${Money.format(summary.incomeCents)}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.weight(1f))
+                    Text("支出 ${Money.format(summary.expenseCents)}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f))
+                }
             }
         }
-        Text(if(entry.kind==EntryKind.EXPENSE)"支出" else "收入",style=MaterialTheme.typography.bodySmall)
-        if(entry.note.isNotEmpty()) Text(entry.note,maxLines=2,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.bodyMedium)
-        HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
     }
 }
-@Composable internal fun SettingsPage(busy:Boolean,listState:LazyListState,onExport:()->Unit,onImport:()->Unit,onLicenses:()->Unit) {
-    LazyColumn(Modifier.fillMaxSize().testTag("settings-list"),state=listState,contentPadding=PaddingValues(start=16.dp,end=16.dp,top=16.dp,bottom=16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        item { Text("备份与恢复",style=MaterialTheme.typography.titleLarge) }
-        item { Button(onClick=onExport,enabled=!busy){Text("导出备份")}; OutlinedButton(onClick=onImport,enabled=!busy){Text("恢复备份")} }
-        item { Text("备份文件包含明文账目，请保存在可信位置。恢复会合并账目，相同记录跳过；内容冲突时整批拒绝。") }
-        item { Text("整本备份最多50000条且不超过10 MiB，目前不支持分批导出。备注等内容也占用容量；接近上限时请先保存备份。") }
-        item { Text("系统文件选择器的提供者可能包含云盘，请自行选择可信位置；建议在另一个可信位置保留第二份备份。") }
-        item { HorizontalDivider();Text("本地隐私",style=MaterialTheme.typography.titleLarge) }
-        item { Text("账目仅保存在此设备，无需登录，不联网，无广告或分析服务。") }
-        item { Text("卸载提醒",style=MaterialTheme.typography.titleLarge);Text("卸载应用会删除本地账目；更换设备或卸载前，请先导出备份。系统云备份已关闭。") }
-        item { HorizontalDivider();Text("关于",style=MaterialTheme.typography.titleLarge);Text("版本 ${BuildConfig.VERSION_NAME}");TextButton(onClick=onLicenses){Text("第三方许可")} }
+
+@Composable
+internal fun LedgerPage(month: YearMonth, summary: MonthlySummary, visible: List<Entry>, total: Int, query: String, kind: EntryKind?, busy: Boolean, listState: LazyListState, onMonth: (YearMonth) -> Unit, onQuery: (String) -> Unit, onKind: (EntryKind?) -> Unit, onClear: () -> Unit, onAdd: () -> Unit, onDetail: (Entry) -> Unit, contentPadding: PaddingValues, onPickMonth: () -> Unit) {
+    LazyColumn(
+        Modifier.fillMaxSize().testTag("ledger-list"),
+        state = listState,
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item { MonthNavigator(month, onMonth, onPickMonth) }
+        item { MonthlyOverview(summary) }
+        item { EntryFilters(query, kind, onQuery, onKind, onClear) }
+        item { Text("显示 ${visible.size} / 本月 $total 条", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        if (total == 0) item {
+            LedgerPanel {
+                LedgerGlyph("ledger", color = MaterialTheme.colorScheme.primary)
+                Text("这个月还没有账目", style = MaterialTheme.typography.titleMedium)
+                Button(onClick = onAdd, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) {
+                    LedgerGlyph("plus")
+                    Spacer(Modifier.width(8.dp))
+                    Text("记一笔")
+                }
+            }
+        } else if (visible.isEmpty()) item {
+            LedgerPanel { Text("没有符合条件的账目", style = MaterialTheme.typography.titleMedium) }
+        }
+        EntryGroups.forDisplay(visible).forEach { day ->
+            item(key = "day-${day.date}") {
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    Text("${day.date} · ${day.entries.size}条", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+                }
+            }
+            items(day.entries, key = { it.id }) { entry -> EntryRow(entry, busy) { onDetail(entry) } }
+        }
     }
 }
-@Composable internal fun EntryDetail(entry:Entry,busy:Boolean,onEdit:()->Unit,onDelete:()->Unit) {
-    Column(Modifier.fillMaxSize().testTag("entry-detail").verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        Text((if(entry.kind==EntryKind.EXPENSE)"-" else "+")+Money.format(entry.amountCents),style=MaterialTheme.typography.headlineMedium)
-        Text(if(entry.kind==EntryKind.EXPENSE)"支出" else "收入")
-        Text("分类：${entry.category}");Text("日期：${entry.date}")
-        Text("备注：${entry.note.ifEmpty{"无"}}")
-        Button(onClick=onEdit,enabled=!busy){Text("编辑")}
-        OutlinedButton(onClick=onDelete,enabled=!busy){Text("删除")}
+
+@Composable
+internal fun EntryRow(entry: Entry, busy: Boolean, verticalLayout: Boolean = false, onClick: () -> Unit) {
+    val amount = (if (entry.kind == EntryKind.EXPENSE) "-" else "+") + Money.format(entry.amountCents)
+    val amountColor = if (entry.kind == EntryKind.EXPENSE) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
+    val textMeasurer = rememberTextMeasurer()
+    val amountStyle = MaterialTheme.typography.headlineMedium
+    Surface(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("entry-${entry.id}")
+            .clickable(enabled = !busy, onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val naturalAmountWidth = textMeasurer.measure(amount, style = amountStyle, softWrap = false, maxLines = 1).size.width
+                val amountWidth = with(LocalDensity.current) { naturalAmountWidth.toDp() }
+                // Reserve 112dp for the category, a 40dp marker and two 12dp gaps.
+                val inline = !verticalLayout && LocalDensity.current.fontScale < 1.5f &&
+                    maxWidth >= 320.dp && amountWidth + 176.dp <= maxWidth
+                if (inline) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        KindMarker(entry.kind)
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(entry.category, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Text(if (entry.kind == EntryKind.EXPENSE) "支出" else "收入", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text(amount, style = amountStyle, color = amountColor, textAlign = TextAlign.End)
+                    }
+                } else {
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            KindMarker(entry.kind)
+                            Text(entry.category, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Text(if (entry.kind == EntryKind.EXPENSE) "支出" else "收入", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        LedgerAmount(amount, Modifier.fillMaxWidth(), amountColor, TextAlign.End)
+                    }
+                }
+            }
+            if (entry.note.isNotEmpty()) {
+                Text(entry.note, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** Keep every character; choose the largest heading that fits the actual scaled amount. */
+@Composable
+internal fun LedgerAmount(value: String, modifier: Modifier = Modifier, color: Color = LocalContentColor.current, textAlign: TextAlign = TextAlign.Start) {
+    val textMeasurer = rememberTextMeasurer()
+    val styles = listOf(
+        MaterialTheme.typography.headlineMedium,
+        MaterialTheme.typography.headlineSmall,
+        MaterialTheme.typography.titleLarge,
+        MaterialTheme.typography.bodyLarge
+    )
+    BoxWithConstraints(modifier) {
+        val style = styles.firstOrNull {
+            textMeasurer.measure(value, style = it, softWrap = false, maxLines = 1).size.width <= constraints.maxWidth
+        } ?: styles.last()
+        Text(value, style = style, color = color, textAlign = textAlign, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun EntryDetail(entry: Entry, busy: Boolean, onEdit: () -> Unit, onDelete: () -> Unit, contentPadding: PaddingValues, accountName: String) {
+    val amountColor = if (entry.kind == EntryKind.EXPENSE) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
+    Column(
+        Modifier.fillMaxSize().testTag("entry-detail").verticalScroll(rememberScrollState()).padding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        LedgerPanel {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                KindMarker(entry.kind)
+                Text(if (entry.kind == EntryKind.EXPENSE) "支出" else "收入", style = MaterialTheme.typography.titleMedium, color = amountColor)
+            }
+            LedgerAmount((if (entry.kind == EntryKind.EXPENSE) "-" else "+") + Money.format(entry.amountCents), Modifier.fillMaxWidth(), amountColor)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Text("分类：${entry.category}", style = MaterialTheme.typography.bodyLarge)
+            Text("日期：${entry.date}", style = MaterialTheme.typography.bodyLarge)
+            Text("账户：$accountName", style = MaterialTheme.typography.bodyLarge)
+        }
+        LedgerPanel {
+            Text("备注：${entry.note.ifEmpty { "无" }}", style = MaterialTheme.typography.bodyLarge)
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = onEdit, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { Text("编辑") }
+            OutlinedButton(
+                onClick = onDelete,
+                enabled = !busy,
+                modifier = Modifier.heightIn(min = 48.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) { Text("删除") }
+        }
     }
 }

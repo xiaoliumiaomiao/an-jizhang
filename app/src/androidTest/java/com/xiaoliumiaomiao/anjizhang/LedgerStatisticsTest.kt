@@ -116,7 +116,7 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
 
     @Test fun drillEditCancelLeavesDetailAndOriginalFields() {
         openStats(); drill("餐饮"); detail(3); edit()
-        field("分类（可自定义）", "未保存")
+        field("editor-category-current", "未保存")
         compose.onNodeWithText("取消").performScrollTo().performClick(); compose.onNodeWithText("放弃修改").performClick()
         compose.onNodeWithTag("entry-detail").assertIsDisplayed(); assertEquals(statisticsFixture.toSet(), entries().toSet())
         compose.activityRule.scenario.recreate(); compose.onNodeWithTag("detail-back").performClick(); allDrillIds(listOf(3, 4))
@@ -130,11 +130,11 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
         drillBack(); overview(if (fieldName == "kind") "112.35" else "100.01", expense, balance)
         category("餐饮").assertTextContains("餐饮  ¥0.01")
     }
-    @Test fun editedDateMovesEntryOutAndReturnsToOriginalDrill() = editOut("日期（yyyy-MM-dd）", "2025-06-02",
-        statisticsFixture[2].copy(date = LocalDate.of(2025, 6, 2), category = "餐饮"), "4.08", "95.93")
+    @Test fun editedDateMovesEntryOutAndReturnsToOriginalDrill() = editOut("editor-date-select", "2025-06-02",
+        statisticsFixture[2].copy(date = LocalDate.of(2025, 6, 2)), "4.08", "95.93")
     @Test fun editedKindMovesEntryOutAndReturnsToOriginalDrill() = editOut("kind", "",
-        statisticsFixture[2].copy(kind = EntryKind.INCOME, category = "餐饮"), "4.08", "108.27")
-    @Test fun editedCategoryMovesEntryOutWithoutChangingMonthTotal() = editOut("分类（可自定义）", "餐饮外卖",
+        statisticsFixture[2].copy(kind = EntryKind.INCOME), "4.08", "108.27")
+    @Test fun editedCategoryMovesEntryOutWithoutChangingMonthTotal() = editOut("editor-category-current", "餐饮外卖",
         statisticsFixture[2].copy(category = "餐饮外卖"), "16.42", "83.59")
 
     @Test fun deleteLastDrillEntryReturnsToPersistentEmptyCategory() {
@@ -249,7 +249,7 @@ class LedgerStatisticsTest : StatisticsDeviceScenario() {
             compose.onNodeWithText("正在读取账目…").assertIsDisplayed()
             compose.onNodeWithText("此分类在所选期间没有记录").assertDoesNotExist()
             compose.activityRule.scenario.recreate(); compose.onNodeWithText("正在读取账目…").assertIsDisplayed()
-            compose.runOnIdle { mutable.value = loaded.copy(entries = emptyList(), busy = false, error = "读取失败") }
+            compose.runOnIdle { mutable.value = loaded.copy(entries = emptyList(), busy = false, error = "读取失败", readError = true) }
             compose.onNodeWithText("无法读取账目，请重试").assertIsDisplayed()
             compose.onNodeWithText("此分类在所选期间没有记录").assertDoesNotExist()
             compose.runOnIdle { mutable.value = loaded }

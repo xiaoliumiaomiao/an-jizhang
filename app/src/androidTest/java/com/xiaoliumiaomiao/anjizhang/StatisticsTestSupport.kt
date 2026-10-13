@@ -81,7 +81,7 @@ abstract class StatisticsDeviceScenario {
             emulatorOnly()
             val context = ApplicationProvider.getApplicationContext<Context>()
             context.deleteDatabase("ledger.db")
-            LedgerDatabase(context).use { db -> statisticsFixture.forEach(db::save) }
+            LedgerDatabase(context).use { db -> db.seedLegacyFixture(statisticsFixture) }
         }
     }
     private val failureImage = object : TestWatcher() {
@@ -91,20 +91,20 @@ abstract class StatisticsDeviceScenario {
             runCatching { captureLedgerScreen(name) }.exceptionOrNull()?.let(error::addSuppressed)
         }
     }
-    @get:Rule val rules: RuleChain = RuleChain.outerRule(seed).around(compose).around(failureImage)
+    @get:Rule val rules: RuleChain = RuleChain.outerRule(UiPreferencesIsolation()).around(seed).around(compose).around(failureImage)
     protected fun model() = compose.runOnIdle { ViewModelProvider(compose.activity)[LedgerViewModel::class.java] }
     protected fun ready() {
         val vm = model()
         compose.waitUntil(10000) { !vm.state.value.busy && vm.state.value.entries.size == statisticsFixture.size }
         assertNull(vm.state.value.error)
     }
-    protected fun listTag() = listOf("stats-drill-list", "stats-list", "ledger-list", "settings-list")
-        .single { compose.onAllNodesWithTag(it).fetchSemanticsNodes().isNotEmpty() }
+    protected fun listTag() = compose.displayedOrdinaryListTag()
     protected fun reveal(matcher: SemanticsMatcher): SemanticsNodeInteraction {
         // Async analysis has an explicit pending surface, not the previous period's list.
         awaitAnalysis()
         compose.onNodeWithTag(listTag()).performScrollToNode(matcher)
-        return compose.onNode(matcher).assertIsDisplayed()
+        // Compose 1.8 may stop at a nested target's semantics container; finish on the target.
+        return compose.onNode(matcher).performScrollTo().assertIsDisplayed()
     }
     protected fun tag(value: String) = reveal(hasTestTag(value))
     protected fun text(value: String) = reveal(hasText(value))
@@ -114,7 +114,7 @@ abstract class StatisticsDeviceScenario {
             compose.onNodeWithTag("stats-error").assertDoesNotExist()
             compose.onAllNodesWithTag("stats-loading").fetchSemanticsNodes().isEmpty() &&
                 compose.onAllNodesWithTag("stats-reading").fetchSemanticsNodes().isEmpty() &&
-                listOf("stats-drill-list", "stats-list", "ledger-list", "settings-list").sumOf {
+                ordinaryListTags.sumOf {
                     compose.onAllNodesWithTag(it).fetchSemanticsNodes().size
                 } == 1
         }
@@ -189,7 +189,7 @@ abstract class StatisticsDeviceScenario {
                 compose.onAllNodesWithTag("stats-drill-list").fetchSemanticsNodes().size == 1
         }
         compose.onNodeWithTag("stats-drill-list").assertExists()
-        compose.onNodeWithTag("add-entry").assertDoesNotExist()
+        compose.onNodeWithTag("add-entry").assertIsDisplayed().assertIsEnabled()
     }
     protected fun drillBack() { compose.onNodeWithTag("stats-drill-back").performClick() }
     protected fun back() {
@@ -210,16 +210,16 @@ abstract class StatisticsDeviceScenario {
     protected fun entries(): List<Entry> = LedgerDatabase(ApplicationProvider.getApplicationContext<Context>()).use { it.listEntries() }
     protected fun replaceFixture(records: List<Entry>) {
         val vm = model(); compose.waitUntil(10000) { !vm.state.value.busy }
-        LedgerDatabase(ApplicationProvider.getApplicationContext<Context>()).use { db -> db.listEntries().forEach { db.delete(it.id) }; records.forEach(db::save) }
+        LedgerDatabase(ApplicationProvider.getApplicationContext<Context>()).use { db -> db.listEntries().forEach { db.delete(it.id) }; db.seedLegacyFixture(records) }
         vm.load(); compose.waitUntil(10000) { !vm.state.value.busy && vm.state.value.entries.toSet() == records.toSet() }
         awaitAnalysis()
     }
     @Suppress("UNCHECKED_CAST")
     protected fun mutableState(): MutableStateFlow<LedgerUiState> = LedgerViewModel::class.java.getDeclaredField("mutable")
         .apply { isAccessible = true }.get(model()) as MutableStateFlow<LedgerUiState>
-    protected fun detail(id: Int) { tag("entry-${statsId(id)}").performClick(); compose.onNodeWithTag("entry-detail").assertIsDisplayed(); compose.onNodeWithTag("add-entry").assertDoesNotExist() }
+    protected fun detail(id: Int) { tag("entry-${statsId(id)}").performClick(); compose.onNodeWithTag("entry-detail").assertIsDisplayed(); compose.onNodeWithTag("add-entry").assertIsDisplayed().assertIsEnabled() }
     protected fun edit() { compose.onNodeWithText("编辑").performScrollTo().performClick() }
-    protected fun field(label: String, value: String) { compose.onNodeWithText(label).performScrollTo().performTextReplacement(value); compose.closeKeyboard() }
+    protected fun field(label: String, value: String) { when(label) { "editor-category-current" -> compose.setCategoryThroughDirectory(value); "editor-date-select" -> compose.selectEditorDate(value, compose.activity); else -> { compose.onNodeWithText(label).performScrollTo().performTextReplacement(value); compose.closeKeyboard() } } }
     protected fun save() {
         compose.onNodeWithText("保存").performScrollTo().assertIsEnabled().performClick()
         compose.waitUntil(10000) { compose.onAllNodesWithTag("editor-form").fetchSemanticsNodes().isEmpty() }
@@ -234,14 +234,42 @@ abstract class StatisticsDeviceScenario {
         text("共 ${expected.size} 条记录")
         val observed = linkedSetOf<String>()
         val list = compose.onNodeWithTag("stats-drill-list")
-        list.performScrollToIndex(0)
-        repeat(expected.size + 3) {
-            compose.onAllNodes(hasTestTag("stats-drill-list")).assertCountEquals(1)
-            compose.onAllNodes(SemanticsMatcher("entry tag") { it.config.getOrElse(SemanticsProperties.TestTag) { "" }.startsWith("entry-") })
-                .fetchSemanticsNodes().sortedBy { it.boundsInRoot.top }.forEach { observed.add(it.config[SemanticsProperties.TestTag].removePrefix("entry-")) }
-            list.performTouchInput { swipeUp() }
+        val matcher = SemanticsMatcher("entry tag") {
+            it.config.getOrElse(SemanticsProperties.TestTag) { "" }.startsWith("entry-")
         }
-        assertEquals(expected.map(::statsId), observed.toList())
+        val samples = mutableListOf<String>()
+        list.performScrollToIndex(0)
+        var reachedEnd = false
+        for (step in 0 until 20) {
+            compose.onAllNodes(hasTestTag("stats-drill-list")).assertCountEquals(1)
+            val nodes = compose.onAllNodes(matcher).fetchSemanticsNodes()
+            val viewport = list.fetchSemanticsNode()
+            val (distance, atEnd) = compose.runOnIdle {
+                assertTrue(viewport.layoutInfo.isAttached && viewport.layoutInfo.isPlaced)
+                val area = viewport.boundsInRoot
+                val axis = viewport.config[SemanticsProperties.VerticalScrollAxisRange]
+                val visible = nodes.filter { it.layoutInfo.isAttached && it.layoutInfo.isPlaced }
+                    .filter {
+                        val bounds = it.boundsInRoot
+                        bounds.width > 0f && bounds.height > 0f &&
+                            bounds.bottom > area.top && bounds.top < area.bottom &&
+                            bounds.right > area.left && bounds.left < area.right
+                    }
+                    .sortedBy { it.positionInRoot.y }
+                    .map { it.config[SemanticsProperties.TestTag].removePrefix("entry-") }
+                observed.addAll(visible)
+                samples.add("step=$step scroll=${axis.value()}/${axis.maxValue()} viewport=$area raw=" +
+                    nodes.joinToString { "${it.config[SemanticsProperties.TestTag]}:attached=${it.layoutInfo.isAttached},placed=${it.layoutInfo.isPlaced}" } +
+                    " visible=$visible observed=$observed")
+                area.height / 2f to (axis.value() >= axis.maxValue())
+            }
+            if (atEnd) { reachedEnd = true; break }
+            assertTrue("Positive drill viewport: $samples", distance > 0f)
+            // Overlapping, non-flinging samples preserve the order of actual visible rows.
+            list.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, distance) }
+        }
+        assertTrue("Drill traversal reached list end: ${samples.joinToString("\n")}", reachedEnd)
+        assertEquals("Actual drill order: ${samples.joinToString("\n")}", expected.map(::statsId), observed.toList())
     }
     protected fun anchor(tag: String): Float {
         awaitAnalysis()
@@ -338,7 +366,7 @@ abstract class StatisticsDeviceScenario {
     }
     private fun fullyVisible(interaction: SemanticsNodeInteraction) {
         val node = interaction.assertIsDisplayed().fetchSemanticsNode()
-        val activeLists = listOf("stats-list", "stats-drill-list", "ledger-list").flatMap { compose.onAllNodesWithTag(it).fetchSemanticsNodes() }
+        val activeLists = ordinaryListTags.flatMap { compose.onAllNodesWithTag(it).fetchSemanticsNodes() }
         val enclosingList = activeLists.firstOrNull { list ->
             generateSequence(node.parent) { it.parent }.any { it.id == list.id }
         }

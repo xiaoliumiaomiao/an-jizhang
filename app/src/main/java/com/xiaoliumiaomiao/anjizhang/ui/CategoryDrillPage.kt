@@ -11,18 +11,23 @@ import com.xiaoliumiaomiao.anjizhang.domain.Entry
 import com.xiaoliumiaomiao.anjizhang.domain.EntryKind
 
 @Composable internal fun CategoryDrillPage(key: CategoryKey, result: DrillResult?, reading: Boolean, readError: Boolean,
-    busy: Boolean, listState: LazyListState, onRetry: () -> Unit, onDetail: (Entry) -> Unit) {
+    busy: Boolean, listState: LazyListState, onRetry: () -> Unit, onDetail: (Entry) -> Unit, contentPadding: PaddingValues) {
     when {
         reading -> StatisticsStatus("正在读取账目…")
         readError -> StatisticsStatus("无法读取账目，请重试", onRetry)
         result == null -> StatisticsStatus("正在整理分类记录…", loading = true)
         result.failed -> StatisticsStatus("无法整理统计，请重试", onRetry)
         else -> LazyColumn(Modifier.fillMaxSize().testTag("stats-drill-list"), state = listState,
-            contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item(key = "category") { Text(key.category, style = MaterialTheme.typography.titleLarge) }
-            item(key = "period") { Text("${key.period.startDate} 至 ${key.period.endDate} · ${if (key.kind == EntryKind.INCOME) "收入" else "支出"}") }
+            contentPadding = contentPadding, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val entries = requireNotNull(result.entries)
-            item(key = "count") { Text("共 ${entries.size} 条记录") }
+            item(key = "category") {
+                LedgerPanel {
+                    LedgerSectionTitle(key.category)
+                    Text("${key.period.startDate} 至 ${key.period.endDate} · ${if (key.kind == EntryKind.INCOME) "收入" else "支出"}",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("共 ${entries.size} 条记录", style = MaterialTheme.typography.titleMedium)
+                }
+            }
             if (entries.isEmpty()) item(key = "empty") { Text("此分类在所选期间没有记录") }
             items(entries, key = { it.id }) { entry ->
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

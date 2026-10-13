@@ -45,7 +45,7 @@ jobs:
 
   device-smoke:
     runs-on: ubuntu-24.04
-    # Covers 55 UI tests (three complete font scenarios), a second baseline build, and real upgrade checks.
+    # Runs the full ordinary UI suite, then a separate raw schema1 -> schema2 replacement chain.
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -136,7 +136,7 @@ jobs:
           chmod +x gradlew
           ./gradlew :app:connectedDebugAndroidTest \
             -Pandroid.testInstrumentationRunnerArguments.ledgerCi=true \
-            -Pandroid.testInstrumentationRunnerArguments.notClass=com.xiaoliumiaomiao.anjizhang.LedgerUpgradeTest --no-daemon
+            -Pandroid.testInstrumentationRunnerArguments.notClass=com.xiaoliumiaomiao.anjizhang.LedgerUpgradeTest,com.xiaoliumiaomiao.anjizhang.LedgerRawUpgradeSeedTest,com.xiaoliumiaomiao.anjizhang.LedgerSchema2UpgradeTest --no-daemon
           # Connected teardown happens before the upgrade chain. No connected task
           # may run between seeding the old app and verifying the replaced app.
           bash .github/scripts/verify-upgrade.sh \

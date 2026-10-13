@@ -19,7 +19,7 @@ import org.junit.rules.RuleChain
 
 class LedgerQueryTest {
     private fun activeList():SemanticsNodeInteraction {
-        val tag=listOf("ledger-list","stats-list","settings-list").single{compose.onAllNodesWithTag(it).fetchSemanticsNodes().isNotEmpty()}
+        val tag=compose.displayedOrdinaryListTag()
         return compose.onNodeWithTag(tag)
     }
     private val month = YearMonth.now()
@@ -35,10 +35,10 @@ class LedgerQueryTest {
             val context = ApplicationProvider.getApplicationContext<Context>()
             context.deleteDatabase("ledger.db")
             val db = LedgerDatabase(context)
-            try { seeds.forEach(db::save) } finally { db.close() }
+            try { db.seedLegacyFixture(seeds) } finally { db.close() }
         }
     }
-    @get:Rule val rules: RuleChain = RuleChain.outerRule(seedDatabase).around(compose)
+    @get:Rule val rules: RuleChain = RuleChain.outerRule(UiPreferencesIsolation()).around(seedDatabase).around(compose)
 
     private fun model(): LedgerViewModel {
         var result: LedgerViewModel? = null
@@ -84,12 +84,9 @@ class LedgerQueryTest {
         assertNull(model().state.value.error)
     }
     private fun add(category: String, amount: String) {
-        compose.onAllNodes(hasText("记一笔") and hasClickAction() and isEnabled())[0].performClick()
+        compose.onNodeWithTag("add-entry").assertIsDisplayed().assertIsEnabled().performClick()
         compose.setAmountWithKeypad(amount)
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().performTextReplacement(category)
-        // Text replacement focuses category and starts a native IME transition.
-        // Finish that transition before locating the real touch target.
-        closeIme()
+        compose.addAndSelectCategory(category)
         compose.waitForIdle()
         val toggle = compose.onNodeWithTag("note-toggle").performScrollTo().assert(hasText("添加备注"))
         val before = toggle.fetchSemanticsNode()

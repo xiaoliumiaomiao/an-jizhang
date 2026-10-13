@@ -36,7 +36,7 @@ class MainActivityTest {
             val background = activity.window.decorView.background
             assertTrue("Transparent system bars need a real solid window background", background is ColorDrawable)
             assertEquals("Window background must match the active ledger palette",
-                if (dark) 0xFF101820.toInt() else 0xFFF5F7FB.toInt(), (background as ColorDrawable).color)
+                if (dark) 0xFF101A17.toInt() else 0xFFF4F5F2.toInt(), (background as ColorDrawable).color)
             assertEquals("Status bar must reveal the window background", Color.TRANSPARENT, activity.window.statusBarColor)
             val icons = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
             assertEquals("Status icons must contrast with the window background", !dark, icons.isAppearanceLightStatusBars)

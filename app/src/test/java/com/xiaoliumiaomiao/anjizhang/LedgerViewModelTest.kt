@@ -95,10 +95,12 @@ class LedgerViewModelTest {
             model.load()
             await { model.state.value.error != null && !model.state.value.busy }
             assertTrue(model.state.value.error!!.contains("操作失败"))
-            outside.onCreate(outside.writableDatabase)
+            assertTrue(model.state.value.readError)
+            recreateEntriesTable(outside.writableDatabase)
             model.load()
             await { model.state.value.error == null && !model.state.value.busy }
             assertTrue(model.state.value.entries.isEmpty())
+            assertFalse(model.state.value.readError)
         } finally { outside.close() }
     }
     @Test fun successfulSavePublishesUniqueCompletionForNewObserver() {
@@ -155,7 +157,10 @@ class LedgerViewModelTest {
         val output = ByteArrayOutputStream()
         model.export { output }
         await { model.state.value.message?.startsWith("备份已导出") == true && !model.state.value.busy }
-        assertEquals(listOf(valid), BackupCodec.decode(output.toString("UTF-8")))
+        val decoded = BackupCodec.decodeBackup(output.toString("UTF-8"))
+        assertEquals(2, decoded.sourceVersion)
+        assertEquals(model.state.value.snapshot, decoded.snapshot)
+        assertEquals(listOf(valid), decoded.snapshot.entries)
         model.restore { ByteArrayInputStream(output.toByteArray()) }
         await { model.state.value.message?.startsWith("恢复完成") == true && !model.state.value.busy }
         assertEquals("恢复完成：新增 0 条，跳过 1 条", model.state.value.message)
@@ -207,8 +212,136 @@ class LedgerViewModelTest {
             override fun read(buffer: ByteArray, offset: Int, length: Int): Int { buffer.fill(32, offset, offset + length); read += length; return length }
         }
         model.restore { stream }
-        await { model.state.value.error?.contains("10 MiB") == true && !model.state.value.busy }
-        assertEquals(BackupCodec.MAX_BYTES + 1, read); assertTrue(model.state.value.entries.isEmpty())
+        await { model.state.value.error?.contains("32 MiB") == true && !model.state.value.busy }
+        assertEquals(BackupCodec.MAX_SNAPSHOT_BYTES + 1, read); assertTrue(model.state.value.entries.isEmpty())
+    }
+    private fun assertDatabaseMatches(expected: List<Entry>) {
+        val outside = com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase(application)
+        try {
+            assertEquals(expected.toSet(), outside.listEntries().toSet())
+        } finally { outside.close() }
+    }
+    @Test fun damagedRestoreKeepsLoadedStatisticsReadable() {
+        val valid = entry(1234).copy(note = "合成恢复测试")
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        model.restore { ByteArrayInputStream("broken".toByteArray()) }
+        await { model.state.value.error?.contains("备份无效") == true && !model.state.value.busy }
+        assertFalse("损坏备份不应让已读取的账目统计失效", model.state.value.readError)
+        assertEquals(listOf(valid), model.state.value.entries)
+        assertEquals(saved, model.state.value.completedOperationId)
+        assertDatabaseMatches(listOf(valid))
+    }
+    @Test fun backupInputFailureKeepsLoadedStatisticsReadable() {
+        val valid = entry(1234)
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        model.restore { throw java.io.IOException("合成provider读取失败") }
+        await { model.state.value.error?.contains("读取失败") == true && !model.state.value.busy }
+        assertFalse("备份文件读取失败不是账目读取失败", model.state.value.readError)
+        assertEquals(listOf(valid), model.state.value.entries)
+        assertDatabaseMatches(listOf(valid))
+    }
+    @Test fun failedOutputKeepsLoadedStatisticsReadable() {
+        val valid = entry(1234)
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        model.export { object : java.io.OutputStream() {
+            override fun write(value: Int) { throw java.io.IOException("合成输出失败") }
+        } }
+        await { model.state.value.error?.contains("输出失败") == true && !model.state.value.busy }
+        assertFalse("导出输出失败不应让有效统计失效", model.state.value.readError)
+        assertEquals(listOf(valid), model.state.value.entries)
+        assertEquals(saved, model.state.value.completedOperationId)
+        assertDatabaseMatches(listOf(valid))
+    }
+    @Test fun rejectedSaveKeepsLoadedStatisticsReadableAndOwnFailureId() {
+        val valid = entry(1234)
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        val failed = model.save(valid.copy(amountCents = 0))
+        await { model.state.value.failedOperationId == failed && !model.state.value.busy }
+        assertFalse("输入校验失败不应让有效统计失效", model.state.value.readError)
+        assertNotNull(model.state.value.error)
+        assertEquals(saved, model.state.value.completedOperationId)
+        assertEquals(listOf(valid), model.state.value.entries)
+        assertDatabaseMatches(listOf(valid))
+    }
+    @Test fun readFailureSurvivesInProgressAndFailedRestoreUntilSuccessfulReload() {
+        val valid = entry(1234)
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        val outside = com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase(application)
+        try {
+            outside.writableDatabase.execSQL("DROP TABLE entries")
+            model.load()
+            await { model.state.value.error?.contains("读取账目失败") == true && !model.state.value.busy }
+            assertTrue(model.state.value.readError)
+            val started = java.util.concurrent.CountDownLatch(1)
+            val release = java.util.concurrent.CountDownLatch(1)
+            try {
+                model.restore {
+                    started.countDown()
+                    check(release.await(10, java.util.concurrent.TimeUnit.SECONDS))
+                    ByteArrayInputStream("broken".toByteArray())
+                }
+                await { model.state.value.busy && started.count == 0L }
+                assertTrue("另一操作开始不能解除真实读错", model.state.value.readError)
+            } finally { release.countDown() }
+            await { model.state.value.error?.contains("备份无效") == true && !model.state.value.busy }
+            assertTrue("另一操作失败不能解除真实读错", model.state.value.readError)
+            assertEquals(listOf(valid), model.state.value.entries)
+            recreateEntriesTable(outside.writableDatabase)
+            outside.save(valid)
+            model.load()
+            await { model.state.value.error == null && !model.state.value.busy }
+            assertFalse("成功重读应解除真实读错", model.state.value.readError)
+            assertEquals(listOf(valid), model.state.value.entries)
+        } finally { outside.close() }
+    }
+    // Repair only the table this fixture deliberately removed; the schema2 catalog is untouched.
+    private fun recreateEntriesTable(db: android.database.sqlite.SQLiteDatabase) {
+        db.execSQL("""CREATE TABLE entries (
+            id TEXT PRIMARY KEY NOT NULL,
+            kind TEXT NOT NULL CHECK(kind IN ('EXPENSE','INCOME')),
+            amount_cents INTEGER NOT NULL CHECK(amount_cents BETWEEN 1 AND 99999999999),
+            category TEXT NOT NULL, date TEXT NOT NULL, note TEXT NOT NULL,
+            account_id TEXT REFERENCES accounts(id))""")
+    }
+
+    @Test fun exportDatabaseReadFailureMarksLedgerUnreadable() {
+        var openedOutput = false
+        val outside = com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase(application)
+        try {
+            outside.writableDatabase.execSQL("DROP TABLE entries")
+            model.export { openedOutput = true; ByteArrayOutputStream() }
+            await { model.state.value.error != null && !model.state.value.busy }
+            assertTrue("导出中的账目读取失败也是真实读错", model.state.value.readError)
+            assertFalse(openedOutput)
+        } finally { outside.close() }
+    }
+    @Test fun successfulSaveWithFailedRefreshMarksLedgerUnreadableAndKeepsOldSnapshot() {
+        val valid = entry(1234)
+        val saved = model.save(valid)
+        await { model.state.value.completedOperationId == saved && !model.state.value.busy }
+        val outside = com.xiaoliumiaomiao.anjizhang.data.LedgerDatabase(application)
+        try {
+            outside.writableDatabase.execSQL("""CREATE TRIGGER corrupt_new_date AFTER INSERT ON entries
+                BEGIN UPDATE entries SET date = 'invalid-date' WHERE id = NEW.id; END""")
+            val attempted = model.save(entry(5678))
+            await { model.state.value.failedOperationId == attempted && !model.state.value.busy }
+            assertTrue("保存后的快照刷新失败必须标记真实读错", model.state.value.readError)
+            val readFailure = requireNotNull(model.state.value.error)
+            assertFalse("保存已经写入，不能承诺原有账目未被替换", readFailure.contains("原有账目未被替换"))
+            assertTrue("真实读取失败应提示重新读取", readFailure.contains("无法重新读取账目，请重试读取"))
+            assertEquals(saved, model.state.value.completedOperationId)
+            assertEquals(listOf(valid), model.state.value.entries)
+            assertNull(model.state.value.message)
+            outside.readableDatabase.rawQuery("SELECT COUNT(*) FROM entries WHERE date = 'invalid-date'", null).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("实际保存已发生，失败来自最终读取", 1, cursor.getInt(0))
+            }
+        } finally { outside.close() }
     }
     @Test fun repeatedFailuresPublishOwnIdsWithoutReplacingOldSuccessAndRetryWorks() {
         val valid=entry();val success=model.save(valid)

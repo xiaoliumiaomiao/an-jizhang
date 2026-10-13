@@ -24,14 +24,18 @@ class LedgerFlowTest {
     val compose=createAndroidComposeRule<MainActivity>()
     private val seed=object:ExternalResource(){override fun before(){
         val context=ApplicationProvider.getApplicationContext<Context>();context.deleteDatabase("ledger.db")
-        LedgerDatabase(context).use{it.save(first);it.save(second)}
+        LedgerDatabase(context).use{it.seedLegacyFixture(listOf(first, second))}
     }}
-    @get:Rule val rules:RuleChain=RuleChain.outerRule(seed).around(compose)
+    @get:Rule val rules:RuleChain=RuleChain.outerRule(UiPreferencesIsolation()).around(seed).around(compose)
     private fun model():LedgerViewModel { var result:LedgerViewModel?=null;compose.runOnIdle{result=ViewModelProvider(compose.activity)[LedgerViewModel::class.java]};return result!! }
     private fun ready(){val vm=model();compose.waitUntil(10000){!vm.state.value.busy&&vm.state.value.entries.size==2};assertNull(vm.state.value.error)}
     private fun reveal(tag:String,text:String):SemanticsNodeInteraction {compose.onNodeWithTag(tag).performScrollToNode(hasText(text));return compose.onNodeWithText(text).assertIsDisplayed()}
     private fun open(entry:Entry){compose.onNodeWithTag("ledger-list").performScrollToNode(hasTestTag("entry-${entry.id}"));compose.onNodeWithTag("entry-${entry.id}").assertIsDisplayed().performClick();compose.onNodeWithTag("entry-detail").assertIsDisplayed()}
-    private fun set(label:String,value:String){compose.onNodeWithText(label).performScrollTo().performTextReplacement(value)}
+    private fun set(label:String,value:String){when(label) {
+            "editor-category-current" -> compose.setCategoryThroughDirectory(value)
+            "editor-date-select" -> compose.selectEditorDate(value)
+            else -> compose.onNodeWithText(label).performScrollTo().performTextReplacement(value)
+        }}
     @Test fun detailCancelPreservesQueryAndDoesNotLeakDraftIntoAnotherEntry(){
         ready()
         compose.onNodeWithTag("ledger-list").assertIsDisplayed();captureLedgerScreen("ledger")
@@ -60,7 +64,7 @@ class LedgerFlowTest {
         reveal("ledger-list","仅支出").performClick();open(first)
         captureLedgerScreen("detail")
         compose.onNodeWithText("编辑").performScrollTo().performClick()
-        set("分类（可自定义）","未保存分类");compose.closeKeyboard()
+        set("editor-category-current","未保存分类")
         compose.onNodeWithText("取消").performScrollTo().performClick()
         compose.onNodeWithText("放弃未保存的修改？").assertIsDisplayed()
         compose.onNodeWithText("放弃修改").performClick()
@@ -80,22 +84,22 @@ class LedgerFlowTest {
         reveal("ledger-list","仅支出").assertIsSelected()
         assertEquals(listOf(first,second).toSet(),model().state.value.entries.toSet())
         open(second);compose.onNodeWithText("编辑").performScrollTo().performClick()
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("交通")
+        compose.assertSelectedCategory("交通")
         compose.onNodeWithText("金额（元）").performScrollTo().assertTextContains("56.78")
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().assertTextContains("匹配词乙")
     }
     @Test fun allEditorFieldsSurviveRecreationAndSaveKeepsStableId(){
         ready();open(first);compose.onNodeWithText("编辑").performScrollTo().performClick()
         compose.onNodeWithText("收入").performScrollTo().performClick()
-        compose.setAmountWithKeypad("987654321.09");set("日期（yyyy-MM-dd）","2020-02-29")
-        set("分类（可自定义）","自定义收入");set("备注（可选，最多200字）","完整备注\n第二行")
+        compose.setAmountWithKeypad("987654321.09");set("editor-date-select","2020-02-29")
+        set("editor-category-current","自定义收入");set("备注（可选，最多200字）","完整备注\n第二行")
         compose.closeKeyboard()
         compose.onNodeWithText("金额（元）").performScrollTo().assertIsDisplayed();captureLedgerScreen("editor")
         val vm=model();compose.activityRule.scenario.recreate();assertSame(vm,model())
         compose.onNodeWithText("收入").performScrollTo().assertIsSelected()
         compose.onNodeWithText("金额（元）").performScrollTo().assertTextContains("987654321.09")
-        compose.onNodeWithText("日期（yyyy-MM-dd）").performScrollTo().assertTextContains("2020-02-29")
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("自定义收入")
+        compose.assertEditorDate("2020-02-29")
+        compose.assertSelectedCategory("自定义收入")
         compose.onNodeWithText("备注（可选，最多200字）").performScrollTo().assertTextContains("完整备注\n第二行")
         compose.onNodeWithText("保存").performScrollTo().performClick()
         compose.waitUntil(10000){compose.onAllNodesWithTag("editor-form").fetchSemanticsNodes().isEmpty()}
@@ -106,10 +110,11 @@ class LedgerFlowTest {
     @Test fun newEntryFromStatisticsReturnsThereAndNextSessionStartsFresh(){
         ready();compose.onNodeWithTag("nav-settings").performClick()
         val before=model().state.value.entries.toList()
-        reveal("settings-list","导出备份").performClick()
+        compose.onNodeWithTag("settings-open-backup").performScrollTo().performClick()
+        reveal("settings-backup-list","导出备份").performClick()
         compose.onNodeWithText("导出明文备份").assertIsDisplayed()
         compose.onNodeWithText("取消").performClick()
-        reveal("settings-list","恢复备份").performClick()
+        reveal("settings-backup-list","恢复备份").performClick()
         compose.onNodeWithText("合并恢复账目").assertIsDisplayed()
         compose.onNodeWithText("取消").performClick()
         assertEquals(before,model().state.value.entries)
@@ -122,19 +127,19 @@ class LedgerFlowTest {
         compose.onNodeWithText("支出分类").assertIsDisplayed()
         captureLedgerScreen("statistics")
         compose.onNodeWithTag("nav-settings").performClick()
-        compose.onNodeWithTag("settings-list").assertIsDisplayed();captureLedgerScreen("settings")
+        compose.onNodeWithTag("settings-backup-list").assertIsDisplayed();captureLedgerScreen("settings")
         compose.onNodeWithTag("nav-stats").performClick()
         compose.onNodeWithTag("add-entry").performClick()
-        compose.setAmountWithKeypad("77.77");set("分类（可自定义）","取消草稿");compose.closeKeyboard()
+        compose.setAmountWithKeypad("77.77");set("editor-category-current","取消草稿")
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
         compose.onNodeWithText("放弃未保存的修改？").assertIsDisplayed()
         compose.onNodeWithText("放弃修改").performClick()
         compose.onNodeWithTag("nav-stats").assertIsSelected();assertEquals(2,model().state.value.entries.size)
         compose.onNodeWithTag("add-entry").performClick()
         compose.onNodeWithText("金额（元）").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText,AnnotatedString("")))
-        compose.onNodeWithText("日期（yyyy-MM-dd）").performScrollTo().assertTextContains(java.time.LocalDate.now().toString())
-        compose.onNodeWithText("分类（可自定义）").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText,AnnotatedString("")))
-        set("分类（可自定义）","餐饮")
-        compose.onNodeWithText("分类（可自定义）").performScrollTo().assertTextContains("餐饮")
+        compose.assertEditorDate(java.time.LocalDate.now().toString())
+        compose.onNodeWithTag("editor-category-current").assertDoesNotExist()
+        set("editor-category-current","餐饮")
+        compose.assertSelectedCategory("餐饮")
     }
 }
